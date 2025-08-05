@@ -23,3 +23,21 @@ export type AppPageProps = {
     };
     services?: Services[];
 };
+
+export type BasicForm = {
+    id?: number;
+    service_id: number;
+    style: string;
+    company_name: string;
+    contact: string;
+    project_name: string;
+    format?: string;
+    camera?: string;
+    quality?: string;
+    music?: string;
+    music_link?: string;
+    file_link?: string;
+    notes?: string;
+    total_price: number;
+    with_agent?: boolean;
+};

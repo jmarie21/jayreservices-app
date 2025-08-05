@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Client\ProjectsController;
 use App\Http\Controllers\Client\ServicesController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -11,9 +12,9 @@ Route::get('/', function () {
 Route::middleware(['auth', 'client'])->group(function () {
     Route::get("/services", [ServicesController::class, "index"])->name("services");
 
-    Route::get("/projects",  function() {
-        return Inertia::render("client/Projects");
-    });
+    Route::get("/projects",  [ProjectsController::class, 'index'])->name("projects");
+    Route::post("/projects", [ProjectsController::class, 'createProject'])->name('projects.store');
+    Route::put("/projects/{project}", [ProjectsController::class, 'updateProject'])->name('projects.update');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {

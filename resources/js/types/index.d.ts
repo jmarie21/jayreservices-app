@@ -46,4 +46,31 @@ export interface Services {
     updated_at?: string;
 }
 
+export interface Projects {
+    id: number;
+    client_id: number;
+    editor_id: number | null;
+    service_id: number;
+
+    style: string;
+    company_name: string;
+    contact: string;
+    project_name: string;
+    format?: string;
+    camera?: string;
+    quality?: string;
+    music?: string;
+    music_link?: string;
+    file_link: string;
+    notes?: string;
+    total_price: number;
+    output_link?: string;
+
+    status: 'pending' | 'in_progress' | 'completed';
+    extra_fields?: Record<string, any>;
+
+    created_at: string; // ISO date
+    updated_at: string; // ISO date
+}
+
 export type BreadcrumbItemType = BreadcrumbItem;

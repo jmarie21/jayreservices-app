@@ -36,9 +36,9 @@ function closeModal() {
 </script>
 
 <template>
+    <Toaster />
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head title="Services" />
-
         <div class="grid gap-4 p-4 md:grid-cols-4">
             <div
                 v-for="service in services"
@@ -63,7 +63,13 @@ function closeModal() {
         </div>
 
         <!-- Modals -->
-        <BasicStyleForm v-if="selectedService?.name === 'Basic Style'" :open="true" :base-price="selectedService.price" @close="closeModal" />
+        <BasicStyleForm
+            v-if="selectedService?.name === 'Basic Style'"
+            :open="true"
+            :base-price="selectedService.price"
+            @close="closeModal"
+            :service-id="selectedService.id"
+        />
         <DeluxeStyleForm v-if="selectedService?.name === 'Deluxe Style'" :open="true" @close="closeModal" />
         <PremiumStyleForm v-if="selectedService?.name === 'Premium Style'" :open="true" @close="closeModal" />
         <LuxuryStyleForm v-if="selectedService?.name === 'Luxury Style'" :open="true" @close="closeModal" />

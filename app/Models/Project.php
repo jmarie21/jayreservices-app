@@ -7,6 +7,32 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Project extends Model
 {
+    protected $fillable = [
+        'client_id',
+        'editor_id',
+        'service_id',
+        'style',
+        'company_name',
+        'contact',
+        'project_name',
+        'format',
+        'camera',
+        'quality',
+        'music',
+        'music_link',
+        'file_link',
+        'notes',
+        'total_price',
+        'output_link',
+        'status',
+        'extra_fields',
+    ];
+
+    protected $casts = [
+        'extra_fields' => 'array',
+        'total_price' => 'decimal:2',
+    ];
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, "client_id");
