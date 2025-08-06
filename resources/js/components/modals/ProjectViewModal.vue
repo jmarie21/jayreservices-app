@@ -18,6 +18,7 @@ defineEmits(['close']);
                 <DialogTitle>Project Details</DialogTitle>
             </DialogHeader>
             <div class="space-y-2">
+                <p><strong>Service:</strong> {{ project.service?.name }}</p>
                 <p><strong>Project Name:</strong> {{ project.project_name }}</p>
                 <p><strong>Style:</strong> {{ project.style }}</p>
                 <p><strong>Company:</strong> {{ project.company_name }}</p>

@@ -26,6 +26,7 @@ class Project extends Model
         'output_link',
         'status',
         'extra_fields',
+        'with_agent',
     ];
 
     protected $casts = [

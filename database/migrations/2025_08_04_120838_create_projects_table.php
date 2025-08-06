@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string("project_name");
             $table->string("format")->nullable();
             $table->string("camera")->nullable();
+            $table->boolean('with_agent')->default(false);
             $table->string("quality")->nullable();
             $table->string("music")->nullable();
             $table->string("music_link")->nullable();

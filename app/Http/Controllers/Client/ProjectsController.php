@@ -13,7 +13,7 @@ class ProjectsController extends Controller
 
     public function index()
     {
-        $projects =Auth::user()->projects()->latest()->get();
+        $projects =Auth::user()->projects()->with('service')->latest()->get();
 
         return Inertia::render("client/Projects", [
             "projects" => $projects
@@ -39,6 +39,7 @@ class ProjectsController extends Controller
             "output_link" => ['nullable', 'string'],
             "status" => ['nullable', 'in:pending,in_progress,completed'],
             "extra_fields" => ['nullable', 'array'],
+            "with_agent" => ['required', 'boolean'],
         ]);
 
         $validated['client_id'] = Auth::id(); 
@@ -73,6 +74,7 @@ class ProjectsController extends Controller
             "output_link" => ['nullable', 'string'],
             "status" => ['nullable', 'in:pending,in_progress,completed'],
             "extra_fields" => ['nullable', 'array'],
+            "with_agent" => ['required', 'boolean'],
         ]);
 
         $project->update($validated);

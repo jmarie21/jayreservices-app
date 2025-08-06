@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
+import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,11 +21,14 @@ const projects = computed(() => usePage<AppPageProps<{ projects: Projects[] }>>(
 const showModal = ref(false);
 const showViewModal = ref(false);
 const selectedProject = ref<Projects | null>(null);
+const selectedStyle = computed(() => selectedProject.value?.service.name ?? '');
 const viewProject = ref<Projects | null>(null);
 
 const openEditModal = (project: Projects) => {
     selectedProject.value = project;
     showModal.value = true;
+    console.log(selectedProject.value);
+    console.log(selectedStyle.value);
 };
 
 const closeModal = () => {
@@ -55,7 +59,8 @@ const closeViewModal = () => {
                 <TableCaption>A list of your recent projects.</TableCaption>
                 <TableHeader>
                     <TableRow>
-                        <TableHead class="w-[250px]"> Project Name </TableHead>
+                        <TableHead class="w-[200px]"> Service </TableHead>
+                        <TableHead> Project Name </TableHead>
                         <TableHead>Style</TableHead>
                         <TableHead>Created At</TableHead>
                         <TableHead> Status </TableHead>
@@ -66,7 +71,8 @@ const closeViewModal = () => {
                 </TableHeader>
                 <TableBody v-for="project in projects" :key="project.id">
                     <TableRow>
-                        <TableCell class="font-bold"> {{ project.project_name }} </TableCell>
+                        <TableCell class="font-bold"> {{ project.service?.name }} </TableCell>
+                        <TableCell> {{ project.project_name }} </TableCell>
                         <TableCell>{{ project.style }}</TableCell>
                         <TableCell>{{ project.created_at }}</TableCell>
                         <TableCell
@@ -84,8 +90,18 @@ const closeViewModal = () => {
         </div>
 
         <BasicStyleForm
+            v-if="selectedStyle === 'Basic Style'"
             :open="showModal"
-            :base-price="selectedProject?.total_price ?? 0"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
+            @close="closeModal"
+        />
+
+        <DeluxeStyleForm
+            v-if="selectedStyle === 'Deluxe Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
             :project="selectedProject"
             @close="closeModal"

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BasicForm } from '@/types/app-page-prop';
 import { useForm } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
 const props = defineProps<{
@@ -20,7 +20,12 @@ const emit = defineEmits<{
 }>();
 
 const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
-// const totalPrice = ref(props.basePrice);
+
+// Computed property for total price calculation
+const calculatedTotalPrice = computed(() => {
+    const extraCost = agentOption.value === 'with-agent' ? 10 : 0;
+    return props.basePrice + extraCost;
+});
 
 const form = useForm<BasicForm>({
     style: props.project?.style ?? '',
@@ -39,16 +44,27 @@ const form = useForm<BasicForm>({
     service_id: props.serviceId,
 });
 
+// Watch agentOption and update form accordingly
 watch(agentOption, (value) => {
-    const extraCost = value === 'with-agent' ? 10 : 0;
-    form.total_price = props.basePrice + extraCost;
+    console.log('Agent option changed:', value);
+    console.log('Base price:', props.basePrice);
+    console.log('Calculated total:', calculatedTotalPrice.value);
+
     form.with_agent = value === 'with-agent';
+    form.total_price = calculatedTotalPrice.value;
 });
 
+// Watch for computed total price changes
+watch(calculatedTotalPrice, (newPrice) => {
+    form.total_price = newPrice;
+});
+
+// Initialize form when project changes
 watch(
     () => props.project,
     (project) => {
         if (project) {
+            // Set form values
             form.style = project.style;
             form.company_name = project.company_name;
             form.contact = project.contact;
@@ -60,12 +76,16 @@ watch(
             form.music_link = project.music_link ?? '';
             form.file_link = project.file_link ?? '';
             form.notes = project.notes ?? '';
-            form.total_price = Number(project?.total_price) || Number(props.basePrice);
             form.with_agent = project.with_agent ?? false;
 
+            // Set agent option based on project data
             agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
+
+            // Calculate and set total price after setting agent option
+            const extraCost = project.with_agent ? 10 : 0;
+            form.total_price = props.basePrice + extraCost;
         } else {
-            // If no project (i.e., creating new), reset the form
+            // Reset form for new project
             form.style = '';
             form.company_name = '';
             form.contact = '';
@@ -77,8 +97,8 @@ watch(
             form.music_link = '';
             form.file_link = '';
             form.notes = '';
-            form.total_price = props.basePrice;
             form.with_agent = false;
+            form.total_price = props.basePrice;
             agentOption.value = '';
         }
     },
@@ -95,7 +115,6 @@ const handleSubmit = () => {
                     description: 'Your order was updated successfully!',
                     position: 'top-right',
                 });
-                
                 emit('close');
             },
             onError: (error) => {
@@ -110,6 +129,7 @@ const handleSubmit = () => {
                     description: 'Your order has been placed.',
                     position: 'top-right',
                 });
+                emit('close');
             },
             onError: (error) => {
                 console.error('error saving to db:', error);
