@@ -392,8 +392,6 @@ const handleSubmit = () => {
                                 <label :for="effect.id" class="cursor-pointer">{{ effect.label }}</label>
                             </div>
                         </div>
-                        <!-- Debug display -->
-                        <div class="text-xs text-gray-500">Selected effects: {{ form.extra_fields.effects.join(', ') || 'None' }}</div>
                     </div>
 
                     <!-- 3D Text and Captions -->
@@ -411,8 +409,6 @@ const handleSubmit = () => {
                                 </label>
                             </div>
                         </div>
-                        <!-- Debug display -->
-                        <div class="text-xs text-gray-500">Selected captions: {{ form.extra_fields.captions.join(', ') || 'None' }}</div>
                     </div>
 
                     <!-- File Link -->
