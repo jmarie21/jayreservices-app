@@ -222,7 +222,7 @@ const handleSubmit = () => {
 
     if (isEditing) {
         // Use transform to send clean data
-        form.transform((data) => submitData).put(route('projects.update', props.project!.id), {
+        form.transform(() => submitData).put(route('projects.update', props.project!.id), {
             onSuccess: () => {
                 toast('Updated successfully!', {
                     description: 'Your order was updated successfully!',
@@ -237,7 +237,7 @@ const handleSubmit = () => {
         });
     } else {
         // Use transform to send clean data
-        form.transform((data) => submitData).post(route('projects.store'), {
+        form.transform(() => submitData).post(route('projects.store'), {
             onSuccess: () => {
                 toast('Order placed', {
                     description: 'Your order has been placed.',
