@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
 import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
+import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,25 @@ const closeViewModal = () => {
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
             :project="selectedProject"
+            @close="closeModal"
+        />
+
+        <PremiumStyleForm
+            v-if="selectedStyle === 'Premium Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
             @close="closeModal"
         />
 

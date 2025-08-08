@@ -59,3 +59,25 @@ export type DeluxeForm = {
     total_price: number;
     with_agent?: boolean;
 };
+
+export type PremiumForm = {
+    id?: number;
+    service_id: number;
+    style: string;
+    company_name: string;
+    contact: string;
+    project_name: string;
+    format?: string;
+    camera?: string;
+    quality?: string;
+    music?: string;
+    music_link?: string;
+    file_link?: string;
+    notes?: string;
+    total_price: number;
+    with_agent?: boolean;
+    extra_fields: {
+        effects: string[]; // e.g., ["Ken Burns"]
+        captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
+    };
+};
