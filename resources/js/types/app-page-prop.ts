@@ -81,3 +81,39 @@ export type PremiumForm = {
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
 };
+
+export type LuxuryForm = {
+    id?: number;
+    service_id: number;
+    style: string;
+    company_name: string;
+    contact: string;
+    project_name: string;
+    format?: string;
+    camera?: string;
+    quality?: string;
+    music?: string;
+    music_link?: string;
+    file_link?: string;
+    notes?: string;
+    total_price: number;
+    with_agent?: boolean;
+    extra_fields: {
+        effects: string[]; // e.g., ["Ken Burns"]
+        captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
+    };
+};
+
+// ✅ Generic pagination type
+export type Paginated<T> = {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    links: {
+        url: string | null;
+        label: string;
+        active: boolean;
+    }[];
+};

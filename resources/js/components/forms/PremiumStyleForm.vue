@@ -260,7 +260,7 @@ const handleSubmit = () => {
         <DialogContent class="!w-full !max-w-6xl">
             <DialogHeader>
                 <DialogTitle>
-                    {{ props.project ? 'Edit Project' : 'Order: Premium Style' }}
+                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Premium Style' }}
                 </DialogTitle>
             </DialogHeader>
 
@@ -381,7 +381,7 @@ const handleSubmit = () => {
 
                     <!-- Customize the Effects -->
                     <div class="space-y-2">
-                        <Label>Customize the Effects *</Label>
+                        <Label>Do you want to customize the effects?</Label>
                         <div class="flex flex-col gap-2">
                             <div v-for="effect in effectsOptions" :key="effect.id" class="mb-1 flex items-center gap-2">
                                 <Checkbox
@@ -396,7 +396,7 @@ const handleSubmit = () => {
 
                     <!-- 3D Text and Captions -->
                     <div class="space-y-2">
-                        <Label>Do you need 3D text and captions? *</Label>
+                        <Label>Do you need 3D text and captions?</Label>
                         <div class="flex flex-col gap-2">
                             <div v-for="caption in captionsOptions" :key="caption.id" class="mb-1 flex items-center gap-2">
                                 <Checkbox

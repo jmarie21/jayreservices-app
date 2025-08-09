@@ -11,12 +11,43 @@ use Inertia\Inertia;
 class ProjectsController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
-        $projects =Auth::user()->projects()->with('service')->latest()->get();
+        $query = Auth::user()
+        ->projects()
+        ->with('service')
+        ->latest();
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // 🔍 Search filter
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('project_name', 'like', "%{$searchTerm}%")
+                ->orWhere('style', 'like', "%{$searchTerm}%")
+                ->orWhereHas('service', function ($sq) use ($searchTerm) {
+                    $sq->where('name', 'like', "%{$searchTerm}%");
+                });
+            });
+        }
+
+        $projects = $query->paginate(10)->withQueryString();
 
         return Inertia::render("client/Projects", [
-            "projects" => $projects
+            "projects" => $projects,
+            "filters"  => $request->only(['status', 'date_from', 'date_to', 'search']),
         ]);
     }
 

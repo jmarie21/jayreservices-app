@@ -145,7 +145,7 @@ const handleSubmit = () => {
         <DialogContent class="!w-full !max-w-6xl">
             <DialogHeader>
                 <DialogTitle>
-                    {{ props.project ? 'Edit Project' : 'Order: Basic Style' }}
+                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Basic Style' }}
                 </DialogTitle>
             </DialogHeader>
 

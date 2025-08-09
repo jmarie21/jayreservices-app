@@ -26,10 +26,14 @@ defineEmits(['close']);
                 <p><strong>Status:</strong> {{ project.status }}</p>
                 <p><strong>Total Price:</strong> ${{ project.total_price }}</p>
                 <p>
-                    <strong>File Link:</strong> <a :href="project.file_link" target="_blank">{{ project.file_link }}</a>
+                    <strong>File Link:</strong>
+                    <a :href="project.file_link" target="_blank" class="text-blue-500 underline underline-offset-3">Raw Files Link</a>
                 </p>
                 <p>
-                    <strong>Output Link:</strong> <a :href="project.output_link" target="_blank">{{ project.output_link }}</a>
+                    <strong>Output Link:</strong>
+                    <a :href="project.output_link" target="_blank" class="text-blue-500 underline underline-offset-3"
+                        ><span v-if="project.output_link">Finished Output Link</span></a
+                    >
                 </p>
                 <p><strong>Notes:</strong> {{ project.notes || 'N/A' }}</p>
             </div>

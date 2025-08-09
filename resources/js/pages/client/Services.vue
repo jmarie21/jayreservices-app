@@ -85,6 +85,12 @@ function closeModal() {
             @close="closeModal"
         />
 
-        <LuxuryStyleForm v-if="selectedService?.name === 'Luxury Style'" :open="true" @close="closeModal" />
+        <LuxuryStyleForm
+            v-if="selectedService?.name === 'Luxury Style'"
+            :open="true"
+            :base-price="selectedService.price"
+            :service-id="selectedService.id"
+            @close="closeModal"
+        />
     </AppLayout>
 </template>
