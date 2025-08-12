@@ -1,5 +1,5 @@
 import { NavItem } from '@/types';
-import { ClipboardList, FolderOpenDot, LayoutGrid } from 'lucide-vue-next';
+import { ClipboardList, FolderOpenDot, LayoutGrid, UserCog } from 'lucide-vue-next';
 
 export const allNavItems: { [key: string]: NavItem[] } = {
     admin: [
@@ -7,6 +7,11 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             title: 'Dashboard',
             href: '/dashboard',
             icon: LayoutGrid,
+        },
+        {
+            title: 'User Management',
+            href: '/user-mgmt',
+            icon: UserCog,
         },
     ],
     client: [

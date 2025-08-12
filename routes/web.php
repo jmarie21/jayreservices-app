@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Client\ProjectsController;
 use App\Http\Controllers\Client\ServicesController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('admin/Dashboard');
     })->name('dashboard');
+
+    Route::get("/user-mgmt", [AdminController::class, 'index'])->name('user-mgmt');
+    Route::post("/user-mgmt", [AdminController::class, 'createNewUser'])->name('user-mgmt.store');
+    Route::put("/user-mgmt/{user}", [AdminController::class, 'updateUser'])->name("user-mgmt.update");
+    Route::delete("/user-mgmt/{user}", [AdminController::class, 'deleteUser'])->name('user-mgmt.destroy');
 });
 
 
