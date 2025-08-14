@@ -12,6 +12,7 @@ class AdminController extends Controller
 {
     public function index()
     {
+
         $users = User::select('id', 'name', 'email', 'role', 'created_at')
             ->orderBy('id')
             ->get();
@@ -60,5 +61,18 @@ class AdminController extends Controller
         $user->delete();
 
         return redirect()->back()->with('message', 'User deleted successfully.');
+    }
+
+    public function showClientProjects(User $client)
+    {
+        $projects = $client->projects()
+            ->with(['service', 'editor'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return Inertia::render("admin/ClientProjects", [
+            'client' => $client->only(["id", "name", "email"]),
+            'projects' => $projects
+        ]);
     }
 }

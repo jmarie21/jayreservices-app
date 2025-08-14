@@ -11,7 +11,7 @@ import SidebarMenuButton from '@/components/ui/sidebar/SidebarMenuButton.vue';
 import SidebarMenuItem from '@/components/ui/sidebar/SidebarMenuItem.vue';
 
 import { allNavItems } from '@/config/nav-items';
-import type { AppPageProps, NavItem } from '@/types';
+import type { AppPageProps, Client, NavItem } from '@/types';
 import AppLogo from './AppLogo.vue';
 import NavMain from './NavMain.vue';
 import NavUser from './NavUser.vue';
@@ -19,9 +19,27 @@ import NavUser from './NavUser.vue';
 const page = usePage<AppPageProps>();
 const user = computed(() => page.props.auth?.user);
 const role = computed(() => user.value?.role);
+const clients = computed<Client[]>(() => (page.props.clients as Client[]) ?? []);
 
 const mainNavItems = computed<NavItem[]>(() => {
-    return allNavItems[role.value] ?? [];
+    let navItems = [...(allNavItems[role.value] ?? [])];
+
+    if (role.value === 'admin') {
+        navItems = navItems.map((item) => {
+            if (item.title === 'Project Management') {
+                return {
+                    ...item,
+                    children: clients.value.map((client: any) => ({
+                        title: client.name,
+                        href: `/project-mgmt/${client.id}`,
+                    })),
+                };
+            }
+            return item;
+        });
+    }
+
+    return navItems;
 });
 </script>
 <template>

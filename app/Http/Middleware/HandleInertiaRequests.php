@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -48,6 +49,9 @@ class HandleInertiaRequests extends Middleware
                 ? $request->user()->only('id', 'name', 'email', 'role')
                 : null,
             ],
+            'clients' => fn () => User::where('role', 'client')
+                ->select('id', 'name')
+                ->get(),
             'ziggy' => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

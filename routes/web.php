@@ -27,6 +27,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post("/user-mgmt", [AdminController::class, 'createNewUser'])->name('user-mgmt.store');
     Route::put("/user-mgmt/{user}", [AdminController::class, 'updateUser'])->name("user-mgmt.update");
     Route::delete("/user-mgmt/{user}", [AdminController::class, 'deleteUser'])->name('user-mgmt.destroy');
+
+    Route::get("/project-mgmt/{client}", [AdminController::class, 'showClientProjects'])->name("client.projects");
 });
 
 

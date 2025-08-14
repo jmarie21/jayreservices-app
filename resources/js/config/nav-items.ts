@@ -13,6 +13,11 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             href: '/user-mgmt',
             icon: UserCog,
         },
+        {
+            title: 'Project Management',
+            href: '/project-mgmt',
+            icon: FolderOpenDot,
+        },
     ],
     client: [
         {
