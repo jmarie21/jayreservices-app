@@ -23,6 +23,13 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/projects',
     },
 ];
+
+const statusLabels: Record<'pending' | 'in_progress' | 'completed', string> = {
+    pending: 'Pending',
+    in_progress: 'In Progress',
+    completed: 'Completed',
+};
+
 const pageProps = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any }>>().props;
 const projects = computed(() => pageProps.projects);
 
@@ -135,7 +142,14 @@ const goToPage = (page: number) => {
                         <TableCell>{{ new Date(project.created_at).toLocaleDateString() }}</TableCell>
 
                         <TableCell
-                            ><Badge>{{ project.status }}</Badge></TableCell
+                            ><Badge
+                                :class="{
+                                    'bg-green-100 text-green-700': project.status === 'completed',
+                                    'bg-yellow-100 text-yellow-700': project.status === 'in_progress',
+                                    'bg-red-200 text-gray-600': project.status === 'pending',
+                                }"
+                                >{{ statusLabels[project.status as 'pending' | 'in_progress' | 'completed'] }}</Badge
+                            ></TableCell
                         >
                         <TableCell>${{ project.total_price }}</TableCell>
                         <TableCell>{{ project.output_link }}</TableCell>
@@ -226,6 +240,6 @@ const goToPage = (page: number) => {
             @close="closeModal"
         />
 
-        <ProjectViewModal v-if="viewProject" :open="showViewModal" :project="viewProject" @close="closeViewModal" />
+        <ProjectViewModal v-if="viewProject" :isOpen="showViewModal" :project="viewProject" @close="closeViewModal" />
     </AppLayout>
 </template>

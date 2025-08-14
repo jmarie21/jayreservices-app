@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
-class AdminController extends Controller
+class UserController extends Controller
 {
     public function index()
     {
@@ -63,16 +63,5 @@ class AdminController extends Controller
         return redirect()->back()->with('message', 'User deleted successfully.');
     }
 
-    public function showClientProjects(User $client)
-    {
-        $projects = $client->projects()
-            ->with(['service', 'editor'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return Inertia::render("admin/ClientProjects", [
-            'client' => $client->only(["id", "name", "email"]),
-            'projects' => $projects
-        ]);
-    }
+    
 }

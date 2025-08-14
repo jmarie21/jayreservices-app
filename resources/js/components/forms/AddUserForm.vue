@@ -54,6 +54,7 @@ const handleSubmit = () => {
                 });
 
                 emit('close');
+                formData.reset();
             },
         });
     } else {
@@ -64,6 +65,7 @@ const handleSubmit = () => {
                     position: 'top-right',
                 });
                 emit('close');
+                formData.reset();
             },
         });
     }

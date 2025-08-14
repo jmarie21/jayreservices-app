@@ -2,7 +2,7 @@
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import type { NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { ChevronDown, ChevronRight } from 'lucide-vue-next';
+import { ChevronDown, ChevronRight, User } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 defineProps<{
@@ -43,6 +43,7 @@ const isActive = (href?: string) => {
                         <SidebarMenuItem v-for="child in item.children" :key="child.title">
                             <SidebarMenuButton as-child :is-active="isActive(child.href)" :tooltip="child.title">
                                 <Link :href="child.href || '#'">
+                                    <User />
                                     <span>{{ child.title }}</span>
                                 </Link>
                             </SidebarMenuButton>
@@ -54,8 +55,10 @@ const isActive = (href?: string) => {
                 <SidebarMenuItem v-else>
                     <SidebarMenuButton as-child :is-active="isActive(item.href)" :tooltip="item.title">
                         <Link :href="item.href || '#'">
-                            <component :is="item.icon" v-if="item.icon" />
-                            <span>{{ item.title }}</span>
+                            <div class="flex items-center gap-2">
+                                <component :is="item.icon" v-if="item.icon" class="h-5 w-5 flex-shrink-0" />
+                                <span>{{ item.title }}</span>
+                            </div>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

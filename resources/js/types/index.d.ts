@@ -56,6 +56,7 @@ export interface Projects {
     editor_id: number | null;
     service_id: number;
     service: Record<string>;
+    editor: Record<string>;
 
     style: string;
     company_name: string;

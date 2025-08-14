@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\ProjectManagement;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Client\ProjectsController;
 use App\Http\Controllers\Client\ServicesController;
 use Illuminate\Support\Facades\Route;
@@ -23,12 +25,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
         return Inertia::render('admin/Dashboard');
     })->name('dashboard');
 
-    Route::get("/user-mgmt", [AdminController::class, 'index'])->name('user-mgmt');
-    Route::post("/user-mgmt", [AdminController::class, 'createNewUser'])->name('user-mgmt.store');
-    Route::put("/user-mgmt/{user}", [AdminController::class, 'updateUser'])->name("user-mgmt.update");
-    Route::delete("/user-mgmt/{user}", [AdminController::class, 'deleteUser'])->name('user-mgmt.destroy');
+    Route::get("/user-mgmt", [UserController::class, 'index'])->name('user-mgmt');
+    Route::post("/user-mgmt", [UserController::class, 'createNewUser'])->name('user-mgmt.store');
+    Route::put("/user-mgmt/{user}", [UserController::class, 'updateUser'])->name("user-mgmt.update");
+    Route::delete("/user-mgmt/{user}", [UserController::class, 'deleteUser'])->name('user-mgmt.destroy');
 
-    Route::get("/project-mgmt/{client}", [AdminController::class, 'showClientProjects'])->name("client.projects");
+    Route::get("/project-mgmt/{client}", [ProjectManagement::class, 'showClientProjects'])->name("client.projects");
+    Route::patch('/projects/{project}', [ProjectManagement::class, 'update'])->name('projects.update');
 });
 
 
