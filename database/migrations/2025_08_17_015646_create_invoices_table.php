@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('date_to')->nullable();
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->string('paypal_link')->nullable();
-            $table->enum('status', ['draft', 'sent', 'paid', 'overdue', 'cancelled'])->default('draft');
+            $table->enum('status', ['pending','sent', 'paid', 'overdue', 'cancelled'])->default('pending');
             $table->timestamps();
         });
     }

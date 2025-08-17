@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId("client_id")->constrained("users")->cascadeOnDelete();
             $table->foreignId("editor_id")->nullable()->constrained("users")->cascadeOnDelete();
             $table->foreignId("service_id")->constrained("services")->cascadeOnDelete();
+            $table->foreignId('invoice_id')->nullable()->constrained('invoices')->cascadeOnDelete();
+
 
             // Basic fields from the form
             $table->string("style");
