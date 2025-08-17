@@ -10,7 +10,7 @@ defineProps<{
 }>();
 
 const page = usePage();
-const expanded = ref<Record<string, boolean>>({}); // track open/close state per menu
+const expanded = ref<Record<string, boolean>>({});
 
 const toggleExpand = (title: string) => {
     expanded.value[title] = !expanded.value[title];

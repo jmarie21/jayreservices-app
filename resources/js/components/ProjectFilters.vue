@@ -44,9 +44,14 @@ const handleStatusChange = (value: any) => {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="todo">To Do</SelectItem>
                     <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="for_qa">For QA</SelectItem>
+                    <SelectItem value="done_qa">Done QA</SelectItem>
+                    <SelectItem value="sent_to_client">Sent to Client</SelectItem>
+                    <SelectItem value="revision">Revision</SelectItem>
+                    <SelectItem value="revision_completed">Revision Completed</SelectItem>
+                    <SelectItem value="backlog">Backlog</SelectItem>
                 </SelectContent>
             </Select>
         </div>

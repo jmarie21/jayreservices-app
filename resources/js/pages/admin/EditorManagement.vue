@@ -15,25 +15,23 @@ import { computed, ref } from 'vue';
 
 type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Project Management', href: '/project-mgmt' }];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Editor Management', href: '/editor-mgmt' }];
 
 const pageProps = usePage<
     AppPageProps<{
-        client: { id: number; name: string; email: string };
+        editor: { id: number; name: string; email: string };
         projects: Paginated<Projects>;
-        editors: { id: number; name: string }[];
         filters?: { status?: string; date_from?: string; date_to?: string; search?: string };
     }>
 >().props;
 
-const { client, editors } = pageProps;
+const { editor } = pageProps;
 const projects = computed(() => pageProps.projects);
 
 const showModal = ref(false);
 const selectedProject = ref<Projects | null>(null);
 
-const form = useForm<{ editor_id: number | null; status: Status }>({
-    editor_id: null,
+const form = useForm<{ status: Status }>({
     status: 'todo',
 });
 
@@ -59,7 +57,7 @@ const closeViewModal = () => {
     selectedProject.value = null;
 };
 
-// Optimistic update for editor/status
+// Optimistic update for status
 const updateProject = <K extends keyof typeof form>(projectId: number, field: K, value: any) => {
     router.patch(
         route('projects.update', projectId),
@@ -76,33 +74,6 @@ const updateProject = <K extends keyof typeof form>(projectId: number, field: K,
     );
 };
 
-// // Format date
-// function formatLocalDate(d: Date) {
-//     const year = d.getFullYear();
-//     const month = String(d.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-//     const day = String(d.getDate()).padStart(2, '0');
-//     return `${year}-${month}-${day}`;
-// }
-
-// // Get current week
-// function getCurrentWeekRange() {
-//     const now = new Date();
-//     const day = now.getDay(); // 0 (Sun) - 6 (Sat)
-
-//     // Start of week = Sunday
-//     const sunday = new Date(now);
-//     sunday.setDate(now.getDate() - day);
-//     sunday.setHours(0, 0, 0, 0);
-
-//     const saturday = new Date(sunday);
-//     saturday.setDate(sunday.getDate() + 6);
-//     saturday.setHours(23, 59, 59, 999);
-
-//     return { date_from: formatLocalDate(sunday), date_to: formatLocalDate(saturday) };
-// }
-
-// const weekRange = getCurrentWeekRange();
-
 // Filters state
 const filters = ref({
     status: pageProps.filters?.status || '',
@@ -114,10 +85,9 @@ const filters = ref({
 // Apply filters
 const applyFilters = (newFilters?: typeof filters.value) => {
     const query = newFilters || filters.value;
-    // Update local filters to keep v-model in sync
     filters.value = { ...filters.value, ...query };
 
-    router.get(route('client.projects', { client: client.id }), filters.value, {
+    router.get(route('editor.projects', { editor: editor.id }), filters.value, {
         preserveScroll: true,
         replace: true,
     });
@@ -125,28 +95,26 @@ const applyFilters = (newFilters?: typeof filters.value) => {
 
 // Pagination with filters
 const goToPage = (pageNumber: number) => {
-    router.get(route('client.projects', { client: client.id }), { ...filters.value, page: pageNumber }, { preserveScroll: true, replace: true });
+    router.get(route('editor.projects', { editor: editor.id }), { ...filters.value, page: pageNumber }, { preserveScroll: true, replace: true });
 };
 </script>
 
 <template>
-    <Head :title="`Projects - ${client.name}`" />
+    <Head :title="`Projects - ${editor.name}`" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
             <div class="mb-2 flex flex-col gap-4">
-                <h1 class="text-3xl font-bold">{{ client.name }}'s Projects</h1>
-                <p class="text-muted-foreground">{{ client.email }}</p>
+                <h1 class="text-3xl font-bold">{{ editor.name }}'s Assigned Projects</h1>
+                <p class="text-muted-foreground">{{ editor.email }}</p>
             </div>
 
             <!-- Filters section -->
             <div class="flex justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <!-- Status & Date filters -->
                 <div class="space-y-2">
                     <Label class="text-xl font-bold">Filter by:</Label>
                     <ProjectFilters :filters="filters" @update:filters="applyFilters" />
                 </div>
 
-                <!-- Search input -->
                 <div class="w-[320px] space-y-2">
                     <Label class="text-xl font-bold">Search project:</Label>
                     <Input v-model="filters.search" type="text" placeholder="Search..." @keyup.enter="applyFilters" />
@@ -159,7 +127,7 @@ const goToPage = (pageNumber: number) => {
                     <TableRow>
                         <TableHead>Project Name</TableHead>
                         <TableHead>Service</TableHead>
-                        <TableHead>Editor</TableHead>
+                        <TableHead>Client</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Total Price</TableHead>
                         <TableHead>Created At</TableHead>
@@ -171,21 +139,7 @@ const goToPage = (pageNumber: number) => {
                     <TableRow>
                         <TableCell>{{ project.project_name }}</TableCell>
                         <TableCell>{{ project.service?.name || 'N/A' }}</TableCell>
-
-                        <!-- Editor Select -->
-                        <TableCell>
-                            <Select :modelValue="project.editor_id" @update:modelValue="(value) => updateProject(project.id, 'editor_id', value)">
-                                <SelectTrigger class="w-[180px]">
-                                    <SelectValue placeholder="Assign an editor" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem :value="null">Unassigned</SelectItem>
-                                    <SelectItem v-for="editor in editors" :key="editor.id" :value="editor.id">
-                                        {{ editor.name }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </TableCell>
+                        <TableCell>{{ project.client?.name || 'N/A' }}</TableCell>
 
                         <!-- Status Select -->
                         <TableCell>

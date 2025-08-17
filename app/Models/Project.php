@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Project extends Model
 {
@@ -48,4 +49,9 @@ class Project extends Model
     {
         return $this->belongsTo(Service::class);
     }
+
+    public function invoices(): BelongsToMany
+{
+    return $this->belongsToMany(Invoice::class, 'invoice_project');
+}
 }

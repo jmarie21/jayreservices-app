@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\EditorManagement;
+use App\Http\Controllers\Admin\InvoiceManagementController;
 use App\Http\Controllers\Admin\ProjectManagement;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Client\ProjectsController;
 use App\Http\Controllers\Client\ServicesController;
+use App\Http\Controllers\Editor\EditorProjectsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -21,8 +24,8 @@ Route::middleware(['auth', 'client'])->group(function () {
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('admin/Dashboard');
+    Route::get('admin-dashboard', function () {
+        return Inertia::render('admin/AdminDashboard');
     })->name('dashboard');
 
     Route::get("/user-mgmt", [UserController::class, 'index'])->name('user-mgmt');
@@ -32,6 +35,19 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get("/project-mgmt/{client}", [ProjectManagement::class, 'showClientProjects'])->name("client.projects");
     Route::patch('/projects/{project}', [ProjectManagement::class, 'update'])->name('projects.update');
+
+    Route::get('/editor-mgmt/{editor}', [EditorManagement::class, 'showEditorProjects'])->name('editor.projects');
+
+    Route::get('/invoice-mgmt', [InvoiceManagementController::class, 'index'])->name('invoice.index');
+});
+
+Route::middleware(['auth', 'editor'])->group(function () {
+    Route::get('editor-dashboard', function () {
+        return Inertia::render('editor/EditorDashboard');
+    })->name('editor-dashboard');
+
+    Route::get('/editor-projects', [EditorProjectsController::class, 'index'])->name('editor.projects.index');
+    Route::patch('/editor-projects/{project}', [EditorProjectsController::class, 'update'])->name('editor.projects.update');
 });
 
 

@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
+import { mapStatusForClient } from '@/utils/statusMapper';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
@@ -24,10 +25,18 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const statusLabels: Record<'pending' | 'in_progress' | 'completed', string> = {
+// Labels for display
+const clientStatusLabels: Record<string, string> = {
     pending: 'Pending',
     in_progress: 'In Progress',
     completed: 'Completed',
+};
+
+// Colors for statuses
+const clientStatusClasses: Record<string, string> = {
+    pending: 'bg-yellow-500 text-white',
+    in_progress: 'bg-blue-500 text-white',
+    completed: 'bg-green-600 text-white',
 };
 
 const pageProps = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any }>>().props;
@@ -141,16 +150,11 @@ const goToPage = (page: number) => {
                         <TableCell>{{ project.style }}</TableCell>
                         <TableCell>{{ new Date(project.created_at).toLocaleDateString() }}</TableCell>
 
-                        <TableCell
-                            ><Badge
-                                :class="{
-                                    'bg-green-100 text-green-700': project.status === 'completed',
-                                    'bg-yellow-100 text-yellow-700': project.status === 'in_progress',
-                                    'bg-red-200 text-gray-600': project.status === 'pending',
-                                }"
-                                >{{ statusLabels[project.status as 'pending' | 'in_progress' | 'completed'] }}</Badge
-                            ></TableCell
-                        >
+                        <TableCell>
+                            <Badge :class="clientStatusClasses[mapStatusForClient(project.status)]">
+                                {{ clientStatusLabels[mapStatusForClient(project.status)] }}
+                            </Badge>
+                        </TableCell>
                         <TableCell>${{ project.total_price }}</TableCell>
                         <TableCell>{{ project.output_link }}</TableCell>
                         <TableCell class="space-x-4">

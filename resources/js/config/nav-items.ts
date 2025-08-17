@@ -1,11 +1,11 @@
 import { NavItem } from '@/types';
-import { ClipboardList, FolderOpenDot, LayoutGrid, UserCog } from 'lucide-vue-next';
+import { Brush, ClipboardList, FolderOpenDot, HandCoins, LayoutGrid, UserCog } from 'lucide-vue-next';
 
 export const allNavItems: { [key: string]: NavItem[] } = {
     admin: [
         {
-            title: 'Dashboard',
-            href: '/dashboard',
+            title: 'Admin Dashboard',
+            href: '/admin-dashboard',
             icon: LayoutGrid,
         },
         {
@@ -17,6 +17,16 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             title: 'Project Management',
             href: '/project-mgmt',
             icon: FolderOpenDot,
+        },
+        {
+            title: 'Editor Management',
+            href: '/editor-mgmt',
+            icon: Brush,
+        },
+        {
+            title: 'Invoice Management',
+            href: '/invoice-mgmt',
+            icon: HandCoins,
         },
     ],
     client: [
@@ -31,11 +41,17 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             icon: FolderOpenDot,
         },
     ],
-    // editor: [
-    //     {
-    //         title: 'Edit Projects',
-    //         href: '/editor/projects',
-    //         icon: LayoutGrid,
-    //     },
-    // ],
+    editor: [
+        {
+            title: 'Editor Dashboard',
+            href: '/editor-dashboard',
+            icon: LayoutGrid,
+        },
+
+        {
+            title: 'Editor Projects',
+            href: '/editor-projects',
+            icon: FolderOpenDot,
+        },
+    ],
 };

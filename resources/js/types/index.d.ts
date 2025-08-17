@@ -40,6 +40,13 @@ type Client = {
     name: string;
 };
 
+type Editor = {
+    id: number;
+    name: string;
+};
+
+type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
+
 export interface Services {
     id: number;
     name: string;
@@ -57,6 +64,7 @@ export interface Projects {
     service_id: number;
     service: Record<string>;
     editor: Record<string>;
+    client: Record<string>;
 
     style: string;
     company_name: string;
@@ -72,7 +80,7 @@ export interface Projects {
     total_price: number;
     output_link?: string;
 
-    status: 'pending' | 'in_progress' | 'completed';
+    status: 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
     extra_fields?: Record<string, any>;
 
     created_at: string; // ISO date

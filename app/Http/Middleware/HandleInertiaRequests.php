@@ -52,6 +52,9 @@ class HandleInertiaRequests extends Middleware
             'clients' => fn () => User::where('role', 'client')
                 ->select('id', 'name')
                 ->get(),
+            'editors' => fn () => User::where('role', 'editor')
+                ->select('id', 'name')
+                ->get(),
             'ziggy' => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
