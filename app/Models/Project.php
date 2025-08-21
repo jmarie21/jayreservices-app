@@ -50,8 +50,9 @@ class Project extends Model
         return $this->belongsTo(Service::class);
     }
 
-    public function invoice(): BelongsTo
+    public function invoices(): BelongsToMany
     {
-        return $this->belongsTo(Invoice::class);
+        return $this->belongsToMany(Invoice::class, 'invoice_project')
+                    ->withTimestamps();
     }
 }

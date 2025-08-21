@@ -83,8 +83,26 @@ export interface Projects {
     status: 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
     extra_fields?: Record<string, any>;
 
-    created_at: string; // ISO date
-    updated_at: string; // ISO date
+    created_at: string;
+    updated_at: string;
+}
+
+// Invoice interface
+export interface Invoice {
+    id: number;
+    client_id: number;
+    client: Client;
+    projects: Projects[];
+    invoice_number: number;
+
+    paypal_link: string;
+    date_from?: string;
+    date_to?: string;
+    total_amount: number;
+
+    status: 'pending' | 'sent' | 'paid' | 'overdue';
+    created_at: string;
+    updated_at: string;
 }
 
 export type BreadcrumbItemType = BreadcrumbItem;
