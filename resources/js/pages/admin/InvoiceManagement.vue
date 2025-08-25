@@ -34,12 +34,16 @@ const dateTo = ref('');
 
 const openEditInvoice = (invoice: Invoice) => {
     selectedInvoice.value = invoice;
+
+    // Pre-fill filters for watcher to fetch projects
+    selectedClient.value = invoice.client_id ?? null;
+    dateFrom.value = invoice.date_from ?? '';
+    dateTo.value = invoice.date_to ?? '';
+
     isModalOpen.value = true;
 };
 
-// Watch filters and fetch projects from backend
-watch([selectedClient, dateFrom, dateTo], ([client, from, to]) => {
-    // Only fetch if client is selected
+watch([selectedClient, dateFrom, dateTo, selectedInvoice], ([client, from, to, invoice]) => {
     if (!client) {
         projects.value = [];
         return;
@@ -51,6 +55,7 @@ watch([selectedClient, dateFrom, dateTo], ([client, from, to]) => {
             client_id: client,
             date_from: from || undefined,
             date_to: to || undefined,
+            invoice_id: invoice?.id || undefined, // ✅ include invoice_id
         },
         {
             preserveState: true,
@@ -66,7 +71,7 @@ watch([selectedClient, dateFrom, dateTo], ([client, from, to]) => {
 const handleUpdateInvoice = (invoice: { client_id: number; paypal_link: string; date_from: string; date_to: string }) => {
     if (!selectedInvoice.value) return;
 
-    router.put(`/invoices/${selectedInvoice.value.id}`, invoice, {
+    router.put(`/invoice-mgmt/${selectedInvoice.value.id}`, invoice, {
         onSuccess: () => {
             isModalOpen.value = false;
             selectedInvoice.value = null;
@@ -79,7 +84,7 @@ const handleUpdateInvoice = (invoice: { client_id: number; paypal_link: string; 
 
 // Handle invoice creation
 const handleCreateInvoice = (invoice: { client_id: number; paypal_link: string; date_from: string; date_to: string }) => {
-    router.post('/invoices', invoice, {
+    router.post('/invoice-mgmt', invoice, {
         onSuccess: () => {
             isModalOpen.value = false;
             selectedClient.value = null;
@@ -147,13 +152,15 @@ const handleCreateInvoice = (invoice: { client_id: number; paypal_link: string; 
             :isOpen="isModalOpen"
             :clients="clients"
             :projects="projects"
-            v-model:selectedClient="selectedClient"
-            v-model:dateFrom="dateFrom"
-            v-model:dateTo="dateTo"
+            :selectedClient="selectedClient"
+            :dateFrom="dateFrom"
+            :dateTo="dateTo"
             :invoice="selectedInvoice"
             @close="isModalOpen = false"
             @createInvoice="handleCreateInvoice"
-            @updateInvoice="handleUpdateInvoice"
+            @update:selectedClient="(val) => (selectedClient = val)"
+            @update:dateFrom="(val) => (dateFrom = val)"
+            @update:dateTo="(val) => (dateTo = val)"
         />
     </AppLayout>
 </template>

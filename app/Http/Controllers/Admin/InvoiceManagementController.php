@@ -15,53 +15,51 @@ class InvoiceManagementController extends Controller
 {
     public function index(Request $request)
     {
-        // Get all clients
         $clients = User::where('role', 'client')->get(['id', 'name']);
-
         $projects = collect();
 
         if ($request->filled('client_id')) {
-            $projectsQuery = Project::with(['service', 'client'])
-                ->where('client_id', $request->client_id);
+            $clientId = $request->client_id;
 
-            // Check if we are editing an invoice
-            $invoiceProjectIds = [];
             if ($request->filled('invoice_id')) {
-                $invoice = Invoice::with('projects')->find($request->invoice_id);
-                if ($invoice) {
-                    $invoiceProjectIds = $invoice->projects->pluck('id')->toArray();
-                }
+                // Editing → include invoice projects + available free projects
+                $invoice = Invoice::with('projects.service', 'projects.client')->find($request->invoice_id);
+
+                $invoiceProjects = $invoice ? $invoice->projects : collect();
+
+                $freeProjects = Project::with(['service', 'client'])
+                    ->where('client_id', $clientId)
+                    ->whereDoesntHave('invoices', function ($q) use ($request) {
+                        $q->where('invoices.id', '!=', $request->invoice_id);
+                    })
+                    ->when($request->filled('date_from'), fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
+                    ->when($request->filled('date_to'), fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+                    ->get();
+
+                // Merge invoice projects + free projects
+                $projects = $invoiceProjects->merge($freeProjects)->unique('id');
+            } else {
+                // Creating → only free projects
+                $projects = Project::with(['service', 'client'])
+                    ->where('client_id', $clientId)
+                    ->whereDoesntHave('invoices')
+                    ->when($request->filled('date_from'), fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
+                    ->when($request->filled('date_to'), fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+                    ->orderBy('created_at', 'desc')
+                    ->get();
             }
-
-            // Only exclude projects that don't have invoices, but include already attached projects
-            $projectsQuery->where(function ($query) use ($invoiceProjectIds) {
-                $query->whereDoesntHave('invoices')
-                    ->orWhereIn('id', $invoiceProjectIds);
-            });
-
-            if ($request->filled('date_from')) {
-                $projectsQuery->whereDate('created_at', '>=', $request->date_from);
-            }
-
-            if ($request->filled('date_to')) {
-                $projectsQuery->whereDate('created_at', '<=', $request->date_to);
-            }
-
-            $projects = $projectsQuery->orderBy('created_at', 'desc')->get();
         }
 
-        // Fetch all invoices with relations
-        $invoices = Invoice::with(['client', 'projects'])
+        $invoices = Invoice::with(['client', 'projects.service', 'projects.client'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         return Inertia::render('admin/InvoiceManagement', [
-            'clients' => $clients,
+            'clients'  => $clients,
             'projects' => $projects,
-            'invoices' => $invoices
+            'invoices' => $invoices,
         ]);
     }
-
 
 
     public function store(Request $request)
@@ -71,11 +69,11 @@ class InvoiceManagementController extends Controller
             'projects' => 'required|array',
             'projects.*' => 'exists:projects,id',
             'paypal_link' => 'nullable|string',
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
+            // 'date_from' => 'date',
+            // 'date_to' => 'date|after_or_equal:date_from',
         ]);
 
-        dd($validated);
+        // dd($validated);
 
         // Generate invoice number
         $invoiceNumber = 'INV-' . strtoupper(Str::random(8));
@@ -96,28 +94,25 @@ class InvoiceManagementController extends Controller
         return redirect()->route('invoice.index')->with('success', 'Invoice created successfully.');
     }
 
-
-
     public function update(Request $request, Invoice $invoice)
     {
         $request->validate([
             'client_id' => 'required|exists:users,id',
-            'paypal_link' => 'nullable|url',
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
+            'paypal_link' => 'nullable|string',
+            // 'date_from' => 'required|date',
+            // 'date_to' => 'required|date|after_or_equal:date_from',
             'projects' => 'required|array',
             'projects.*' => 'exists:projects,id',
         ]);
 
-        // Update basic invoice fields
         $invoice->update([
             'client_id' => $request->client_id,
             'paypal_link' => $request->paypal_link,
             'date_from' => $request->date_from,
             'date_to' => $request->date_to,
+            'total_amount' => Project::whereIn('id', $request->projects)->sum('total_price'),
         ]);
 
-        // Sync projects (will update pivot table)
         $invoice->projects()->sync($request->projects);
 
         return redirect()->route('invoice.index')

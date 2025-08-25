@@ -48,9 +48,6 @@ watch(
             form.date_from = invoice.date_from ?? '';
             form.date_to = invoice.date_to ?? '';
             form.projects = invoice.projects.map((p: any) => (typeof p === 'number' ? p : p.id));
-
-            // Fetch projects for the invoice client
-            updateFilters();
         } else {
             form.client_id = props.selectedClient ?? null;
             form.paypal_link = '';
@@ -66,7 +63,7 @@ watch(
     () => form.client_id,
     (val) => {
         emit('update:selectedClient', val);
-        updateFilters(); // fetch projects for new client
+        // updateFilters(); // fetch projects for new client
     },
 );
 
@@ -82,7 +79,7 @@ watch(
     () => form.date_from,
     (val) => {
         emit('update:dateFrom', val);
-        updateFilters();
+        // updateFilters();
     },
 );
 
@@ -90,24 +87,25 @@ watch(
     () => form.date_to,
     (val) => {
         emit('update:dateTo', val);
-        updateFilters();
+        // updateFilters();
     },
 );
 
-const updateFilters = () => {
-    router.get(
-        route('invoice.index'),
-        {
-            client_id: form.client_id, // ✅ use form.client_id
-            date_from: form.date_from,
-            date_to: form.date_to,
-        },
-        {
-            preserveState: true,
-            replace: true,
-        },
-    );
-};
+// const updateFilters = () => {
+//     router.get(
+//         route('invoice.index'),
+//         {
+//             client_id: form.client_id, // ✅ use form.client_id
+//             date_from: form.date_from,
+//             date_to: form.date_to,
+//             invoice_id: props.invoice?.id ?? null, // ✅ include invoice_id when editing
+//         },
+//         {
+//             preserveState: true,
+//             replace: true,
+//         },
+//     );
+// };
 
 // --- Submit handler ---
 const handleSubmit = () => {
@@ -117,6 +115,8 @@ const handleSubmit = () => {
             onSuccess: () => {
                 toast('Invoice updated successfully!', { position: 'top-right' });
                 emit('close');
+                form.reset();
+                router.replace(route('invoice.index'));
             },
         });
     } else {
@@ -125,6 +125,8 @@ const handleSubmit = () => {
                 toast('Invoice created successfully!', { position: 'top-right' });
                 emit('close');
                 console.log(form);
+                form.reset();
+                router.replace(route('invoice.index'));
             },
         });
     }
