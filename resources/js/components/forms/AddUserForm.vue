@@ -120,7 +120,10 @@ const handleSubmit = () => {
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit">{{ props.user ? 'Save Changes' : 'Add User' }}</Button>
+                    <Button type="submit" :disabled="formData.processing">
+                        <span v-if="formData.processing" class="mr-2 animate-spin">⏳</span>
+                        {{ props.user ? 'Save Changes' : 'Add User' }}
+                    </Button>
                 </DialogFooter>
             </form>
         </DialogContent>

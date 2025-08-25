@@ -27,6 +27,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const page = usePage<AppPageProps<{ users: User[] }>>();
 const users = computed(() => page.props.users);
 
+const loading = ref(false);
 const selectedUser = ref<User | null>(null);
 const showForm = ref(false);
 const showDeleteModal = ref(false);

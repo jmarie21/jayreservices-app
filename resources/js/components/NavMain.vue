@@ -28,7 +28,12 @@ const isActive = (href?: string) => {
             <template v-for="item in items" :key="item.title">
                 <!-- Dropdown Parent -->
                 <SidebarMenuItem v-if="item.children && item.children.length">
-                    <SidebarMenuButton as-child :is-active="isActive(item.href)" :tooltip="item.title" @click="toggleExpand(item.title)">
+                    <!-- Only toggle expand; do not navigate -->
+                    <SidebarMenuButton
+                        :is-active="isActive(item.href) || item.children.some((c) => isActive(c.href))"
+                        :tooltip="item.title"
+                        @click.prevent="toggleExpand(item.title)"
+                    >
                         <div class="flex w-full cursor-pointer items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <component :is="item.icon" v-if="item.icon" />
@@ -38,7 +43,7 @@ const isActive = (href?: string) => {
                         </div>
                     </SidebarMenuButton>
 
-                    <!-- Children (collapsible) -->
+                    <!-- Children -->
                     <SidebarMenu v-show="expanded[item.title]" class="pl-6">
                         <SidebarMenuItem v-for="child in item.children" :key="child.title">
                             <SidebarMenuButton as-child :is-active="isActive(child.href)" :tooltip="child.title">
@@ -51,7 +56,7 @@ const isActive = (href?: string) => {
                     </SidebarMenu>
                 </SidebarMenuItem>
 
-                <!-- Normal Menu Items -->
+                <!-- Normal Menu Items (no children) -->
                 <SidebarMenuItem v-else>
                     <SidebarMenuButton as-child :is-active="isActive(item.href)" :tooltip="item.title">
                         <Link :href="item.href || '#'">

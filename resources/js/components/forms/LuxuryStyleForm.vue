@@ -431,6 +431,7 @@ const handleSubmit = () => {
                     <div class="mt-8 text-xl font-semibold">Total: ${{ Number(form.total_price).toFixed(2) }}</div>
                     <div class="mt-8 flex justify-end">
                         <Button type="submit" :disabled="form.processing">
+                            <span v-if="form.processing" class="mr-2 animate-spin">⏳</span>
                             {{ props.project ? 'Save Changes' : 'Place Order' }}
                         </Button>
                     </div>

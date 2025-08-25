@@ -243,6 +243,7 @@ const handleSubmit = () => {
             <DialogFooter class="mt-6">
                 <Button variant="outline" @click="emit('close')">Cancel</Button>
                 <Button type="button" @click="handleSubmit" :disabled="form.processing">
+                    <span v-if="form.processing" class="mr-2 animate-spin">⏳</span>
                     {{ props.invoice ? 'Save Changes' : 'Create Invoice' }}
                 </Button>
             </DialogFooter>
