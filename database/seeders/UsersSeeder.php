@@ -21,17 +21,6 @@ class UsersSeeder extends Seeder
             'role' => 'admin',
         ]);
 
-        // Editors
-        $editors = ['nami', 'penny', 'christian'];
-        foreach ($editors as $editor) {
-            User::create([
-                'name' => ucfirst($editor),
-                'email' => $editor . '@gmail.com',
-                'password' => 'password',
-                'role' => 'editor',
-            ]);
-        }
-
         // Clients
         $clients = ['merose', 'jomari'];
         foreach ($clients as $client) {

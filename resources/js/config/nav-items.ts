@@ -15,12 +15,12 @@ export const allNavItems: { [key: string]: NavItem[] } = {
         },
         {
             title: 'Project Management',
-            href: '/project-mgmt',
+            href: undefined,
             icon: FolderOpenDot,
         },
         {
             title: 'Editor Management',
-            href: '/editor-mgmt',
+            href: undefined,
             icon: Brush,
         },
         {

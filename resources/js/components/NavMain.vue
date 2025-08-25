@@ -28,7 +28,6 @@ const isActive = (href?: string) => {
             <template v-for="item in items" :key="item.title">
                 <!-- Dropdown Parent -->
                 <SidebarMenuItem v-if="item.children && item.children.length">
-                    <!-- Only toggle expand; do not navigate -->
                     <SidebarMenuButton
                         :is-active="isActive(item.href) || item.children.some((c) => isActive(c.href))"
                         :tooltip="item.title"
