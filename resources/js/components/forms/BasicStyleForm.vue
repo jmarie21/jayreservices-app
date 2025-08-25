@@ -99,7 +99,7 @@ const handleSubmit = () => {
     if (isEditing) {
         form.put(route('projects.update', props.project!.id), {
             onSuccess: () => {
-                toast('Updated successfully!', {
+                toast.success('Updated successfully!', {
                     description: 'Your order was updated successfully!',
                     position: 'top-right',
                 });
@@ -113,7 +113,7 @@ const handleSubmit = () => {
     } else {
         form.post(route('projects.store'), {
             onSuccess: () => {
-                toast('Order placed', {
+                toast.success('Order placed', {
                     description: 'Your order has been placed.',
                     position: 'top-right',
                 });

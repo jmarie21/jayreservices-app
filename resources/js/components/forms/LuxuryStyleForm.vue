@@ -227,7 +227,7 @@ const handleSubmit = () => {
         // Use transform to send clean data
         form.transform(() => submitData).put(route('projects.update', props.project!.id), {
             onSuccess: () => {
-                toast('Updated successfully!', {
+                toast.success('Updated successfully!', {
                     description: 'Your order was updated successfully!',
                     position: 'top-right',
                 });
@@ -242,7 +242,7 @@ const handleSubmit = () => {
         // Use transform to send clean data
         form.transform(() => submitData).post(route('projects.store'), {
             onSuccess: () => {
-                toast('Order placed', {
+                toast.success('Order placed', {
                     description: 'Your order has been placed.',
                     position: 'top-right',
                 });
