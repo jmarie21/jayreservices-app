@@ -197,6 +197,7 @@ const goToPage = (pageNumber: number) => {
                                 <TableHead>Invoice #</TableHead>
                                 <TableHead>Client</TableHead>
                                 <TableHead>Created At</TableHead>
+                                <TableHead>Total Price</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Action</TableHead>
                             </TableRow>
@@ -207,6 +208,7 @@ const goToPage = (pageNumber: number) => {
                                 <TableCell>{{ invoice.invoice_number }}</TableCell>
                                 <TableCell>{{ invoice.client?.name ?? 'N/A' }}</TableCell>
                                 <TableCell>{{ new Date(invoice.created_at).toLocaleDateString() }}</TableCell>
+                                <TableCell>${{ invoice.total_amount ?? 'N/A' }}</TableCell>
                                 <TableCell>
                                     <Badge :class="getStatusBadgeClass(invoice.status)">
                                         {{ invoice.status }}
