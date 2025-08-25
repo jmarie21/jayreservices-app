@@ -39,8 +39,8 @@ const clientStatusClasses: Record<string, string> = {
     completed: 'bg-green-600 text-white',
 };
 
-const pageProps = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any }>>().props;
-const projects = computed(() => pageProps.projects);
+const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any }>>();
+const projects = computed(() => page.props.projects);
 
 const showModal = ref(false);
 const showViewModal = ref(false);
@@ -75,10 +75,10 @@ const closeViewModal = () => {
 // };
 
 const filters = ref({
-    status: pageProps.filters?.status || '',
-    date_from: pageProps.filters?.date_from || '',
-    date_to: pageProps.filters?.date_to || '',
-    search: pageProps.filters?.search || '',
+    status: page.props.filters?.status || '',
+    date_from: page.props.filters?.date_from || '',
+    date_to: page.props.filters?.date_to || '',
+    search: page.props.filters?.search || '',
 });
 
 const applyFilters = (newFilters: typeof filters.value) => {
