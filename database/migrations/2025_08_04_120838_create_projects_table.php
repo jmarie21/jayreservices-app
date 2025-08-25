@@ -36,7 +36,18 @@ return new class extends Migration
             // Status, pricing, output
             $table->decimal("total_price", 10, 2);
             $table->string("output_link")->nullable();
-            $table->enum("status", ["pending", "in_progress", "completed"])->default("pending");
+            $table->enum("status", [
+                "pending",
+                "in_progress",
+                "completed",
+                "todo",
+                "backlog",
+                "for_qa",
+                "done_qa",
+                "sent_to_client",
+                "revision",
+                "revision_completed"
+            ])->default("pending");
 
             // Optional JSON for premium/luxury extras
             $table->json("extra_fields")->nullable();
