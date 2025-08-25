@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { Invoice, Projects } from '@/types';
 import { router, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import { toast } from 'vue-sonner';
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
@@ -24,6 +23,11 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'createInvoice', 'update:selectedClient', 'update:dateFrom', 'update:dateTo']);
 
+const formatDate = (date: string | undefined | null) => {
+    if (!date) return '';
+    return new Date(date).toISOString().split('T')[0]; // YYYY-MM-DD
+};
+
 // Only local state for PayPal link
 const paypalLink = ref('');
 
@@ -31,8 +35,8 @@ const paypalLink = ref('');
 const form = useForm({
     client_id: props.invoice?.client_id ?? props.selectedClient ?? null,
     paypal_link: props.invoice?.paypal_link ?? '',
-    date_from: props.invoice?.date_from ?? props.dateFrom,
-    date_to: props.invoice?.date_to ?? props.dateTo,
+    date_from: formatDate(props.invoice?.date_from ?? props.dateFrom),
+    date_to: formatDate(props.invoice?.date_to ?? props.dateTo),
     projects: props.invoice
         ? props.invoice.projects.map((p: any) => (typeof p === 'number' ? p : p.id)) // ✅ IDs only
         : [],
@@ -45,14 +49,14 @@ watch(
         if (invoice) {
             form.client_id = invoice.client_id;
             form.paypal_link = invoice.paypal_link ?? '';
-            form.date_from = invoice.date_from ?? '';
-            form.date_to = invoice.date_to ?? '';
+            form.date_from = formatDate(invoice.date_from);
+            form.date_to = formatDate(invoice.date_to);
             form.projects = invoice.projects.map((p: any) => (typeof p === 'number' ? p : p.id));
         } else {
             form.client_id = props.selectedClient ?? null;
             form.paypal_link = '';
-            form.date_from = props.dateFrom;
-            form.date_to = props.dateTo;
+            form.date_from = formatDate(props.dateFrom);
+            form.date_to = formatDate(props.dateTo);
             form.projects = [];
         }
     },
@@ -113,7 +117,6 @@ const handleSubmit = () => {
     if (isEditing) {
         form.put(route('invoice.update', props.invoice!.id), {
             onSuccess: () => {
-                toast('Invoice updated successfully!', { position: 'top-right' });
                 emit('close');
                 form.reset();
                 router.replace(route('invoice.index'));
@@ -122,7 +125,6 @@ const handleSubmit = () => {
     } else {
         form.post(route('invoice.store'), {
             onSuccess: () => {
-                toast('Invoice created successfully!', { position: 'top-right' });
                 emit('close');
                 console.log(form);
                 form.reset();

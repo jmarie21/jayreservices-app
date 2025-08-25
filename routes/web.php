@@ -39,7 +39,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/editor-mgmt/{editor}', [EditorManagement::class, 'showEditorProjects'])->name('editor.projects');
 
     Route::get('/invoice-mgmt', [InvoiceManagementController::class, 'index'])->name('invoice.index');
+    Route::get('/invoice-mgmt/{invoice}/view', [InvoiceManagementController::class, 'view'])->name('invoice.view');
     Route::post('/invoice-mgmt', [InvoiceManagementController::class, 'store'])->name('invoice.store');
+    Route::post('invoice-mgmt/{invoice}/send', [InvoiceManagementController::class, 'send'])->name('invoice.send');
     Route::put('/invoice-mgmt/{invoice}', [InvoiceManagementController::class, 'update'])->name('invoice.update');
 });
 

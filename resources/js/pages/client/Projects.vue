@@ -15,7 +15,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { mapStatusForClient } from '@/utils/statusMapper';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -115,6 +115,7 @@ const goToPage = (page: number) => {
             <!-- Page header -->
             <div class="mb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h1 class="text-3xl font-bold">My Projects</h1>
+                <Button><Link href="/services">Add new project</Link></Button>
             </div>
 
             <!-- Filters section -->

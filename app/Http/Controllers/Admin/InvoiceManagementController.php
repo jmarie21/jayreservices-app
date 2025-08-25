@@ -6,8 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 
@@ -50,9 +54,11 @@ class InvoiceManagementController extends Controller
             }
         }
 
+
         $invoices = Invoice::with(['client', 'projects.service', 'projects.client'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10)
+            ->withQueryString(); // keeps filters & page in URL
 
         return Inertia::render('admin/InvoiceManagement', [
             'clients'  => $clients,
@@ -69,8 +75,8 @@ class InvoiceManagementController extends Controller
             'projects' => 'required|array',
             'projects.*' => 'exists:projects,id',
             'paypal_link' => 'nullable|string',
-            // 'date_from' => 'date',
-            // 'date_to' => 'date|after_or_equal:date_from',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);
 
         // dd($validated);
@@ -119,4 +125,47 @@ class InvoiceManagementController extends Controller
             ->with('success', 'Invoice updated successfully.');
     }
 
+    public function view(Invoice $invoice)
+    {
+        // Load relationships if needed
+        $invoice->load(['client', 'projects']);
+
+        // Render PDF view
+        $pdf = Pdf::loadView('emails.invoice', compact('invoice'));
+
+        return $pdf->stream("invoice-{$invoice->invoice_number}.pdf");
+    }
+
+    public function send(Invoice $invoice)
+    {
+        $client = $invoice->client;
+        $user = Auth::user();
+
+        if (!$client || !$client->email) {
+            return back()->withErrors('Client email not found.');
+        }
+
+        $pdf = Pdf::loadView('emails.invoice', compact('invoice'));
+
+        try {
+            Mail::send([], [], function ($message) use ($client, $pdf, $invoice, $user) {
+                $message->to($client->email)
+                        ->subject("Invoice #{$invoice->invoice_number}")
+                        ->from($user->email, $user->name)
+                        ->attachData($pdf->output(), "invoice-{$invoice->invoice_number}.pdf")
+                        ->text("Hello {$client->name},\n\nPlease find attached your invoice #{$invoice->invoice_number}. Thank you for your business.\n\nBest regards,\n{$user->name}");
+            });
+
+            // ✅ Update invoice status to "sent"
+            $invoice->update(['status' => 'sent']);
+
+            return back()->with('success', 'Invoice sent successfully and status updated.');
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error("Failed to send invoice #{$invoice->invoice_number}: " . $e->getMessage());
+
+            // Optionally, you can notify the user in a friendly way
+            return back()->withErrors("Failed to send invoice. Error: {$e->getMessage()}");
+        }
+    }
 }

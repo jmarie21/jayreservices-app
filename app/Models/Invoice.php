@@ -15,6 +15,8 @@ class Invoice extends Model
         'total_amount',
         'paypal_link',
         'status',
+        'date_from',
+        'date_to',
     ];
 
     protected $casts = [
