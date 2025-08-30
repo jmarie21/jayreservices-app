@@ -42,11 +42,11 @@ export const allNavItems: { [key: string]: NavItem[] } = {
         },
     ],
     editor: [
-        {
-            title: 'Editor Dashboard',
-            href: '/editor-dashboard',
-            icon: LayoutGrid,
-        },
+        // {
+        //     title: 'Editor Dashboard',
+        //     href: '/editor-dashboard',
+        //     icon: LayoutGrid,
+        // },
 
         {
             title: 'Editor Projects',

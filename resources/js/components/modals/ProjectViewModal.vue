@@ -68,7 +68,7 @@ const comments = ref([
                                 <span class="text-base font-semibold">{{ project.service?.name }}</span>
                             </div>
 
-                            <div v-if="role !== 'client'" class="flex items-center justify-between">
+                            <div v-if="role === 'admin'" class="flex items-center justify-between">
                                 <span class="text-sm font-medium text-gray-500">Editor</span>
                                 <span class="text-base font-semibold">{{ project.editor?.name || 'Unassigned' }}</span>
                             </div>
