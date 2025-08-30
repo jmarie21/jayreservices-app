@@ -62,8 +62,8 @@ class InvoiceMail extends Mailable implements ShouldQueue
         $pdf = Pdf::loadView('emails.invoice', ['invoice' => $this->invoice]);
 
         return [
-            Attachment::fromData($pdf->output(), "invoice-{$this->invoice->invoice_number}.pdf")
-                      ->withMime('application/pdf'),
+            Attachment::fromData(fn () => $pdf->output(), "invoice-{$this->invoice->invoice_number}.pdf")
+                    ->withMime('application/pdf'),
         ];
     }
 }
