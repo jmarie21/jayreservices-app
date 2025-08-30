@@ -97,7 +97,7 @@ const handleSubmit = () => {
     const isEditing = !!props.project;
 
     if (isEditing) {
-        form.put(route('projects.update', props.project!.id), {
+        form.put(route('projects.client_update', props.project!.id), {
             onSuccess: () => {
                 toast.success('Updated successfully!', {
                     description: 'Your order was updated successfully!',

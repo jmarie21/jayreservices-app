@@ -221,7 +221,7 @@ const handleSubmit = () => {
 
     if (isEditing) {
         // Use transform to send clean data
-        form.transform(() => submitData).put(route('projects.update', props.project!.id), {
+        form.transform(() => submitData).put(route('projects.client_update', props.project!.id), {
             onSuccess: () => {
                 toast.success('Updated successfully!', {
                     description: 'Your order was updated successfully!',

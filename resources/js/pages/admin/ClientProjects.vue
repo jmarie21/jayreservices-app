@@ -71,7 +71,7 @@ const closeViewModal = () => {
 // Optimistic update for editor/status
 const updateProject = <K extends keyof typeof form>(projectId: number, field: K, value: any) => {
     router.patch(
-        route('projects.update', projectId),
+        route('projects.admin_update', projectId),
         { [field]: value },
         {
             preserveScroll: true,
