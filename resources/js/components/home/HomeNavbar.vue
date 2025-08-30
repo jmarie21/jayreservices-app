@@ -8,7 +8,10 @@ import { Button } from '../ui/button';
         <nav className="fixed top-0 left-0 z-50 w-full bg-white shadow">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
                 <!-- Logo -->
-                <div className="text-2xl font-bold text-gray-800">JayRE</div>
+                <div class="flex items-center">
+                    <!-- <img src="/jayreblack.png" alt="JayRE Logo" class="h-14 w-auto" /> -->
+                    <span class="text-2xl font-bold">JayRE</span>
+                </div>
 
                 <!-- Buttons -->
                 <div className="space-x-4">
@@ -16,9 +19,9 @@ import { Button } from '../ui/button';
                         <Link href="/login">Login</Link>
                     </Button>
 
-                    <Button variant="outline">
+                    <!-- <Button variant="outline">
                         <Link href="/register">Signup</Link>
-                    </Button>
+                    </Button> -->
                 </div>
             </div>
         </nav>
