@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\EditorManagement;
 use App\Http\Controllers\Admin\InvoiceManagementController;
 use App\Http\Controllers\Admin\ProjectManagement;
@@ -24,9 +25,7 @@ Route::middleware(['auth', 'client'])->group(function () {
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('admin-dashboard', function () {
-        return Inertia::render('admin/AdminDashboard');
-    })->name('dashboard');
+    Route::get('/admin-dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::get("/user-mgmt", [UserController::class, 'index'])->name('user-mgmt');
     Route::post("/user-mgmt", [UserController::class, 'createNewUser'])->name('user-mgmt.store');
