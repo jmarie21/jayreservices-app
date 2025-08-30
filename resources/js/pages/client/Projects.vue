@@ -163,7 +163,7 @@ const goToPage = (page: number) => {
                         <TableCell>${{ project.total_price }}</TableCell>
                         <TableCell>{{ project.output_link }}</TableCell>
                         <TableCell class="space-x-4">
-                            <Button @click="openEditModal(project)">Edit</Button>
+                            <Button @click="openEditModal(project)" :disabled="mapStatusForClient(project.status) === 'completed'"> Edit </Button>
                             <Button @click="openViewModal(project)">View order</Button>
                         </TableCell>
                     </TableRow>
