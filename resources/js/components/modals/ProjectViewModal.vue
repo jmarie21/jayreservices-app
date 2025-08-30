@@ -115,12 +115,20 @@ const comments = ref([
 
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-medium text-gray-500">Created</span>
-                                <span class="text-base">{{ new Date(project.created_at).toLocaleString() }}</span>
+                                <span class="text-base">
+                                    {{
+                                        new Date(project.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                                    }}
+                                </span>
                             </div>
 
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-medium text-gray-500">Last Updated</span>
-                                <span class="text-base">{{ new Date(project.updated_at).toLocaleString() }}</span>
+                                <span class="text-base">
+                                    {{
+                                        new Date(project.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                                    }}
+                                </span>
                             </div>
                         </div>
 

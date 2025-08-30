@@ -257,6 +257,12 @@ const goToPage = (pageNumber: number) => {
             </div>
         </div>
 
-        <ProjectViewModal v-if="selectedProject" :isOpen="showModal" :project="selectedProject" @close="closeViewModal" />
+        <ProjectViewModal
+            v-if="selectedProject"
+            :isOpen="showModal"
+            :project="selectedProject"
+            :role="pageProps.auth.user.role"
+            @close="closeViewModal"
+        />
     </AppLayout>
 </template>
