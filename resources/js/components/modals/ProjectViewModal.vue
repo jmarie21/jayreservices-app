@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -186,13 +185,13 @@ const comments = ref([
                 </div>
 
                 <!-- Right Column: Comments -->
-                <div class="flex w-[350px] flex-col border-l bg-white">
+                <!-- <div class="flex w-[350px] flex-col border-l bg-white">
                     <div class="border-b p-4">
                         <h3 class="text-lg font-semibold">Comments</h3>
-                    </div>
+                    </div> -->
 
-                    <!-- Scrollable comments area -->
-                    <ScrollArea class="min-h-0 flex-1 p-4">
+                <!-- Scrollable comments area -->
+                <!-- <ScrollArea class="min-h-0 flex-1 p-4">
                         <div class="space-y-4">
                             <div v-for="comment in comments" :key="comment.id" class="flex items-start space-x-3">
                                 <Avatar class="h-8 w-8">
@@ -206,14 +205,14 @@ const comments = ref([
                                 </div>
                             </div>
                         </div>
-                    </ScrollArea>
+                    </ScrollArea> -->
 
-                    <!-- New comment input -->
-                    <div class="flex items-center space-x-2 border-t p-4">
+                <!-- New comment input -->
+                <!-- <div class="flex items-center space-x-2 border-t p-4">
                         <Input v-model="newComment" placeholder="Write a comment..." class="flex-1" />
                         <Button size="sm">Send</Button>
                     </div>
-                </div>
+                </div>-->
             </div>
         </DialogContent>
     </Dialog>
