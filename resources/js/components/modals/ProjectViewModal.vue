@@ -11,6 +11,7 @@ const props = defineProps<{
     isOpen: boolean;
     onClose: () => void;
     project: import('@/types').Projects;
+    role: 'client' | 'editor' | 'admin';
 }>();
 
 const statusLabels: Record<'pending' | 'in_progress' | 'completed', string> = {
@@ -48,7 +49,7 @@ const comments = ref([
                                 <span class="text-base font-semibold">{{ project.service?.name }}</span>
                             </div>
 
-                            <div class="flex items-center justify-between">
+                            <div v-if="role !== 'client'" class="flex items-center justify-between">
                                 <span class="text-sm font-medium text-gray-500">Editor</span>
                                 <span class="text-base font-semibold">{{ project.editor?.name || 'Unassigned' }}</span>
                             </div>
