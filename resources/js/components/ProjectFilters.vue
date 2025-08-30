@@ -10,7 +10,7 @@ interface Props {
         date_from?: string;
         date_to?: string;
     };
-    role?: 'admin' | 'client';
+    role?: 'admin' | 'editor' | 'client';
 }
 
 const props = defineProps<Props>();
@@ -44,7 +44,8 @@ const handleStatusChange = (value: any) => {
                     <SelectItem value="all">All Statuses</SelectItem>
 
                     <!-- Admin sees raw statuses -->
-                    <template v-if="props.role === 'admin'">
+                    <!-- Admin & Editor see raw statuses -->
+                    <template v-if="props.role === 'admin' || props.role === 'editor'">
                         <SelectItem value="todo">To Do</SelectItem>
                         <SelectItem value="in_progress">In Progress</SelectItem>
                         <SelectItem value="for_qa">For QA</SelectItem>

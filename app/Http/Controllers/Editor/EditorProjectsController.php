@@ -42,13 +42,24 @@ class EditorProjectsController extends Controller
 
     public function update(Request $request, Project $project)
     {
+        // Ensure only editors assigned to the project can update it
+        if ($request->user()->id !== $project->editor_id) {
+            abort(403, 'Unauthorized');
+        }
+
         $validated = $request->validate([
             'editor_id' => 'nullable|exists:users,id',
             'status' => 'nullable|string',
+            'output_link' => 'nullable|string',
         ]);
+
+        if (!empty($validated['output_link']) && !preg_match('/^https?:\/\//', $validated['output_link'])) {
+            $validated['output_link'] = 'https://' . $validated['output_link'];
+        }
 
         $project->update($validated);
 
         return back()->with('success', 'Project updated successfully.');
     }
+
 }

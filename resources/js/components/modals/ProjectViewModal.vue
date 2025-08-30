@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { mapStatusForClient } from '@/utils/statusMapper';
+import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const props = defineProps<{
@@ -21,6 +22,24 @@ const statusLabels: Record<'pending' | 'in_progress' | 'completed', string> = {
 };
 
 const mappedStatus = computed(() => mapStatusForClient(props.project.status));
+
+const outputLink = ref(props.project.output_link || '');
+
+const saveOutputLink = () => {
+    if (!outputLink.value) return;
+
+    router.patch(
+        route('editor.projects.update', props.project.id),
+        { output_link: outputLink.value },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                props.project.output_link = outputLink.value; // update local view
+            },
+        },
+    );
+};
 
 const newComment = ref('');
 const comments = ref([
@@ -132,6 +151,12 @@ const comments = ref([
                             </div>
                         </div>
 
+                        <!-- Notes -->
+                        <div class="mb-4 rounded-xl bg-white p-5 shadow">
+                            <h1 class="text-lg font-bold">Notes</h1>
+                            <p class="whitespace-pre-line text-gray-700">{{ project.notes || 'No notes available.' }}</p>
+                        </div>
+
                         <!-- Links Section -->
                         <div class="mb-4 space-y-4 rounded-xl bg-white p-5 shadow">
                             <h1 class="text-lg font-bold">Links</h1>
@@ -150,12 +175,12 @@ const comments = ref([
                             >
                                 🎬 Finished Output
                             </a>
-                        </div>
 
-                        <!-- Notes -->
-                        <div class="mb-4 rounded-xl bg-white p-5 shadow">
-                            <h1 class="text-lg font-bold">Notes</h1>
-                            <p class="whitespace-pre-line text-gray-700">{{ project.notes || 'No notes available.' }}</p>
+                            <!-- Editor Upload Output Link -->
+                            <div v-if="role === 'editor'" class="space-y-2">
+                                <Input v-model="outputLink" placeholder="Paste output link..." />
+                                <Button class="w-full" @click="saveOutputLink">Upload Output Link</Button>
+                            </div>
                         </div>
                     </ScrollArea>
                 </div>
@@ -186,7 +211,7 @@ const comments = ref([
                     <!-- New comment input -->
                     <div class="flex items-center space-x-2 border-t p-4">
                         <Input v-model="newComment" placeholder="Write a comment..." class="flex-1" />
-                        <Button size="sm" @click="addComment">Send</Button>
+                        <Button size="sm">Send</Button>
                     </div>
                 </div>
             </div>

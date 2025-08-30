@@ -26,6 +26,15 @@ const pageProps = usePage<
     }>
 >().props;
 
+const page = usePage<
+    AppPageProps<{
+        client: { id: number; name: string; email: string };
+        projects: Paginated<Projects>;
+        editors: { id: number; name: string }[];
+        filters?: { status?: string; date_from?: string; date_to?: string; search?: string };
+    }>
+>();
+
 const { client, editors } = pageProps;
 const projects = computed(() => pageProps.projects);
 
@@ -261,7 +270,7 @@ const goToPage = (pageNumber: number) => {
             v-if="selectedProject"
             :isOpen="showModal"
             :project="selectedProject"
-            :role="pageProps.auth.user.role"
+            :role="page.props.auth.user.role"
             @close="closeViewModal"
         />
     </AppLayout>

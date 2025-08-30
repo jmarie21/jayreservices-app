@@ -25,6 +25,15 @@ const pageProps = usePage<
     }>
 >().props;
 
+const page = usePage<
+    AppPageProps<{
+        client: { id: number; name: string; email: string };
+        projects: Paginated<Projects>;
+        editors: { id: number; name: string }[];
+        filters?: { status?: string; date_from?: string; date_to?: string; search?: string };
+    }>
+>();
+
 const { editor } = pageProps;
 const projects = computed(() => pageProps.projects);
 
@@ -107,7 +116,11 @@ const goToPage = (pageNumber: number) => {
             <div class="flex justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <div class="space-y-2">
                     <Label class="text-xl font-bold">Filter by:</Label>
-                    <ProjectFilters :filters="filters" @update:filters="applyFilters" />
+                    <ProjectFilters
+                        :filters="filters"
+                        :role="page.props.auth.user.role === 'client' ? 'client' : 'admin'"
+                        @update:filters="applyFilters"
+                    />
                 </div>
 
                 <div class="w-[320px] space-y-2">
@@ -206,6 +219,12 @@ const goToPage = (pageNumber: number) => {
             </div>
         </div>
 
-        <ProjectViewModal v-if="selectedProject" :isOpen="showModal" :project="selectedProject" @close="closeViewModal" />
+        <ProjectViewModal
+            v-if="selectedProject"
+            :isOpen="showModal"
+            :project="selectedProject"
+            :role="page.props.auth.user.role"
+            @close="closeViewModal"
+        />
     </AppLayout>
 </template>
