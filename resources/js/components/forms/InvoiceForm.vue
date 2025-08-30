@@ -34,7 +34,7 @@ const paypalLink = ref('');
 // --- Invoice form ---
 const form = useForm({
     client_id: props.invoice?.client_id ?? props.selectedClient ?? null,
-    paypal_link: props.invoice?.paypal_link ?? '',
+    // paypal_link: props.invoice?.paypal_link ?? '',
     date_from: formatDate(props.invoice?.date_from ?? props.dateFrom),
     date_to: formatDate(props.invoice?.date_to ?? props.dateTo),
     projects: props.invoice
@@ -48,13 +48,13 @@ watch(
     (invoice) => {
         if (invoice) {
             form.client_id = invoice.client_id;
-            form.paypal_link = invoice.paypal_link ?? '';
+            // form.paypal_link = invoice.paypal_link ?? '';
             form.date_from = formatDate(invoice.date_from);
             form.date_to = formatDate(invoice.date_to);
             form.projects = invoice.projects.map((p: any) => (typeof p === 'number' ? p : p.id));
         } else {
             form.client_id = props.selectedClient ?? null;
-            form.paypal_link = '';
+            // form.paypal_link = '';
             form.date_from = formatDate(props.dateFrom);
             form.date_to = formatDate(props.dateTo);
             form.projects = [];
@@ -171,10 +171,10 @@ const handleSubmit = () => {
                 </div>
 
                 <!-- PayPal Link -->
-                <div class="space-y-2">
+                <!-- <div class="space-y-2">
                     <Label for="paypal">PayPal Link</Label>
                     <Input id="paypal" v-model="form.paypal_link" placeholder="https://paypal.me/yourlink" />
-                </div>
+                </div> -->
 
                 <!-- Projects Table -->
                 <div class="mt-6">

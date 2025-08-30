@@ -23,7 +23,9 @@ const pageProps = usePage<
 
 const clients = computed(() => pageProps.clients);
 const projects = ref<Projects[]>(pageProps.projects ?? []);
-const invoices = computed<Paginated<Invoice>>(() => pageProps.invoices ?? { data: [], total: 0, per_page: 10, current_page: 1 });
+const invoices = computed<Paginated<Invoice>>(
+    () => usePage<AppPageProps<{ invoices: Paginated<Invoice> }>>().props.invoices ?? { data: [], total: 0, per_page: 10, current_page: 1 },
+);
 
 // Modal state
 const isModalOpen = ref(false);
@@ -226,7 +228,13 @@ const goToPage = (pageNumber: number) => {
                                         ></span>
                                         {{ sendingInvoiceIds.includes(invoice.id) ? 'Sending...' : 'Send Invoice' }}
                                     </Button>
-                                    <Button @click="openEditInvoice(invoice)">Edit</Button>
+                                    <Button
+                                        @click="openEditInvoice(invoice)"
+                                        :disabled="invoice.status === 'sent'"
+                                        class="disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        Edit
+                                    </Button>
                                     <Button @click="openInvoice(invoice.id)">View</Button>
                                 </TableCell>
                             </TableRow>
