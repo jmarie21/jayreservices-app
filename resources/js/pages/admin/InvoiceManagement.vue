@@ -2,6 +2,7 @@
 import InvoiceForm from '@/components/forms/InvoiceForm.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -27,6 +28,11 @@ const invoices = computed<Paginated<Invoice>>(
     () => usePage<AppPageProps<{ invoices: Paginated<Invoice> }>>().props.invoices ?? { data: [], total: 0, per_page: 10, current_page: 1 },
 );
 
+const cancellingIds = ref<number[]>([]);
+const markingPaidIds = ref<number[]>([]);
+const isCancelDialogOpen = ref(false);
+const invoiceToCancel = ref<Invoice | null>(null);
+
 // Modal state
 const isModalOpen = ref(false);
 
@@ -39,14 +45,21 @@ const dateTo = ref('');
 const getStatusBadgeClass = (status: string) => {
     switch (status) {
         case 'sent':
-            return 'bg-green-500 ';
+            return 'bg-blue-500 ';
         case 'pending':
             return 'bg-yellow-500';
-        case 'overdue':
+        case 'paid':
+            return 'bg-green-500';
+        case 'cancelled':
             return 'bg-red-500';
         default:
             return 'bg-gray-500';
     }
+};
+
+const openCancelDialog = (invoice: Invoice) => {
+    invoiceToCancel.value = invoice;
+    isCancelDialogOpen.value = true;
 };
 
 const openEditInvoice = (invoice: Invoice) => {
@@ -117,6 +130,67 @@ const handleCreateInvoice = (invoice: { client_id: number; paypal_link: string; 
             dateTo.value = '';
         },
     });
+};
+
+const markInvoiceAsPaid = (id: number) => {
+    if (markingPaidIds.value.includes(id)) return;
+    markingPaidIds.value.push(id);
+
+    router.post(
+        `/invoice-mgmt/${id}/paid`,
+        {},
+        {
+            onSuccess: () => {
+                toast.success('Invoice marked as paid!', {
+                    description: 'Invoice status updated to paid.',
+                    position: 'top-right',
+                });
+                router.reload({ only: ['invoices'] });
+            },
+            onError: () => {
+                toast.error('Failed to mark as paid', {
+                    description: 'Please try again.',
+                    position: 'top-right',
+                });
+            },
+            onFinish: () => {
+                markingPaidIds.value = markingPaidIds.value.filter((i) => i !== id);
+            },
+        },
+    );
+};
+
+const confirmCancelInvoice = () => {
+    if (!invoiceToCancel.value) return;
+
+    const id = invoiceToCancel.value.id;
+    isCancelDialogOpen.value = false;
+    invoiceToCancel.value = null;
+
+    cancellingIds.value.push(id);
+
+    router.post(
+        `/invoice-mgmt/${id}/cancel`,
+        {},
+        {
+            onSuccess: () => {
+                toast.success('Invoice cancelled!', {
+                    description: 'Invoice status updated to cancelled.',
+                    position: 'top-right',
+                });
+                router.reload({ only: ['invoices'] });
+            },
+            onError: () => {
+                toast.error('Failed to cancel invoice', {
+                    description: 'Please try again.',
+                    position: 'top-right',
+                });
+            },
+            onFinish: () => {
+                cancellingIds.value = cancellingIds.value.filter((i) => i !== id);
+            },
+        },
+    );
 };
 
 // --- Helper to close modal and reset filters/URL ---
@@ -217,24 +291,50 @@ const goToPage = (pageNumber: number) => {
                                     </Badge>
                                 </TableCell>
                                 <TableCell class="flex items-center space-x-2">
-                                    <Button
-                                        @click="sendInvoice(invoice.id)"
-                                        :disabled="invoice.status === 'sent' || sendingInvoiceIds.includes(invoice.id)"
-                                        class="flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <span
-                                            v-if="sendingInvoiceIds.includes(invoice.id)"
-                                            class="loader h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"
-                                        ></span>
-                                        {{ sendingInvoiceIds.includes(invoice.id) ? 'Sending...' : 'Send Invoice' }}
-                                    </Button>
-                                    <Button
-                                        @click="openEditInvoice(invoice)"
-                                        :disabled="invoice.status === 'sent'"
-                                        class="disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        Edit
-                                    </Button>
+                                    <template v-if="invoice.status !== 'cancelled'">
+                                        <!-- Send Invoice -->
+                                        <Button
+                                            @click="sendInvoice(invoice.id)"
+                                            :disabled="invoice.status !== 'pending' || sendingInvoiceIds.includes(invoice.id)"
+                                            class="flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            <span
+                                                v-if="sendingInvoiceIds.includes(invoice.id)"
+                                                class="loader h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"
+                                            ></span>
+                                            {{ sendingInvoiceIds.includes(invoice.id) ? 'Sending...' : 'Send Invoice' }}
+                                        </Button>
+
+                                        <!-- Mark as Paid -->
+                                        <Button
+                                            v-if="invoice.status === 'sent' || invoice.status === 'paid'"
+                                            @click="markInvoiceAsPaid(invoice.id)"
+                                            :disabled="invoice.status === 'paid'"
+                                            class="disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            Mark as Paid
+                                        </Button>
+
+                                        <!-- Edit Invoice -->
+                                        <Button
+                                            v-if="invoice.status === 'pending'"
+                                            @click="openEditInvoice(invoice)"
+                                            class="disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            Edit
+                                        </Button>
+
+                                        <!-- Cancel Invoice -->
+                                        <Button
+                                            v-if="invoice.status === 'pending' || invoice.status === 'sent'"
+                                            @click="openCancelDialog(invoice)"
+                                            class="bg-red-500 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </template>
+
+                                    <!-- View Invoice (always visible) -->
                                     <Button @click="openInvoice(invoice.id)">View</Button>
                                 </TableCell>
                             </TableRow>
@@ -281,5 +381,25 @@ const goToPage = (pageNumber: number) => {
             @update:dateFrom="(val) => (dateFrom = val)"
             @update:dateTo="(val) => (dateTo = val)"
         />
+
+        <!-- Cancel Invoice Dialog -->
+        <Dialog v-model:open="isCancelDialogOpen">
+            <DialogContent class="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>Cancel Invoice</DialogTitle>
+                </DialogHeader>
+
+                <p class="text-sm text-gray-600">
+                    Are you sure you want to cancel invoice #
+                    <span class="font-bold">{{ invoiceToCancel?.invoice_number }}</span
+                    >? This action cannot be undone.
+                </p>
+
+                <DialogFooter class="flex justify-end space-x-2">
+                    <Button variant="outline" @click="isCancelDialogOpen = false">Close</Button>
+                    <Button class="bg-red-500 text-white" @click="confirmCancelInvoice"> Yes, Cancel </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>

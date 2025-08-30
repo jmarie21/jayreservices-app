@@ -42,6 +42,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/invoice-mgmt', [InvoiceManagementController::class, 'store'])->name('invoice.store');
     Route::post('invoice-mgmt/{invoice}/send', [InvoiceManagementController::class, 'send'])->name('invoice.send');
     Route::put('/invoice-mgmt/{invoice}', [InvoiceManagementController::class, 'update'])->name('invoice.update');
+    Route::post('/invoice-mgmt/{id}/paid', [InvoiceManagementController::class, 'markAsPaid'])->name('invoice.markPaid');
+    Route::post('/invoice-mgmt/{id}/cancel', [InvoiceManagementController::class, 'cancel'])->name('invoice.cancel');
+
 });
 
 Route::middleware(['auth', 'editor'])->group(function () {

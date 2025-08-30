@@ -168,4 +168,35 @@ class InvoiceManagementController extends Controller
             return back()->withErrors("Failed to send invoice. Error: {$e->getMessage()}");
         }
     }
+
+    
+    public function markAsPaid($id)
+    {
+        $invoice = Invoice::findOrFail($id);
+
+        // Only allow marking as paid if it was sent
+        if ($invoice->status === 'sent') {
+            $invoice->status = 'paid';
+            $invoice->save();
+
+            return redirect()->back()->with('success', 'Invoice marked as paid.');
+        }
+
+        return redirect()->back()->with('error', 'Only sent invoices can be marked as paid.');
+    }
+
+    public function cancel($id)
+    {
+        $invoice = Invoice::findOrFail($id);
+
+        if (!in_array($invoice->status, ['paid', 'cancelled'])) {
+            $invoice->status = 'cancelled';
+            $invoice->save();
+            
+            return redirect()->back()->with('success', 'Invoice cancelled');
+        }
+
+        return redirect()->back()->with('error', 'Error cancelling invoice');
+    }
+
 }

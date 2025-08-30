@@ -26,7 +26,7 @@ class AdminDashboardController extends Controller
         $activeEditors = User::where('role', 'editor')->count();
 
         // Monthly Profit (sum of paid invoices in current month)
-        $monthlyProfit = Invoice::where('status', 'sent')
+        $monthlyProfit = Invoice::where('status', 'paid')
             ->whereBetween('created_at', [$currentMonthStart, $currentMonthEnd])
             ->sum('total_amount');
 

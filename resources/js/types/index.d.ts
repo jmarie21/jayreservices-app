@@ -100,7 +100,7 @@ export interface Invoice {
     date_to?: string;
     total_amount: number;
 
-    status: 'pending' | 'sent' | 'paid' | 'overdue';
+    status: 'pending' | 'sent' | 'paid' | 'cancelled';
     created_at: string;
     updated_at: string;
 }
