@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ref } from 'vue';
+import { mapStatusForClient } from '@/utils/statusMapper';
+import { computed, ref } from 'vue';
 
 const props = defineProps<{
     isOpen: boolean;
@@ -18,23 +19,13 @@ const statusLabels: Record<'pending' | 'in_progress' | 'completed', string> = {
     completed: 'Completed',
 };
 
+const mappedStatus = computed(() => mapStatusForClient(props.project.status));
+
 const newComment = ref('');
 const comments = ref([
     { id: 1, author: 'John Doe', avatar: '', text: 'Great work so far!', time: '2h ago' },
     { id: 2, author: 'Jane Smith', avatar: '', text: 'Waiting for the final output link.', time: '1h ago' },
 ]);
-
-const addComment = () => {
-    if (!newComment.value.trim()) return;
-    comments.value.push({
-        id: Date.now(),
-        author: 'You',
-        avatar: '',
-        text: newComment.value,
-        time: 'Just now',
-    });
-    newComment.value = '';
-};
 </script>
 
 <template>
@@ -107,12 +98,12 @@ const addComment = () => {
                                 <span
                                     class="rounded-full px-2 py-1 text-xs"
                                     :class="{
-                                        'bg-green-100 text-green-700': project.status === 'completed',
-                                        'bg-yellow-100 text-yellow-700': project.status === 'in_progress',
-                                        'bg-red-200 text-gray-600': project.status === 'pending',
+                                        'bg-green-100 text-green-700': mappedStatus === 'completed',
+                                        'bg-yellow-100 text-yellow-700': mappedStatus === 'in_progress',
+                                        'bg-red-200 text-gray-600': mappedStatus === 'pending',
                                     }"
                                 >
-                                    {{ statusLabels[project.status as 'pending' | 'in_progress' | 'completed'] }}
+                                    {{ statusLabels[mappedStatus] }}
                                 </span>
                             </div>
 
