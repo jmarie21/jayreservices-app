@@ -18,9 +18,23 @@ class ProjectsController extends Controller
         ->with('service')
         ->latest();
 
-        // Filter by status
+        // Status mapping for client
+        $clientStatusGroups = [
+            'pending' => ['todo', 'backlog'],
+            'in_progress' => ['in_progress', 'for_qa', 'done_qa', 'revision'],
+            'completed' => ['revision_completed', 'sent_to_client'],
+        ];
+
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $status = $request->status;
+
+            if (in_array($status, array_keys($clientStatusGroups))) {
+                // Client filter
+                $query->whereIn('status', $clientStatusGroups[$status]);
+            } else {
+                // Admin filter (raw status)
+                $query->where('status', $status);
+            }
         }
 
         // Filter by date range

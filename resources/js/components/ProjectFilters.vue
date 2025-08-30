@@ -10,15 +10,14 @@ interface Props {
         date_from?: string;
         date_to?: string;
     };
+    role?: 'admin' | 'client';
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits(['update:filters']);
 
-// Local copy of filters for 2-way binding
 const localFilters = reactive({ ...props.filters });
 
-// Watch for changes and emit
 watch(
     () => ({ ...localFilters }),
     (newFilters) => {
@@ -27,7 +26,6 @@ watch(
     { deep: true },
 );
 
-// Handle select change
 const handleStatusChange = (value: any) => {
     localFilters.status = value === 'all' || !value ? '' : String(value);
 };
@@ -44,25 +42,34 @@ const handleStatusChange = (value: any) => {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="todo">To Do</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="for_qa">For QA</SelectItem>
-                    <SelectItem value="done_qa">Done QA</SelectItem>
-                    <SelectItem value="sent_to_client">Sent to Client</SelectItem>
-                    <SelectItem value="revision">Revision</SelectItem>
-                    <SelectItem value="revision_completed">Revision Completed</SelectItem>
-                    <SelectItem value="backlog">Backlog</SelectItem>
+
+                    <!-- Admin sees raw statuses -->
+                    <template v-if="props.role === 'admin'">
+                        <SelectItem value="todo">To Do</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="for_qa">For QA</SelectItem>
+                        <SelectItem value="done_qa">Done QA</SelectItem>
+                        <SelectItem value="sent_to_client">Sent to Client</SelectItem>
+                        <SelectItem value="revision">Revision</SelectItem>
+                        <SelectItem value="revision_completed">Revision Completed</SelectItem>
+                        <SelectItem value="backlog">Backlog</SelectItem>
+                    </template>
+
+                    <!-- Client sees simplified statuses -->
+                    <template v-else>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                    </template>
                 </SelectContent>
             </Select>
         </div>
 
-        <!-- Date from filter -->
+        <!-- Date filters -->
         <div class="space-y-2">
             <Label for="date-from">From Date</Label>
             <Input id="date-from" type="date" v-model="localFilters.date_from" class="w-[180px]" />
         </div>
-
-        <!-- Date to filter -->
         <div class="space-y-2">
             <Label for="date-to">To Date</Label>
             <Input id="date-to" type="date" v-model="localFilters.date_to" class="w-[180px]" />
