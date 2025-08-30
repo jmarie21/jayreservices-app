@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\InvoiceMail;
 use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\User;
@@ -145,27 +146,17 @@ class InvoiceManagementController extends Controller
             return back()->withErrors('Client email not found.');
         }
 
-        $pdf = Pdf::loadView('emails.invoice', compact('invoice'));
-
         try {
-            Mail::send([], [], function ($message) use ($client, $pdf, $invoice, $user) {
-                $message->to($client->email)
-                        ->subject("Invoice #{$invoice->invoice_number}")
-                        ->from($user->email, $user->name)
-                        ->attachData($pdf->output(), "invoice-{$invoice->invoice_number}.pdf")
-                        ->text("Hello {$client->name},\n\nPlease find attached your invoice #{$invoice->invoice_number}. Thank you for your business.\n\nBest regards,\n{$user->name}");
-            });
+            // Queue the email
+            Mail::to($client->email)->queue(new InvoiceMail($invoice, $user));
 
-            // ✅ Update invoice status to "sent"
+            // Update invoice status immediately
             $invoice->update(['status' => 'sent']);
 
-            return back()->with('success', 'Invoice sent successfully and status updated.');
+            return back()->with('success', 'Invoice queued for sending successfully.');
         } catch (\Exception $e) {
-            // Log the error for debugging
-            Log::error("Failed to send invoice #{$invoice->invoice_number}: " . $e->getMessage());
-
-            // Optionally, you can notify the user in a friendly way
-            return back()->withErrors("Failed to send invoice. Error: {$e->getMessage()}");
+            Log::error("Failed to queue invoice #{$invoice->invoice_number}: " . $e->getMessage());
+            return back()->withErrors("Failed to queue invoice. Error: {$e->getMessage()}");
         }
     }
 
