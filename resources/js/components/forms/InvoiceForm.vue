@@ -137,7 +137,7 @@ const handleSubmit = () => {
 
 <template>
     <Dialog :open="props.isOpen" @update:open="emit('close')">
-        <DialogContent class="!max-w-5xl">
+        <DialogContent class="max-h-[90vh] !w-full !max-w-5xl overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>{{ props.invoice ? 'Edit Invoice' : 'Create Invoice' }}</DialogTitle>
             </DialogHeader>

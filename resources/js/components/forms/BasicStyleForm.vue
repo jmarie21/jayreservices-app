@@ -106,8 +106,7 @@ const handleSubmit = () => {
                 emit('close');
             },
             onError: (error) => {
-                console.error('error saving to db:', error);
-                emit('close');
+                console.error('Validation errors:', form.errors);
             },
         });
     } else {
@@ -120,8 +119,7 @@ const handleSubmit = () => {
                 emit('close');
             },
             onError: (error) => {
-                console.error('error saving to db:', error);
-                emit('close');
+                console.error('Validation errors:', form.errors);
             },
         });
     }
@@ -130,7 +128,7 @@ const handleSubmit = () => {
 
 <template>
     <Dialog :open="open" @update:open="(v) => !v && emit('close')">
-        <DialogContent class="!w-full !max-w-6xl">
+        <DialogContent class="max-h-[90vh] !w-full !max-w-6xl overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>
                     {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Basic Style' }}

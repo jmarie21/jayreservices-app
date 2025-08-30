@@ -219,10 +219,6 @@ const handleSubmit = () => {
         },
     };
 
-    // Debug log to check what's being sent
-    console.log('Clean form data being submitted:', submitData);
-    console.log('Original form extra_fields:', form.extra_fields);
-
     if (isEditing) {
         // Use transform to send clean data
         form.transform(() => submitData).put(route('projects.update', props.project!.id), {
@@ -234,8 +230,7 @@ const handleSubmit = () => {
                 emit('close');
             },
             onError: (error) => {
-                console.error('error saving to db:', error);
-                emit('close');
+                console.error('Validation errors:', form.errors);
             },
         });
     } else {
@@ -250,8 +245,7 @@ const handleSubmit = () => {
                 emit('close');
             },
             onError: (error) => {
-                console.error('error saving to db:', error);
-                emit('close');
+                console.error('Validation errors:', form.errors);
             },
         });
     }
@@ -260,7 +254,7 @@ const handleSubmit = () => {
 
 <template>
     <Dialog :open="open" @update:open="(v) => !v && emit('close')">
-        <DialogContent class="!w-full !max-w-6xl">
+        <DialogContent class="max-h-[90vh] !w-full !max-w-6xl overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>
                     {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Luxury Style' }}
