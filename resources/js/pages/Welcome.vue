@@ -1,10 +1,23 @@
 <script setup lang="ts">
 import HomeNavbar from '@/components/home/HomeNavbar.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 
 // shadcn components
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { computed } from 'vue';
+
+const page = usePage();
+
+// Determine the route for Get Started / Dashboard dynamically
+const getStartedRoute = computed(() => {
+    const user = page.props.auth.user;
+
+    if (!user) return '/login'; // Not authenticated → login
+
+    // Authenticated → route based on role
+    return user.role === 'admin' ? '/admin-dashboard' : user.role === 'client' ? '/services' : user.role === 'editor' ? '/editor-dashboard' : '/';
+});
 </script>
 
 <template>
@@ -26,8 +39,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
                     <p class="text-md mt-2 text-gray-600 dark:text-gray-300">A unified workspace to manage projects and track progress.</p>
                 </CardHeader>
                 <CardContent class="mt-6 flex flex-col items-center space-y-4 sm:flex-row sm:justify-center sm:space-y-0 sm:space-x-4">
-                    <!-- Internal (Inertia) link -->
-                    <Link href="/login" class="w-full sm:w-auto">
+                    <!-- Dynamic Get Started / Dashboard link -->
+                    <Link :href="getStartedRoute" class="w-full sm:w-auto">
                         <Button size="lg" class="w-full sm:w-auto"> Get Started </Button>
                     </Link>
 

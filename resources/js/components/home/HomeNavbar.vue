@@ -1,6 +1,17 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { Button } from '../ui/button';
+
+const page = usePage();
+
+// Determine the dashboard route based on user role
+const dashboardRoute = computed(() => {
+    const user = page.props.auth.user;
+    if (!user) return '/';
+
+    return user.role === 'admin' ? '/admin-dashboard' : user.role === 'client' ? '/services' : user.role === 'editor' ? '/editor-dashboard' : '/';
+});
 </script>
 
 <template>
@@ -15,8 +26,14 @@ import { Button } from '../ui/button';
 
                 <!-- Buttons -->
                 <div className="space-x-4">
-                    <Button>
+                    <!-- Show Login if not logged in -->
+                    <Button v-if="!page.props.auth.user">
                         <Link href="/login">Login</Link>
+                    </Button>
+
+                    <!-- Show Dashboard if logged in -->
+                    <Button v-else>
+                        <Link :href="dashboardRoute">Dashboard</Link>
                     </Button>
 
                     <!-- <Button variant="outline">
