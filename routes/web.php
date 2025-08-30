@@ -21,7 +21,7 @@ Route::middleware(['auth', 'client'])->group(function () {
 
     Route::get("/projects",  [ProjectsController::class, 'index'])->name("projects");
     Route::post("/projects", [ProjectsController::class, 'createProject'])->name('projects.store');
-    Route::put("/projects/{project}", [ProjectsController::class, 'updateProject'])->name('projects.update');
+    Route::put("/projects/{project}", [ProjectsController::class, 'updateProject'])->name('projects.client_update');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -33,7 +33,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete("/user-mgmt/{user}", [UserController::class, 'deleteUser'])->name('user-mgmt.destroy');
 
     Route::get("/project-mgmt/{client}", [ProjectManagement::class, 'showClientProjects'])->name("client.projects");
-    Route::patch('/projects/{project}', [ProjectManagement::class, 'update'])->name('projects.update');
+    Route::patch('/projects/{project}', [ProjectManagement::class, 'update'])->name('projects.admin_update');
 
     Route::get('/editor-mgmt/{editor}', [EditorManagement::class, 'showEditorProjects'])->name('editor.projects');
 
