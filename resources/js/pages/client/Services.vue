@@ -40,12 +40,21 @@ function closeModal() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head title="Services" />
         <div class="grid gap-4 p-4 md:grid-cols-4">
-            <div
-                v-for="service in services"
-                :key="service.id"
-                class="flex h-full min-h-[350px] flex-col justify-between rounded-xl border bg-white p-4 shadow"
-            >
-                <div>
+            <div v-for="service in services" :key="service.id" class="flex h-full min-h-[450px] flex-col rounded-xl border bg-white shadow">
+                <!-- Video at top (no padding) -->
+                <div v-if="service.video_link" class="aspect-video w-full">
+                    <iframe
+                        class="h-full w-full rounded-t-xl"
+                        :src="service.video_link.replace('watch?v=', 'embed/')"
+                        :title="service.name"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                    ></iframe>
+                </div>
+
+                <!-- Card content with padding -->
+                <div class="flex flex-1 flex-col p-4">
                     <h3 class="mb-2 text-lg font-semibold">{{ service.name }}</h3>
 
                     <ul class="list-inside list-disc text-sm text-muted-foreground">
@@ -53,11 +62,11 @@ function closeModal() {
                             {{ feature }}
                         </li>
                     </ul>
-                </div>
 
-                <div class="mt-4">
-                    <p class="mb-2 font-bold text-primary">${{ service.price }}</p>
-                    <Button class="w-full" @click="openModal(service)">Select Style</Button>
+                    <div class="mt-auto">
+                        <p class="mb-2 font-bold text-primary">${{ service.price }}</p>
+                        <Button class="w-full" @click="openModal(service)">Select Style</Button>
+                    </div>
                 </div>
             </div>
         </div>

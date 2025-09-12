@@ -22,6 +22,8 @@ class ServicesSeeder extends Seeder
                     'Some simple transitions like zoom after speed ramps',
                 ],
                 'price' => 1000,
+                // 'video_link' => 'https://www.youtube.com/embed/e5SCQSz5R7Q',
+                'video_link' => 'https://www.youtube.com/embed/vQzUuq14zcM?si=mr85vx65t8FspD4y'
             ],
             [
                 'name' => 'Deluxe Style',
@@ -33,6 +35,7 @@ class ServicesSeeder extends Seeder
                     'With Motion Blur every speed ramps',
                 ],
                 'price' => 2000,
+                'video_link' => 'https://www.youtube.com/embed/oaqW7kBki1c',
             ],
             [
                 'name' => 'Premium Style',
@@ -48,6 +51,7 @@ class ServicesSeeder extends Seeder
                     'With Earth zoom transition if requested',
                 ],
                 'price' => 3000,
+                'video_link' => 'https://player.vimeo.com/video/1106034319',
             ],
             [
                 'name' => 'Luxury Style',
@@ -66,6 +70,7 @@ class ServicesSeeder extends Seeder
                     'With Earth zoom transition if requested',
                 ],
                 'price' => 4000,
+                'video_link' => 'https://player.vimeo.com/video/1106032025',
             ],
         ];
 
@@ -75,6 +80,7 @@ class ServicesSeeder extends Seeder
                 [
                     'features' => $service['features'],
                     'price' => $service['price'],
+                    'video_link' => $service['video_link'],
                 ]
             );
         }

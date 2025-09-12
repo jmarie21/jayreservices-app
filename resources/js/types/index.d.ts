@@ -55,6 +55,7 @@ export interface Services {
     description?: string | null;
     created_at?: string;
     updated_at?: string;
+    video_link?: string;
 }
 
 export interface Projects {
