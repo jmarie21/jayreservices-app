@@ -69,9 +69,14 @@ class ServicesSeeder extends Seeder
             ],
         ];
 
-        foreach($services as $service)
-        {
-            Service::create($service);
+        foreach ($services as $service) {
+            Service::updateOrCreate(
+                ['name' => $service['name']], // unique field to check
+                [
+                    'features' => $service['features'],
+                    'price' => $service['price'],
+                ]
+            );
         }
     }
 }
