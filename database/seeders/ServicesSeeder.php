@@ -21,7 +21,7 @@ class ServicesSeeder extends Seeder
                     'With 2-3 smooth speed ramps only',
                     'Some simple transitions like zoom after speed ramps',
                 ],
-                'price' => 1000,
+                'price' => 0,
                 // 'video_link' => 'https://www.youtube.com/embed/e5SCQSz5R7Q',
                 'video_link' => 'https://www.youtube.com/embed/vQzUuq14zcM?si=mr85vx65t8FspD4y'
             ],
@@ -34,7 +34,7 @@ class ServicesSeeder extends Seeder
                     'With more than 3 smooth speed ramps',
                     'With Motion Blur every speed ramps',
                 ],
-                'price' => 2000,
+                'price' => 0,
                 'video_link' => 'https://www.youtube.com/embed/oaqW7kBki1c',
             ],
             [
@@ -50,7 +50,7 @@ class ServicesSeeder extends Seeder
                     'With sound effects',
                     'With Earth zoom transition if requested',
                 ],
-                'price' => 3000,
+                'price' => 0,
                 'video_link' => 'https://player.vimeo.com/video/1106034319',
             ],
             [
@@ -69,7 +69,7 @@ class ServicesSeeder extends Seeder
                     'With sound effects',
                     'With Earth zoom transition if requested',
                 ],
-                'price' => 4000,
+                'price' => 0,
                 'video_link' => 'https://player.vimeo.com/video/1106032025',
             ],
         ];
