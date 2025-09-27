@@ -64,7 +64,7 @@ function closeModal() {
                     </ul>
 
                     <div class="mt-auto">
-                        <p class="mb-2 font-bold text-primary">${{ service.price }}</p>
+                        <!-- <p class="mb-2 font-bold text-primary">${{ service.price }}</p> -->
                         <Button class="w-full" @click="openModal(service)">Select Style</Button>
                     </div>
                 </div>

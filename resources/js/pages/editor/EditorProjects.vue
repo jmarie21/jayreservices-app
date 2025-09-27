@@ -11,7 +11,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
 
@@ -43,6 +43,19 @@ const selectedProject = ref<Projects | null>(null);
 const form = useForm<{ status: Status }>({
     status: 'todo',
 });
+
+const editorPrices = ref<Record<number, number | undefined>>({});
+watch(
+    projects,
+    (newProjects) => {
+        newProjects.data.forEach((p) => {
+            if (!(p.id in editorPrices.value)) {
+                editorPrices.value[p.id] = p.editor_price ?? undefined;
+            }
+        });
+    },
+    { immediate: true },
+);
 
 const statusLabels: Record<Status, string> = {
     todo: 'To Do',
@@ -188,7 +201,7 @@ const goToPage = (pageNumber: number) => {
                             </Select>
                         </TableCell>
 
-                        <TableCell>${{ Number(project.total_price).toLocaleString() }}</TableCell>
+                        <TableCell>₱{{ Number(project.editor_price).toLocaleString() }}</TableCell>
                         <TableCell>{{ new Date(project.created_at).toLocaleDateString() }}</TableCell>
                         <TableCell>
                             <Button @click="openViewModal(project)">View Details</Button>

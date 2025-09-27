@@ -12,7 +12,7 @@ class EditorManagement extends Controller
     public function showEditorProjects(Request $request, User $editor)
 {
     $query = $editor->assignedProjects()
-        ->with(['service', 'client']) // load client + service
+        ->with(['service', 'client', 'comments.user']) // load client + service
         ->latest();
 
     // Filter by status

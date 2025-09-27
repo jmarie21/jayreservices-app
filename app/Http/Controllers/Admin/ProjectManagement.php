@@ -13,7 +13,7 @@ class ProjectManagement extends Controller
     public function showClientProjects(Request $request, User $client)
     {
         $query = $client->projects()
-            ->with(['service', 'editor'])
+            ->with(['service', 'editor', 'comments.user'])
             ->latest();
 
         // Filter by status
@@ -58,6 +58,7 @@ class ProjectManagement extends Controller
         $validated = $request->validate([
             'editor_id' => 'nullable|exists:users,id',
             'status' => 'nullable|string',
+            'editor_price' => 'nullable|numeric|min:0'
         ]);
 
         $project->update($validated);

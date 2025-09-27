@@ -17,6 +17,7 @@ import { Paginated } from '@/types/app-page-prop';
 import { mapStatusForClient } from '@/utils/statusMapper';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { toast } from 'vue-sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -105,6 +106,25 @@ const goToPage = (page: number) => {
         },
     );
 };
+
+const markForRevision = (projectId: number) => {
+    router.put(
+        route('projects.updateStatus', projectId),
+        {
+            status: 'revision',
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Status updated successfully!', {
+                    description: 'The status was updated successfully!',
+                    position: 'top-right',
+                });
+                console.log('success');
+            },
+        },
+    );
+};
 </script>
 
 <template>
@@ -165,6 +185,7 @@ const goToPage = (page: number) => {
                         <TableCell class="space-x-4">
                             <Button @click="openEditModal(project)" :disabled="mapStatusForClient(project.status) === 'completed'"> Edit </Button>
                             <Button @click="openViewModal(project)">View order</Button>
+                            <Button @click="markForRevision(project.id)">Mark for revision</Button>
                         </TableCell>
                     </TableRow>
                 </TableBody>

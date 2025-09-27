@@ -15,7 +15,7 @@ class ProjectsController extends Controller
     {
         $query = Auth::user()
         ->projects()
-        ->with('service')
+        ->with(['service', 'comments.user'])
         ->latest();
 
         // Status mapping for client
@@ -85,6 +85,7 @@ class ProjectsController extends Controller
             "status" => ['nullable', 'in:pending,in_progress,completed'],
             "extra_fields" => ['nullable', 'array'],
             "with_agent" => ['required', 'boolean'],
+            "per_property" => ['nullable', 'boolean'],
         ]);
 
         $validated['client_id'] = Auth::id(); 
@@ -120,11 +121,28 @@ class ProjectsController extends Controller
             "status" => ['nullable', 'in:pending,in_progress,completed'],
             "extra_fields" => ['nullable', 'array'],
             "with_agent" => ['required', 'boolean'],
+            "per_property" => ['nullable', 'boolean'],
         ]);
 
         $project->update($validated);
 
         return redirect()->back()->with('message', 'Project updated successfully!');
     }
+
+    public function updateStatus(Request $request, Project $project)
+    {
+        if ($project->client_id !== Auth::id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            "status" => ['required', 'in:todo,in_progress,for_qa,done_qa,sent_to_client,revision,revision_completed,backlog'],
+        ]);
+
+        $project->update(['status' => $validated['status']]);
+
+        return back()->with('message', 'Project status updated successfully!');
+    }
+
 
 }

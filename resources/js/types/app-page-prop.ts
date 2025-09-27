@@ -40,6 +40,7 @@ export type BasicForm = {
     notes?: string;
     total_price: number;
     with_agent?: boolean;
+    per_property?: boolean;
 };
 
 export type DeluxeForm = {
@@ -58,6 +59,7 @@ export type DeluxeForm = {
     notes?: string;
     total_price: number;
     with_agent?: boolean;
+    per_property?: boolean;
 };
 
 export type PremiumForm = {
@@ -80,6 +82,7 @@ export type PremiumForm = {
         effects: string[]; // e.g., ["Ken Burns"]
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
+    per_property?: boolean;
 };
 
 export type LuxuryForm = {
@@ -102,6 +105,7 @@ export type LuxuryForm = {
         effects: string[]; // e.g., ["Ken Burns"]
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
+    per_property?: boolean;
 };
 
 // ✅ Generic pagination type

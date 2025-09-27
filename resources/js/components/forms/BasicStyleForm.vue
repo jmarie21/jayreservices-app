@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BasicForm } from '@/types/app-page-prop';
 import { useForm } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
 const props = defineProps<{
@@ -21,6 +21,7 @@ const emit = defineEmits<{
 
 // Agent selection
 const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
+const perPropertyOption = ref<'add-per-property' | 'no' | ''>(props.project?.per_property ? 'add-per-property' : '');
 
 // Form initialization
 const form = useForm<BasicForm>({
@@ -38,13 +39,94 @@ const form = useForm<BasicForm>({
     total_price: Number(props.project?.total_price ?? props.basePrice),
     with_agent: props.project?.with_agent ?? false,
     service_id: props.serviceId,
+    per_property: props.project?.per_property,
 });
 
-// Watch agent option and update total price
-watch(agentOption, (value) => {
-    const extraCost = value === 'with-agent' ? 10 : 0;
-    form.total_price = Number(props.basePrice) + extraCost;
-    form.with_agent = value === 'with-agent';
+const calculateExtraPrice = () => {
+    let extra = 0;
+
+    // Price based on style and format
+    if (form.style === 'basic video') {
+        if (form.format === 'horizontal') extra += 40;
+        else if (form.format === 'vertical') extra += 25;
+        else if (form.format === 'horizontal and vertical package') extra += 40 + 25;
+    } else if (form.style === 'basic drone only') {
+        if (form.format === 'horizontal') extra += 25;
+        else if (form.format === 'vertical') extra += 20;
+        else if (form.format === 'horizontal and vertical package') extra += 25 + 20;
+    }
+
+    // Price based on agent
+    const agentExtra = agentOption.value === 'with-agent' ? 10 : 0;
+
+    // Price based on per property
+    const perPropertyExtra = perPropertyOption.value === 'add-per-property' ? 5 : 0;
+
+    return Number(props.basePrice) + extra + agentExtra + perPropertyExtra;
+};
+
+// Computed total price based on selected options
+const totalPrice = computed(() => {
+    let extra = 0;
+
+    // Price based on style and format
+    if (form.style === 'basic video') {
+        if (form.format === 'horizontal') extra += 40;
+        else if (form.format === 'vertical') extra += 25;
+        else if (form.format === 'horizontal and vertical package') extra += 65; // 40+25
+    } else if (form.style === 'basic drone only') {
+        if (form.format === 'horizontal') extra += 25;
+        else if (form.format === 'vertical') extra += 20;
+        else if (form.format === 'horizontal and vertical package') extra += 45; // 25+20
+    }
+
+    // Price based on agent
+    if (agentOption.value === 'with-agent') extra += 10;
+
+    // Price based on per property
+    if (perPropertyOption.value === 'add-per-property') extra += 5;
+
+    return extra; // basePrice is 0, so we just return extras
+});
+
+const formatOptions = computed(() => {
+    if (form.style === 'basic video') {
+        return [
+            { value: 'horizontal', label: 'Horizontal ($40)' },
+            { value: 'vertical', label: 'Vertical ($25)' },
+            { value: 'horizontal and vertical package', label: 'Horizontal and Vertical Package ($65)' },
+        ];
+    } else if (form.style === 'basic drone only') {
+        return [
+            { value: 'horizontal', label: 'Horizontal ($25)' },
+            { value: 'vertical', label: 'Vertical ($20)' },
+            { value: 'horizontal and vertical package', label: 'Horizontal and Vertical Package ($45)' },
+        ];
+    } else {
+        // Default if no style selected
+        return [
+            { value: 'horizontal', label: 'Horizontal' },
+            { value: 'vertical', label: 'Vertical' },
+            { value: 'horizontal and vertical package', label: 'Horizontal and Vertical Package' },
+        ];
+    }
+});
+
+// Watch totalPrice and update form.total_price
+watch(
+    totalPrice,
+    (val) => {
+        form.total_price = val;
+    },
+    { immediate: true },
+);
+
+// Update form options when selections change
+watch(agentOption, () => {
+    form.with_agent = agentOption.value === 'with-agent';
+});
+watch(perPropertyOption, () => {
+    form.per_property = perPropertyOption.value === 'add-per-property';
 });
 
 // Watch project prop and initialize/reset form
@@ -52,11 +134,11 @@ watch(
     () => props.project,
     (project) => {
         if (project) {
-            form.style = project.style;
-            form.company_name = project.company_name;
-            form.contact = project.contact;
-            form.project_name = project.project_name;
+            form.style = project.style ?? '';
             form.format = project.format ?? '';
+            form.company_name = project.company_name ?? '';
+            form.contact = project.contact ?? '';
+            form.project_name = project.project_name ?? '';
             form.camera = project.camera ?? '';
             form.quality = project.quality ?? '';
             form.music = project.music ?? '';
@@ -64,29 +146,29 @@ watch(
             form.file_link = project.file_link ?? '';
             form.notes = project.notes ?? '';
 
-            // Set agent option based on project
+            // Set agent and per-property options
             agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
-            form.with_agent = project.with_agent ?? false;
+            perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
 
-            // Calculate total price
-            const extraCost = project.with_agent ? 10 : 0;
-            form.total_price = Number(props.basePrice) + extraCost;
+            form.with_agent = project.with_agent ?? false;
+            form.per_property = project.per_property ?? false;
         } else {
-            // Reset form for new project
+            // Reset form
             form.style = '';
+            form.format = '';
             form.company_name = '';
             form.contact = '';
             form.project_name = '';
-            form.format = '';
             form.camera = '';
             form.quality = '';
             form.music = '';
             form.music_link = '';
             form.file_link = '';
             form.notes = '';
-            form.total_price = Number(props.basePrice);
-            form.with_agent = false;
             agentOption.value = '';
+            perPropertyOption.value = '';
+            form.with_agent = false;
+            form.per_property = false;
         }
     },
     { immediate: true },
@@ -181,9 +263,9 @@ const handleSubmit = () => {
                                 <SelectValue placeholder="Format" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="horizontal">Horizontal</SelectItem>
-                                <SelectItem value="vertical">Vertical</SelectItem>
-                                <SelectItem value="horizontal and vertical package"> Horizontal and Vertical Package </SelectItem>
+                                <SelectItem v-for="option in formatOptions" :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                         <span v-if="form.errors.format" class="text-sm text-red-500">{{ form.errors.format }}</span>
@@ -206,6 +288,20 @@ const handleSubmit = () => {
                             <SelectContent>
                                 <SelectItem value="with-agent">With Agent (Add $10)</SelectItem>
                                 <SelectItem value="no-agent">No Agent</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <!-- Per Property Option -->
+                    <div class="space-y-2">
+                        <Label>With per property line?</Label>
+                        <Select v-model="perPropertyOption">
+                            <SelectTrigger class="w-full">
+                                <SelectValue placeholder="Select an option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="add-per-property">Add per property line (Add $5)</SelectItem>
+                                <SelectItem value="no">No</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -262,15 +358,15 @@ const handleSubmit = () => {
                         <Label>More Instructions (Optional)</Label>
                         <Input v-model="form.notes" placeholder="Enter more instructions" />
                     </div>
+                </div>
+                <!-- Total & Submit -->
+                <div class="mt-8 text-xl font-semibold">Total: ${{ form.total_price.toFixed(2) }}</div>
 
-                    <!-- Total & Submit -->
-                    <div class="mt-8 text-xl font-semibold">Total: ${{ Number(form.total_price).toFixed(2) }}</div>
-                    <div class="mt-8 flex justify-end">
-                        <Button type="submit" :disabled="form.processing">
-                            <span v-if="form.processing" class="mr-2 animate-spin">⏳</span>
-                            {{ props.project ? 'Save Changes' : 'Place Order' }}
-                        </Button>
-                    </div>
+                <div class="mt-8 flex justify-end">
+                    <Button type="submit" :disabled="form.processing">
+                        <span v-if="form.processing" class="mr-2 animate-spin">⏳</span>
+                        {{ props.project ? 'Save Changes' : 'Place Order' }}
+                    </Button>
                 </div>
             </form>
         </DialogContent>

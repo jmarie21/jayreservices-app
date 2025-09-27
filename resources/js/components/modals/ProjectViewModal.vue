@@ -3,16 +3,34 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AppPageProps, Projects } from '@/types';
+import { Paginated } from '@/types/app-page-prop';
 import { mapStatusForClient } from '@/utils/statusMapper';
-import { router } from '@inertiajs/vue3';
+import { router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { Textarea } from '../ui/textarea';
 
 const props = defineProps<{
     isOpen: boolean;
     onClose: () => void;
-    project: import('@/types').Projects;
+    project: import('@/types').Projects & {
+        comments?: Array<{
+            id: number;
+            body: string;
+            created_at: string;
+            user: { id: number; name: string };
+        }>;
+    };
     role: 'client' | 'editor' | 'admin';
 }>();
+
+const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any }>>();
+// const comments = ref(props.project.comments ? [...props.project.comments] : []);
+// const comments = computed(() => page.props.projects.data.flatMap((project) => project.comments ?? []));
+const comments = computed(() => {
+    const projectFromPage = page.props.projects.data.find((p) => p.id === props.project.id);
+    return projectFromPage?.comments ?? [];
+});
 
 const statusLabels: Record<'pending' | 'in_progress' | 'completed', string> = {
     pending: 'Pending',
@@ -40,11 +58,24 @@ const saveOutputLink = () => {
     );
 };
 
-const newComment = ref('');
-const comments = ref([
-    { id: 1, author: 'John Doe', avatar: '', text: 'Great work so far!', time: '2h ago' },
-    { id: 2, author: 'Jane Smith', avatar: '', text: 'Waiting for the final output link.', time: '1h ago' },
-]);
+const commentForm = useForm({
+    body: '',
+});
+
+const submitComment = () => {
+    if (!commentForm.body) return;
+
+    commentForm.post(route('projects.comments.store', props.project.id), {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            const newComment = (page.props.flash as any)?.newComment;
+            if (newComment) {
+                comments.value.push(newComment); // ✅ reactive update
+            }
+            commentForm.reset('body');
+        },
+    });
+};
 </script>
 
 <template>
@@ -128,7 +159,9 @@ const comments = ref([
 
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-medium text-gray-500">Total Price</span>
-                                <span class="text-lg font-bold text-green-600">${{ project.total_price }}</span>
+                                <span class="text-lg font-bold text-green-600">
+                                    {{ role === 'editor' ? `₱${project.editor_price}` : `$${project.total_price}` }}
+                                </span>
                             </div>
 
                             <div class="flex items-center justify-between">
@@ -185,34 +218,49 @@ const comments = ref([
                 </div>
 
                 <!-- Right Column: Comments -->
-                <!-- <div class="flex w-[350px] flex-col border-l bg-white">
+                <div class="flex w-[460px] flex-col border-l bg-white">
                     <div class="border-b p-4">
                         <h3 class="text-lg font-semibold">Comments</h3>
-                    </div> -->
+                    </div>
 
-                <!-- Scrollable comments area -->
-                <!-- <ScrollArea class="min-h-0 flex-1 p-4">
-                        <div class="space-y-4">
+                    <!-- Scrollable comments area -->
+                    <ScrollArea class="min-h-0 flex-1 p-4">
+                        <div v-if="comments.length === 0" class="text-sm text-gray-500">No comments yet.</div>
+                        <div v-else class="space-y-4">
                             <div v-for="comment in comments" :key="comment.id" class="flex items-start space-x-3">
-                                <Avatar class="h-8 w-8">
-                                    <AvatarImage :src="comment.avatar" />
-                                    <AvatarFallback>{{ comment.author[0] }}</AvatarFallback>
-                                </Avatar>
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-bold">
+                                    {{ comment.user.name.charAt(0).toUpperCase() }}
+                                </div>
                                 <div class="break-words">
-                                    <p class="text-sm font-semibold">{{ comment.author }}</p>
-                                    <p class="text-sm text-gray-700">{{ comment.text }}</p>
-                                    <span class="text-xs text-gray-400">{{ comment.time }}</span>
+                                    <p class="text-sm font-semibold">{{ comment.user.name }}</p>
+                                    <p class="text-sm whitespace-pre-line text-gray-700">{{ comment.body }}</p>
+                                    <span class="text-xs text-gray-400">
+                                        {{ new Date(comment.created_at).toLocaleString() }}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                    </ScrollArea> -->
+                    </ScrollArea>
 
-                <!-- New comment input -->
-                <!-- <div class="flex items-center space-x-2 border-t p-4">
-                        <Input v-model="newComment" placeholder="Write a comment..." class="flex-1" />
-                        <Button size="sm">Send</Button>
+                    <!-- New comment input -->
+                    <div class="flex items-center space-x-2 border-t p-4">
+                        <Textarea
+                            v-model="commentForm.body"
+                            placeholder="Write a comment..."
+                            class="max-h-[150px] min-h-[40px] flex-1 resize-none overflow-y-auto"
+                            rows="1"
+                            @input="
+                                (e: Event) => {
+                                    const target = e.target as HTMLTextAreaElement;
+                                    target.style.height = 'auto';
+                                    target.style.height = target.scrollHeight + 'px';
+                                }
+                            "
+                            @keydown.enter.exact.prevent="() => submitComment()"
+                        />
+                        <Button size="sm" @click="submitComment" :disabled="commentForm.processing">Send</Button>
                     </div>
-                </div>-->
+                </div>
             </div>
         </DialogContent>
     </Dialog>

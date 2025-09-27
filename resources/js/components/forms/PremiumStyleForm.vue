@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PremiumForm } from '@/types/app-page-prop';
 import { useForm } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
-import { Checkbox } from '../ui/checkbox';
 
 const props = defineProps<{
     open: boolean;
-    basePrice: number;
     serviceId: number;
     project?: PremiumForm | null;
 }>();
@@ -21,13 +20,14 @@ const emit = defineEmits<{
 }>();
 
 const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
+const perPropertyOption = ref<'add-per-property' | 'no' | ''>('');
 
 interface Option {
     id: string;
     label: string;
 }
 
-// Available options
+// Effects & captions options
 const effectsOptions: Option[] = [
     { id: 'ken_burns', label: 'Ken Burns' },
     { id: 'building_house', label: 'Building A House Transition' },
@@ -35,12 +35,12 @@ const effectsOptions: Option[] = [
 ];
 
 const captionsOptions: Option[] = [
-    { id: '3d_text', label: '3D Text behind the Agent Talking (ADD $10)' },
-    { id: 'captions', label: 'Captions while the agent is talking (ADD $10)' },
-    { id: 'no_captions', label: 'NO NEED TO ADD TEXT OR CAPTIONS' },
+    { id: '3d_text', label: '3D Text behind the Agent Talking (Add $10)' },
+    { id: 'captions', label: 'Captions while the agent is talking (Add $10)' },
+    { id: 'no_captions', label: 'No text or captions needed' },
 ];
 
-// Initialize form with proper default values
+// Initialize form
 const form = useForm<PremiumForm>({
     style: props.project?.style ?? '',
     company_name: props.project?.company_name ?? '',
@@ -53,200 +53,157 @@ const form = useForm<PremiumForm>({
     music_link: props.project?.music_link ?? '',
     file_link: props.project?.file_link ?? '',
     notes: props.project?.notes ?? '',
-    total_price: Number(props.project?.total_price ?? props.basePrice ?? 0),
+    total_price: 0, // Will be calculated
     with_agent: props.project?.with_agent ?? false,
     service_id: props.serviceId,
     extra_fields: {
         effects: props.project?.extra_fields?.effects ? [...props.project.extra_fields.effects] : [],
         captions: props.project?.extra_fields?.captions ? [...props.project.extra_fields.captions] : [],
     },
+    per_property: props.project?.per_property ?? false,
 });
 
-function calculateTotalPrice() {
-    const agentCost = agentOption.value === 'with-agent' ? 10 : 0;
+// Computed total price
+const totalPrice = computed(() => {
+    let total = 0;
 
-    let extraCaptionCost = 0;
-    if (form.extra_fields.captions.includes('3d_text')) extraCaptionCost += 10;
-    if (form.extra_fields.captions.includes('captions')) extraCaptionCost += 10;
+    // Style & format extras
+    if (form.style === 'Premium video') {
+        if (form.format === 'horizontal') total += 80;
+        else if (form.format === 'vertical') total += 50;
+        else if (form.format === 'horizontal and vertical package') total += 130;
+    } else if (form.style === 'Premium drone only') {
+        if (form.format === 'horizontal') total += 45;
+        else if (form.format === 'vertical') total += 40;
+        else if (form.format === 'horizontal and vertical package') total += 85;
+    }
 
-    form.total_price = Number(props.basePrice) + agentCost + extraCaptionCost;
+    // Agent & per-property
+    if (agentOption.value === 'with-agent') total += 10;
+    if (perPropertyOption.value === 'add-per-property') total += 5;
+
+    // Captions
+    if (form.extra_fields.captions.includes('3d_text')) total += 10;
+    if (form.extra_fields.captions.includes('captions')) total += 10;
+
+    return total;
+});
+
+// Watch totalPrice to update form
+watch(
+    totalPrice,
+    (val) => {
+        form.total_price = val;
+    },
+    { immediate: true },
+);
+
+// Update flags when options change
+watch(agentOption, () => (form.with_agent = agentOption.value === 'with-agent'));
+watch(perPropertyOption, () => (form.per_property = perPropertyOption.value === 'add-per-property'));
+
+// Format options
+const formatOptions = computed(() => {
+    if (form.style === 'Premium video') {
+        return [
+            { value: 'horizontal', label: 'Horizontal ($80)' },
+            { value: 'vertical', label: 'Vertical ($50)' },
+            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical Package ($130)' },
+        ];
+    } else if (form.style === 'Premium drone only') {
+        return [
+            { value: 'horizontal', label: 'Horizontal ($45)' },
+            { value: 'vertical', label: 'Vertical ($40)' },
+            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical Package ($85)' },
+        ];
+    } else {
+        return [
+            { value: 'horizontal', label: 'Horizontal' },
+            { value: 'vertical', label: 'Vertical' },
+            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical Package' },
+        ];
+    }
+});
+
+// Handle checkbox changes
+function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
+    const isChecked = checked === true;
+    const arr = [...form.extra_fields.effects];
+    if (isChecked && !arr.includes(id)) arr.push(id);
+    if (!isChecked && arr.includes(id)) arr.splice(arr.indexOf(id), 1);
+    form.extra_fields.effects = arr;
+    form.extra_fields = { ...form.extra_fields };
 }
 
-watch(agentOption, () => {
-    form.with_agent = agentOption.value === 'with-agent';
-    calculateTotalPrice();
-});
+function handleCaptionChange(id: string, checked: boolean | 'indeterminate') {
+    const isChecked = checked === true;
+    const arr = [...form.extra_fields.captions];
+    if (isChecked && !arr.includes(id)) arr.push(id);
+    if (!isChecked && arr.includes(id)) arr.splice(arr.indexOf(id), 1);
+    form.extra_fields.captions = arr;
+    form.extra_fields = { ...form.extra_fields };
+}
 
-watch(() => form.extra_fields.captions, calculateTotalPrice, { deep: true });
-
-// Watch for modal opening and project changes
+// Watch project changes and modal open
 watch(
     [() => props.project, () => props.open],
-    ([project, isOpen]) => {
-        if (isOpen) {
-            if (project) {
-                // Editing existing project
-                form.style = project.style || '';
-                form.company_name = project.company_name || '';
-                form.contact = project.contact || '';
-                form.project_name = project.project_name || '';
-                form.format = project.format || '';
-                form.camera = project.camera || '';
-                form.quality = project.quality || '';
-                form.music = project.music || '';
-                form.music_link = project.music_link || '';
-                form.file_link = project.file_link || '';
-                form.notes = project.notes || '';
-                agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
-                form.with_agent = project.with_agent ?? false;
-
-                // Set extra_fields properly for editing - ensure clean arrays
-                form.extra_fields = {
-                    effects: project.extra_fields?.effects ? [...project.extra_fields.effects] : [],
-                    captions: project.extra_fields?.captions ? [...project.extra_fields.captions] : [],
-                };
-
-                const extraCost = project.with_agent ? 10 : 0;
-                form.total_price = Number(props.basePrice) + extraCost;
-
-                console.log('Loading project for editing:', {
-                    project,
-                    effects: form.extra_fields.effects,
-                    captions: form.extra_fields.captions,
-                });
-            } else {
-                // Creating new project - reset form
-                form.style = '';
-                form.company_name = '';
-                form.contact = '';
-                form.project_name = '';
-                form.format = '';
-                form.camera = '';
-                form.quality = '';
-                form.music = '';
-                form.music_link = '';
-                form.file_link = '';
-                form.notes = '';
-                form.total_price = props.basePrice;
-                form.with_agent = false;
-                agentOption.value = '';
-
-                // Reset extra_fields arrays
-                form.extra_fields = {
-                    effects: [],
-                    captions: [],
-                };
-            }
+    ([project, open]) => {
+        if (!open) return;
+        if (project) {
+            form.style = project.style || '';
+            form.format = project.format || '';
+            form.company_name = project.company_name || '';
+            form.contact = project.contact || '';
+            form.project_name = project.project_name || '';
+            form.camera = project.camera || '';
+            form.quality = project.quality || '';
+            form.music = project.music || '';
+            form.music_link = project.music_link || '';
+            form.file_link = project.file_link || '';
+            form.notes = project.notes || '';
+            agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
+            perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
+            form.extra_fields = {
+                effects: project.extra_fields?.effects ? [...project.extra_fields.effects] : [],
+                captions: project.extra_fields?.captions ? [...project.extra_fields.captions] : [],
+            };
+        } else {
+            form.style = '';
+            form.format = '';
+            form.company_name = '';
+            form.contact = '';
+            form.project_name = '';
+            form.camera = '';
+            form.quality = '';
+            form.music = '';
+            form.music_link = '';
+            form.file_link = '';
+            form.notes = '';
+            agentOption.value = '';
+            perPropertyOption.value = '';
+            form.extra_fields = { effects: [], captions: [] };
         }
     },
     { immediate: true },
 );
 
-// Handle checkbox changes using model-value approach
-function handleEffectChange(effectId: string, value: boolean | 'indeterminate') {
-    // Convert indeterminate to false, since we're dealing with simple checked/unchecked states
-    const checked = value === true;
-
-    const currentArray = [...form.extra_fields.effects];
-
-    if (checked) {
-        if (!currentArray.includes(effectId)) {
-            currentArray.push(effectId);
-        }
-    } else {
-        const index = currentArray.indexOf(effectId);
-        if (index > -1) {
-            currentArray.splice(index, 1);
-        }
-    }
-
-    // Update form data
-    form.extra_fields.effects = currentArray;
-    form.extra_fields = { ...form.extra_fields }; // Force reactivity
-
-    console.log(`Effect ${effectId} changed to ${checked}:`, currentArray);
-}
-
-function handleCaptionChange(captionId: string, value: boolean | 'indeterminate') {
-    // Convert indeterminate to false, since we're dealing with simple checked/unchecked states
-    const checked = value === true;
-
-    const currentArray = [...form.extra_fields.captions];
-
-    if (checked) {
-        if (!currentArray.includes(captionId)) {
-            currentArray.push(captionId);
-        }
-    } else {
-        const index = currentArray.indexOf(captionId);
-        if (index > -1) {
-            currentArray.splice(index, 1);
-        }
-    }
-
-    // Update form data
-    form.extra_fields.captions = currentArray;
-    form.extra_fields = { ...form.extra_fields }; // Force reactivity
-
-    console.log(`Caption ${captionId} changed to ${checked}:`, currentArray);
-}
-
+// Submit handler
 const handleSubmit = () => {
     const isEditing = !!props.project;
-
-    // Create a clean data object to ensure proper serialization
-    const submitData = {
-        style: form.style,
-        company_name: form.company_name,
-        contact: form.contact,
-        project_name: form.project_name,
-        format: form.format,
-        camera: form.camera,
-        quality: form.quality,
-        music: form.music,
-        music_link: form.music_link,
-        file_link: form.file_link,
-        notes: form.notes,
-        total_price: form.total_price,
-        with_agent: form.with_agent,
-        service_id: form.service_id,
-        extra_fields: {
-            effects: [...form.extra_fields.effects], // Create clean arrays
-            captions: [...form.extra_fields.captions],
-        },
-    };
-
-    // Debug log to check what's being sent
-    console.log('Clean form data being submitted:', submitData);
-    console.log('Original form extra_fields:', form.extra_fields);
+    const submitData = { ...form, extra_fields: { effects: [...form.extra_fields.effects], captions: [...form.extra_fields.captions] } };
 
     if (isEditing) {
-        // Use transform to send clean data
         form.transform(() => submitData).put(route('projects.client_update', props.project!.id), {
             onSuccess: () => {
-                toast.success('Updated successfully!', {
-                    description: 'Your order was updated successfully!',
-                    position: 'top-right',
-                });
+                toast.success('Updated successfully!', { description: 'Your order was updated successfully!', position: 'top-right' });
                 emit('close');
-            },
-            onError: (error) => {
-                console.error('Validation errors:', form.errors);
             },
         });
     } else {
-        // Use transform to send clean data
         form.transform(() => submitData).post(route('projects.store'), {
             onSuccess: () => {
-                toast.success('Order placed', {
-                    description: 'Your order has been placed.',
-                    position: 'top-right',
-                });
-                console.log('Form extra_fields on success:', form.extra_fields);
+                toast.success('Order placed', { description: 'Your order has been placed.', position: 'top-right' });
                 emit('close');
-            },
-            onError: (error) => {
-                console.error('Validation errors:', form.errors);
             },
         });
     }
@@ -308,11 +265,12 @@ const handleSubmit = () => {
                                 <SelectValue placeholder="Format" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="horizontal">Horizontal</SelectItem>
-                                <SelectItem value="vertical">Vertical</SelectItem>
-                                <SelectItem value="horizontal and vertical package"> Horizontal and Vertical Package </SelectItem>
+                                <SelectItem v-for="option in formatOptions" :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </SelectItem>
                             </SelectContent>
                         </Select>
+
                         <span v-if="form.errors.format" class="text-sm text-red-500">{{ form.errors.format }}</span>
                     </div>
 
@@ -409,6 +367,20 @@ const handleSubmit = () => {
                         </div>
                     </div>
 
+                    <!-- Per Property Option -->
+                    <div class="space-y-2">
+                        <Label>With per property line?</Label>
+                        <Select v-model="perPropertyOption">
+                            <SelectTrigger class="w-full">
+                                <SelectValue placeholder="Select an option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="add-per-property">Add per property line (Add $5)</SelectItem>
+                                <SelectItem value="no">No</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <!-- File Link -->
                     <div class="space-y-2">
                         <Label>File Link</Label>
@@ -421,15 +393,14 @@ const handleSubmit = () => {
                         <Label>More Instructions (Optional)</Label>
                         <Input v-model="form.notes" placeholder="Enter more instructions" />
                     </div>
-
-                    <!-- Total & Submit -->
-                    <div class="mt-8 text-xl font-semibold">Total: ${{ Number(form.total_price).toFixed(2) }}</div>
-                    <div class="mt-8 flex justify-end">
-                        <Button type="submit" :disabled="form.processing">
-                            <span v-if="form.processing" class="mr-2 animate-spin">⏳</span>
-                            {{ props.project ? 'Save Changes' : 'Place Order' }}
-                        </Button>
-                    </div>
+                </div>
+                <!-- Total & Submit -->
+                <div class="mt-8 text-xl font-semibold">Total: ${{ Number(form.total_price).toFixed(2) }}</div>
+                <div class="mt-8 flex justify-end">
+                    <Button type="submit" :disabled="form.processing">
+                        <span v-if="form.processing" class="mr-2 animate-spin">⏳</span>
+                        {{ props.project ? 'Save Changes' : 'Place Order' }}
+                    </Button>
                 </div>
             </form>
         </DialogContent>

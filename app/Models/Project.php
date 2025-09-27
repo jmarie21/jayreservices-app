@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
@@ -28,11 +29,15 @@ class Project extends Model
         'status',
         'extra_fields',
         'with_agent',
+        'editor_price',
+        'per_property'
     ];
 
     protected $casts = [
         'extra_fields' => 'array',
         'total_price' => 'decimal:2',
+        'with_agent' => 'boolean',
+        'per_property' => 'boolean'
     ];
 
     public function client(): BelongsTo
@@ -54,5 +59,10 @@ class Project extends Model
     {
         return $this->belongsToMany(Invoice::class, 'invoice_project')
                     ->withTimestamps();
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(ProjectComment::class);
     }
 }

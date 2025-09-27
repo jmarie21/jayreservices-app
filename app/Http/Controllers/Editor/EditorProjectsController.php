@@ -20,7 +20,7 @@ class EditorProjectsController extends Controller
 
         $filters = $request->only(['status', 'date_from', 'date_to', 'search']);
 
-        $projects = Project::with(['client', 'service'])
+        $projects = Project::with(['client', 'service', 'comments.user'])
             ->where('editor_id', $editor->id)
             ->when($filters['status'] ?? null, fn($q, $status) => $q->where('status', $status))
             ->when($filters['date_from'] ?? null, fn($q, $date) => $q->whereDate('created_at', '>=', $date))

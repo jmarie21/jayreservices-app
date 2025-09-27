@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ProjectManagement;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Client\ProjectsController;
 use App\Http\Controllers\Client\ServicesController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Editor\EditorProjectsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -22,6 +23,7 @@ Route::middleware(['auth', 'client'])->group(function () {
     Route::get("/projects",  [ProjectsController::class, 'index'])->name("projects");
     Route::post("/projects", [ProjectsController::class, 'createProject'])->name('projects.store');
     Route::put("/projects/{project}", [ProjectsController::class, 'updateProject'])->name('projects.client_update');
+    Route::put('/projects/{project}/status', [ProjectsController::class, 'updateStatus'])->name('projects.updateStatus');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -54,6 +56,11 @@ Route::middleware(['auth', 'editor'])->group(function () {
 
     Route::get('/editor-projects', [EditorProjectsController::class, 'index'])->name('editor.projects.index');
     Route::patch('/editor-projects/{project}', [EditorProjectsController::class, 'update'])->name('editor.projects.update');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/projects/{project}/comments', [CommentController::class, 'store'])
+         ->name('projects.comments.store');
 });
 
 

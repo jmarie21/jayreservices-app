@@ -79,6 +79,7 @@ export interface Projects {
     file_link: string;
     notes?: string;
     total_price: number;
+    editor_price: number;
     output_link?: string;
 
     status: 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
@@ -86,6 +87,18 @@ export interface Projects {
 
     created_at: string;
     updated_at: string;
+
+    comments?: Comment[];
+}
+
+export interface Comment {
+    id: number;
+    body: string;
+    created_at: string;
+    user: {
+        id: number;
+        name: string;
+    };
 }
 
 // Invoice interface
