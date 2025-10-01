@@ -158,7 +158,7 @@ const handleSubmit = () => {
                 emit('close');
             },
             onError: (error) => {
-                console.error('Validation errors:', form.errors);
+                console.error('Validation errors:', form.errors, error);
             },
         });
     } else {
@@ -171,7 +171,7 @@ const handleSubmit = () => {
                 emit('close');
             },
             onError: (error) => {
-                console.error('Validation errors:', form.errors);
+                console.error('Validation errors:', form.errors, error);
             },
         });
     }

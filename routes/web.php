@@ -36,6 +36,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get("/project-mgmt/{client}", [ProjectManagement::class, 'showClientProjects'])->name("client.projects");
     Route::patch('/projects/{project}', [ProjectManagement::class, 'update'])->name('projects.admin_update');
+    Route::patch('/projects/{project}/price', [ProjectManagement::class, 'updatePrice'])->name('projects.update-price');
+
+    Route::get('/all-projects', [ProjectManagement::class, 'showAllProjects'])->name('projects.all');
+
 
     Route::get('/editor-mgmt/{editor}', [EditorManagement::class, 'showEditorProjects'])->name('editor.projects');
 

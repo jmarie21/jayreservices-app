@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Invoice, Projects } from '@/types';
 import { router, useForm } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, watch } from 'vue';
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
@@ -29,7 +29,7 @@ const formatDate = (date: string | undefined | null) => {
 };
 
 // Only local state for PayPal link
-const paypalLink = ref('');
+// const paypalLink = ref('');
 
 // --- Invoice form ---
 const form = useForm({

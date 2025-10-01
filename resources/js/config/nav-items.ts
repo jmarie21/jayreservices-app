@@ -14,6 +14,11 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             icon: UserCog,
         },
         {
+            title: 'All Projects',
+            href: '/all-projects',
+            icon: LayoutGrid,
+        },
+        {
             title: 'Project Management',
             href: undefined,
             icon: FolderOpenDot,

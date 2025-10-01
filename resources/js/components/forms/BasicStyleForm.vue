@@ -42,28 +42,28 @@ const form = useForm<BasicForm>({
     per_property: props.project?.per_property,
 });
 
-const calculateExtraPrice = () => {
-    let extra = 0;
+// const calculateExtraPrice = () => {
+//     let extra = 0;
 
-    // Price based on style and format
-    if (form.style === 'basic video') {
-        if (form.format === 'horizontal') extra += 40;
-        else if (form.format === 'vertical') extra += 25;
-        else if (form.format === 'horizontal and vertical package') extra += 40 + 25;
-    } else if (form.style === 'basic drone only') {
-        if (form.format === 'horizontal') extra += 25;
-        else if (form.format === 'vertical') extra += 20;
-        else if (form.format === 'horizontal and vertical package') extra += 25 + 20;
-    }
+//     // Price based on style and format
+//     if (form.style === 'basic video') {
+//         if (form.format === 'horizontal') extra += 40;
+//         else if (form.format === 'vertical') extra += 25;
+//         else if (form.format === 'horizontal and vertical package') extra += 40 + 25;
+//     } else if (form.style === 'basic drone only') {
+//         if (form.format === 'horizontal') extra += 25;
+//         else if (form.format === 'vertical') extra += 20;
+//         else if (form.format === 'horizontal and vertical package') extra += 25 + 20;
+//     }
 
-    // Price based on agent
-    const agentExtra = agentOption.value === 'with-agent' ? 10 : 0;
+//     // Price based on agent
+//     const agentExtra = agentOption.value === 'with-agent' ? 10 : 0;
 
-    // Price based on per property
-    const perPropertyExtra = perPropertyOption.value === 'add-per-property' ? 5 : 0;
+//     // Price based on per property
+//     const perPropertyExtra = perPropertyOption.value === 'add-per-property' ? 5 : 0;
 
-    return Number(props.basePrice) + extra + agentExtra + perPropertyExtra;
-};
+//     return Number(props.basePrice) + extra + agentExtra + perPropertyExtra;
+// };
 
 // Computed total price based on selected options
 const totalPrice = computed(() => {
@@ -188,7 +188,7 @@ const handleSubmit = () => {
                 emit('close');
             },
             onError: (error) => {
-                console.error('Validation errors:', form.errors);
+                console.error('Validation errors:', form.errors, error);
             },
         });
     } else {
@@ -201,7 +201,7 @@ const handleSubmit = () => {
                 emit('close');
             },
             onError: (error) => {
-                console.error('Validation errors:', form.errors);
+                console.error('Validation errors:', form.errors, error);
             },
         });
     }

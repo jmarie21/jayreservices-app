@@ -185,8 +185,11 @@ watch(
 function handleEffectChange(effectId: string, value: boolean | 'indeterminate') {
     const checked = value === true;
     const current = [...form.extra_fields.effects];
-    if (checked) !current.includes(effectId) && current.push(effectId);
-    else current.splice(current.indexOf(effectId), 1);
+    if (checked && !current.includes(effectId)) {
+        current.push(effectId);
+    } else {
+        current.splice(current.indexOf(effectId), 1);
+    }
     form.extra_fields.effects = current;
     form.extra_fields = { ...form.extra_fields };
 }
@@ -194,8 +197,11 @@ function handleEffectChange(effectId: string, value: boolean | 'indeterminate') 
 function handleCaptionChange(captionId: string, value: boolean | 'indeterminate') {
     const checked = value === true;
     const current = [...form.extra_fields.captions];
-    if (checked) !current.includes(captionId) && current.push(captionId);
-    else current.splice(current.indexOf(captionId), 1);
+    if (checked && !current.includes(captionId)) {
+        current.push(captionId);
+    } else {
+        current.splice(current.indexOf(captionId), 1);
+    }
     form.extra_fields.captions = current;
     form.extra_fields = { ...form.extra_fields };
 }
