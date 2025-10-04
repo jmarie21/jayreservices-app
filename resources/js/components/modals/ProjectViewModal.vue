@@ -13,14 +13,7 @@ import { Textarea } from '../ui/textarea';
 const props = defineProps<{
     isOpen: boolean;
     onClose: () => void;
-    project: import('@/types').Projects & {
-        comments?: Array<{
-            id: number;
-            body: string;
-            created_at: string;
-            user: { id: number; name: string };
-        }>;
-    };
+    project: Projects;
     role: 'client' | 'editor' | 'admin';
 }>();
 
@@ -228,11 +221,11 @@ const submitComment = () => {
                         <div v-if="comments.length === 0" class="text-sm text-gray-500">No comments yet.</div>
                         <div v-else class="space-y-4">
                             <div v-for="comment in comments" :key="comment.id" class="flex items-start space-x-3">
-                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-bold">
-                                    {{ comment.user.name.charAt(0).toUpperCase() }}
+                                <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-bold">
+                                    {{ comment.user?.role === 'client' ? 'C' : comment.user?.name?.charAt(0).toUpperCase() }}
                                 </div>
                                 <div class="break-words">
-                                    <p class="text-sm font-semibold">{{ comment.user.name }}</p>
+                                    <p class="text-sm font-semibold">{{ comment.user.role === 'client' ? 'Client' : comment.user.name }}</p>
                                     <p class="text-sm whitespace-pre-line text-gray-700">{{ comment.body }}</p>
                                     <span class="text-xs text-gray-400">
                                         {{ new Date(comment.created_at).toLocaleString() }}

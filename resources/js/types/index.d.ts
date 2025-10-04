@@ -98,6 +98,7 @@ export interface Comment {
     user: {
         id: number;
         name: string;
+        role: string;
     };
 }
 

@@ -35,6 +35,13 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $visible = [
+        'id',
+        'name',
+        'email',
+        'role',
+    ];
+
     /**
      * Get the attributes that should be cast.
      *
