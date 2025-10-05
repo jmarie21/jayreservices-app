@@ -184,8 +184,8 @@ const markForRevision = (projectId: number) => {
                         <TableCell>{{ project.output_link }}</TableCell>
                         <TableCell class="space-x-4">
                             <Button @click="openEditModal(project)" :disabled="mapStatusForClient(project.status) === 'completed'"> Edit </Button>
-                            <Button @click="openViewModal(project)">View order</Button>
-                            <Button @click="markForRevision(project.id)">Mark for revision</Button>
+                            <Button @click="openViewModal(project)" class="bg-blue-500 hover:bg-blue-600 focus:ring-blue-300">View order</Button>
+                            <Button @click="markForRevision(project.id)" variant="destructive">Mark for revision</Button>
                         </TableCell>
                     </TableRow>
                 </TableBody>
