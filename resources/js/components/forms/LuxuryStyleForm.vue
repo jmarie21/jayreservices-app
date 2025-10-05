@@ -32,6 +32,8 @@ const effectsOptions: Option[] = [
     { id: 'Ken Burns', label: 'Ken Burns' },
     { id: 'House Drop', label: 'House Drop' },
     { id: 'Pillar Masking', label: 'Pillar Masking  (This is only applicable if you have the footage)' },
+    { id: 'Virtual Staging AI', label: 'Virtual Staging AI ($20)' },
+    { id: 'Day to Night AI', label: 'Day to Night AI ($15)' },
     { id: 'No Effects', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
 ];
 
@@ -85,9 +87,13 @@ function calculateTotalPrice() {
     if (perPropertyOption.value === 'add-per-property') total += 5;
 
     // Captions cost
-    if (form.extra_fields.captions.includes('3d_text')) total += 10;
-    if (form.extra_fields.captions.includes('3d_text_ground')) total += 15;
-    if (form.extra_fields.captions.includes('captions')) total += 10;
+    if (form.extra_fields.captions.includes('3D Text behind the Agent Talking')) total += 10;
+    if (form.extra_fields.captions.includes('3D Text tracked on the ground etc.')) total += 15;
+    if (form.extra_fields.captions.includes('Captions while the agent is talking')) total += 10;
+
+    //Effects
+    if (form.extra_fields.effects.includes('Virtual Staging AI')) total += 20;
+    if (form.extra_fields.effects.includes('Day to Night AI')) total += 15;
 
     form.total_price = total;
 }

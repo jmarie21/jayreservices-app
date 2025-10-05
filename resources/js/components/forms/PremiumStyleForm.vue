@@ -31,6 +31,8 @@ interface Option {
 const effectsOptions: Option[] = [
     { id: 'Ken Burns', label: 'Ken Burns' },
     { id: 'Building A House Transition', label: 'Building A House Transition' },
+    { id: 'Virtual Staging AI', label: 'Virtual Staging AI ($20)' },
+    { id: 'Day to Night AI', label: 'Day to Night AI ($15)' },
     { id: 'No Effects', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
 ];
 
@@ -83,8 +85,12 @@ const totalPrice = computed(() => {
     if (perPropertyOption.value === 'add-per-property') total += 5;
 
     // Captions
-    if (form.extra_fields.captions.includes('3d_text')) total += 10;
-    if (form.extra_fields.captions.includes('captions')) total += 10;
+    if (form.extra_fields.captions.includes('3D Text behind the Agent Talking')) total += 10;
+    if (form.extra_fields.captions.includes('Captions while the agent is talking')) total += 10;
+
+    //Effects
+    if (form.extra_fields.effects.includes('Virtual Staging AI')) total += 20;
+    if (form.extra_fields.effects.includes('Day to Night AI')) total += 15;
 
     return total;
 });
