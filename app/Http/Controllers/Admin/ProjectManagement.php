@@ -121,4 +121,10 @@ class ProjectManagement extends Controller
         return back()->with('success', 'Price updated successfully.');
     }
 
+    public function destroy(Project $project)
+    {
+        $project->delete();
+
+        return back()->with('success', 'Project deleted successfully.');
+    }
 }

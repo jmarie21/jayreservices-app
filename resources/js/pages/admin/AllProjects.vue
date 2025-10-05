@@ -2,16 +2,19 @@
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Toaster } from '@/components/ui/sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 
 type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
 
@@ -40,6 +43,9 @@ const projects = computed(() => pageProps.projects);
 
 const showModal = ref(false);
 const selectedProject = ref<Projects | null>(null);
+
+const showDeleteModal = ref(false);
+const projectToDelete = ref<Projects | null>(null);
 
 const editorPrices = ref<Record<number, number | undefined>>({});
 watch(
@@ -195,10 +201,38 @@ onMounted(() => {
         applyFilters(filters.value);
     }
 });
+
+const confirmDelete = (project: Projects) => {
+    projectToDelete.value = project;
+    showDeleteModal.value = true;
+};
+
+const closeDeleteModal = () => {
+    projectToDelete.value = null;
+    showDeleteModal.value = false;
+};
+
+const deleteProject = () => {
+    if (!projectToDelete.value) return;
+
+    router.delete(route('projects.destroy', projectToDelete.value.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            // Optimistic update
+            const index = projects.value.data.findIndex((p) => p.id === projectToDelete.value?.id);
+            if (index !== -1) {
+                projects.value.data.splice(index, 1);
+            }
+            closeDeleteModal();
+            toast.success('Project deleted successfully.', { position: 'top-right' });
+        },
+    });
+};
 </script>
 
 <template>
     <Head :title="`All Projects`" />
+    <Toaster />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
             <div class="mb-2 flex flex-col gap-4">
@@ -337,6 +371,7 @@ onMounted(() => {
                         <TableCell>{{ new Date(project.created_at).toLocaleDateString() }}</TableCell>
                         <TableCell>
                             <Button @click="openViewModal(project)">View Details</Button>
+                            <Button variant="destructive" class="ml-2" @click="confirmDelete(project)"> Delete </Button>
                         </TableCell>
                     </TableRow>
                 </TableBody>
@@ -371,5 +406,23 @@ onMounted(() => {
             :role="page.props.auth.user.role"
             @close="closeViewModal"
         />
+
+        <!-- Confirmation Delete Modal -->
+        <Dialog :open="showDeleteModal" @update:open="showDeleteModal = $event">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Delete Project</DialogTitle>
+                    <p class="text-sm text-muted-foreground">
+                        Are you sure you want to delete
+                        <span class="font-semibold">{{ projectToDelete?.project_name }}</span
+                        >? This action cannot be undone.
+                    </p>
+                </DialogHeader>
+                <div class="mt-4 flex justify-end gap-2">
+                    <Button variant="outline" @click="closeDeleteModal">Cancel</Button>
+                    <Button variant="destructive" @click="deleteProject">Delete</Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>

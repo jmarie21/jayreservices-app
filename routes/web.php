@@ -33,6 +33,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post("/user-mgmt", [UserController::class, 'createNewUser'])->name('user-mgmt.store');
     Route::put("/user-mgmt/{user}", [UserController::class, 'updateUser'])->name("user-mgmt.update");
     Route::delete("/user-mgmt/{user}", [UserController::class, 'deleteUser'])->name('user-mgmt.destroy');
+    Route::delete('/admin/projects/{project}', [ProjectManagement::class, 'destroy'])->name('projects.destroy');
 
     Route::get("/project-mgmt/{client}", [ProjectManagement::class, 'showClientProjects'])->name("client.projects");
     Route::patch('/projects/{project}', [ProjectManagement::class, 'update'])->name('projects.admin_update');
