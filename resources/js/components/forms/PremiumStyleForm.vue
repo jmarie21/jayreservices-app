@@ -29,15 +29,15 @@ interface Option {
 
 // Effects & captions options
 const effectsOptions: Option[] = [
-    { id: 'ken_burns', label: 'Ken Burns' },
-    { id: 'building_house', label: 'Building A House Transition' },
-    { id: 'no_effect', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
+    { id: 'Ken Burns', label: 'Ken Burns' },
+    { id: 'Building A House Transition', label: 'Building A House Transition' },
+    { id: 'No Effects', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
 ];
 
 const captionsOptions: Option[] = [
-    { id: '3d_text', label: '3D Text behind the Agent Talking (Add $10)' },
-    { id: 'captions', label: 'Captions while the agent is talking (Add $10)' },
-    { id: 'no_captions', label: 'No text or captions needed' },
+    { id: '3D Text behind the Agent Talking', label: '3D Text behind the Agent Talking (Add $10)' },
+    { id: 'Captions while the agent is talking', label: 'Captions while the agent is talking (Add $10)' },
+    { id: 'No Captions', label: 'No text or captions needed' },
 ];
 
 // Initialize form

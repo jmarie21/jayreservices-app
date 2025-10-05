@@ -29,17 +29,17 @@ interface Option {
 }
 
 const effectsOptions: Option[] = [
-    { id: 'ken_burns', label: 'Ken Burns' },
-    { id: 'house_drop', label: 'House Drop' },
-    { id: 'pillar_masking', label: 'Pillar Masking  (This is only applicable if you have the footage)' },
-    { id: 'no_effect', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
+    { id: 'Ken Burns', label: 'Ken Burns' },
+    { id: 'House Drop', label: 'House Drop' },
+    { id: 'Pillar Masking', label: 'Pillar Masking  (This is only applicable if you have the footage)' },
+    { id: 'No Effects', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
 ];
 
 const captionsOptions: Option[] = [
-    { id: '3d_text', label: '3D Text behind the Agent Talking (ADD $10)' },
-    { id: '3d_text_ground', label: '3D Text tracked on the ground etc. (ADD $15)' },
-    { id: 'captions', label: 'Captions while the agent is talking (ADD $10)' },
-    { id: 'no_captions', label: 'NO NEED TO ADD TEXT OR CAPTIONS' },
+    { id: '3D Text behind the Agent Talking', label: '3D Text behind the Agent Talking (ADD $10)' },
+    { id: '3D Text tracked on the ground etc.', label: '3D Text tracked on the ground etc. (ADD $15)' },
+    { id: 'Captions while the agent is talking', label: 'Captions while the agent is talking (ADD $10)' },
+    { id: 'No Captions', label: 'NO NEED TO ADD TEXT OR CAPTIONS' },
 ];
 
 const form = useForm<LuxuryForm>({

@@ -188,6 +188,29 @@ const submitComment = () => {
                                     {{ project.per_property === true ? 'Yes' : 'No' }}
                                 </span>
                             </div>
+
+                            <!-- Extra Fields -->
+                            <div v-if="project.extra_fields" class="space-y-4">
+                                <!-- Captions -->
+                                <div v-if="project.extra_fields.captions?.length" class="flex items-start justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Captions</span>
+                                    <ul class="list-inside list-disc space-y-1 text-right text-sm text-gray-700">
+                                        <li v-for="(caption, index) in project.extra_fields.captions" :key="index">
+                                            {{ caption }}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <!-- Effects -->
+                                <div v-if="project.extra_fields.effects?.length" class="flex items-start justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Effects</span>
+                                    <ul class="list-inside list-disc space-y-1 text-right text-sm text-gray-700">
+                                        <li v-for="(effect, index) in project.extra_fields.effects" :key="index">
+                                            {{ effect }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Notes -->

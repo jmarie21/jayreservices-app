@@ -66,6 +66,7 @@ export interface Projects {
     service: Record<string>;
     editor: Record<string>;
     client: Record<string>;
+    extra_fields: Record<string>;
 
     style: string;
     company_name: string;
