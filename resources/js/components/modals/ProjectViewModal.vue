@@ -188,15 +188,6 @@ const submitComment = () => {
                                     {{ project.per_property === true ? 'Yes' : 'No' }}
                                 </span>
                             </div>
-
-                            <div v-if="project.service?.features?.length" class="flex items-start justify-between">
-                                <span class="text-sm font-medium text-gray-500">Features</span>
-                                <ul class="list-inside list-disc space-y-1 text-right text-sm text-gray-700">
-                                    <li v-for="(feature, index) in project.service.features" :key="index">
-                                        {{ feature }}
-                                    </li>
-                                </ul>
-                            </div>
                         </div>
 
                         <!-- Notes -->
