@@ -10,7 +10,7 @@ const dashboardRoute = computed(() => {
     const user = page.props.auth.user;
     if (!user) return '/';
 
-    return user.role === 'admin' ? '/admin-dashboard' : user.role === 'client' ? '/services' : user.role === 'editor' ? '/editor-dashboard' : '/';
+    return user.role === 'admin' ? '/admin-dashboard' : user.role === 'client' ? '/services' : user.role === 'editor' ? '/editor-projects' : '/';
 });
 </script>
 

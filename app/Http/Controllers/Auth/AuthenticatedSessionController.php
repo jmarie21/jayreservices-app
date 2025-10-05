@@ -38,7 +38,7 @@ class AuthenticatedSessionController extends Controller
         $redirectRoute = match ($user->role) {
             "admin" => "dashboard",
             "client" => "services",
-            "editor" => 'editor-dashboard',
+            "editor" => 'editor.projects.index',
             default => "/"
         };
 

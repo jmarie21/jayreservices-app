@@ -81,6 +81,8 @@ export interface Projects {
     total_price: number;
     editor_price: number;
     output_link?: string;
+    with_agent?: boolean;
+    per_property?: boolean;
 
     status: 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
     extra_fields?: Record<string, any>;

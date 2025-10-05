@@ -126,12 +126,12 @@ const submitComment = () => {
                                 <a :href="project.music_link" target="_blank" class="text-blue-500 underline">View</a>
                             </div>
 
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center justify-between" v-if="role === 'admin'">
                                 <span class="text-sm font-medium text-gray-500">Company</span>
                                 <span class="text-base font-semibold">{{ project.company_name }}</span>
                             </div>
 
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center justify-between" v-if="role === 'admin'">
                                 <span class="text-sm font-medium text-gray-500">Contact</span>
                                 <span class="text-base font-semibold">{{ project.contact }}</span>
                             </div>
@@ -174,6 +174,29 @@ const submitComment = () => {
                                     }}
                                 </span>
                             </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-500">With Agent</span>
+                                <span class="text-base">
+                                    {{ project.with_agent === true ? 'Yes' : 'No' }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-500">With per property line</span>
+                                <span class="text-base">
+                                    {{ project.per_property === true ? 'Yes' : 'No' }}
+                                </span>
+                            </div>
+
+                            <div v-if="project.service?.features?.length" class="flex items-start justify-between">
+                                <span class="text-sm font-medium text-gray-500">Features</span>
+                                <ul class="list-inside list-disc space-y-1 text-right text-sm text-gray-700">
+                                    <li v-for="(feature, index) in project.service.features" :key="index">
+                                        {{ feature }}
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
 
                         <!-- Notes -->
@@ -202,7 +225,7 @@ const submitComment = () => {
                             </a>
 
                             <!-- Editor Upload Output Link -->
-                            <div v-if="role === 'editor'" class="space-y-2">
+                            <div v-if="role === 'editor' || role === 'admin'" class="space-y-2">
                                 <Input v-model="outputLink" placeholder="Paste output link..." />
                                 <Button class="w-full" @click="saveOutputLink">Upload Output Link</Button>
                             </div>
@@ -222,10 +245,32 @@ const submitComment = () => {
                         <div v-else class="space-y-4">
                             <div v-for="comment in comments" :key="comment.id" class="flex items-start space-x-3">
                                 <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-bold">
-                                    {{ comment.user?.role === 'client' ? 'C' : comment.user?.name?.charAt(0).toUpperCase() }}
+                                    {{
+                                        role === 'admin'
+                                            ? comment.user?.name?.charAt(0).toUpperCase()
+                                            : comment.user?.role === 'client'
+                                              ? 'C'
+                                              : comment.user?.role === 'editor'
+                                                ? 'E'
+                                                : comment.user?.role === 'admin'
+                                                  ? 'A'
+                                                  : '?'
+                                    }}
                                 </div>
                                 <div class="break-words">
-                                    <p class="text-sm font-semibold">{{ comment.user.role === 'client' ? 'Client' : comment.user.name }}</p>
+                                    <p class="text-sm font-semibold">
+                                        {{
+                                            role === 'admin'
+                                                ? comment.user?.name
+                                                : comment.user?.role === 'client'
+                                                  ? 'Client'
+                                                  : comment.user?.role === 'editor'
+                                                    ? 'Editor'
+                                                    : comment.user?.role === 'admin'
+                                                      ? 'Admin'
+                                                      : 'Unknown'
+                                        }}
+                                    </p>
                                     <p class="text-sm whitespace-pre-line text-gray-700">{{ comment.body }}</p>
                                     <span class="text-xs text-gray-400">
                                         {{ new Date(comment.created_at).toLocaleString() }}
