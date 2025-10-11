@@ -14,6 +14,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
 type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
+type Priority = 'urgent' | 'high' | 'normal' | 'low';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Editor Management', href: '/editor-mgmt' }];
 
@@ -31,8 +32,9 @@ const projects = computed(() => pageProps.projects);
 const showModal = ref(false);
 const selectedProject = ref<Projects | null>(null);
 
-const form = useForm<{ status: Status }>({
+const form = useForm<{ status: Status; priority: Priority }>({
     status: 'todo',
+    priority: 'normal',
 });
 
 const editorPrices = ref<Record<number, number | undefined>>({});
@@ -142,6 +144,7 @@ const goToPage = (pageNumber: number) => {
                         <TableHead>Service</TableHead>
                         <TableHead>Client</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Priority Level</TableHead>
                         <TableHead>Total Price</TableHead>
                         <TableHead>Editor Price</TableHead>
                         <TableHead>Created At</TableHead>
@@ -190,6 +193,32 @@ const goToPage = (pageNumber: number) => {
                                     >
                                         {{ label }}
                                     </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </TableCell>
+
+                        <!-- Priority Select -->
+                        <TableCell>
+                            <Select :modelValue="project.priority" @update:modelValue="(value) => updateProject(project.id, 'priority', value)">
+                                <SelectTrigger
+                                    class="w-[180px]"
+                                    :class="{
+                                        'font-semibold text-red-600': project.priority === 'urgent',
+                                        'text-orange-500': project.priority === 'high',
+                                        'text-blue-500': project.priority === 'normal',
+                                        'text-gray-400': project.priority === 'low',
+                                    }"
+                                >
+                                    <SelectValue placeholder="Select a priority" />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem value="urgent">Urgent</SelectItem>
+                                        <SelectItem value="high">High</SelectItem>
+                                        <SelectItem value="normal">Normal</SelectItem>
+                                        <SelectItem value="low">Low</SelectItem>
+                                    </SelectGroup>
                                 </SelectContent>
                             </Select>
                         </TableCell>
