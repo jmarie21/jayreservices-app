@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ProjectSentToClientMail;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class ProjectManagement extends Controller
@@ -100,10 +102,26 @@ class ProjectManagement extends Controller
         $validated = $request->validate([
             'editor_id' => 'nullable|exists:users,id',
             'status' => 'nullable|string',
-            'editor_price' => 'nullable|numeric|min:0'
+            'editor_price' => 'nullable|numeric|min:0',
+            'output_link' => 'nullable|string',
+            'priority' => 'nullable|in:urgent,high,normal,low',
         ]);
 
+        $oldStatus = $project->status;
+
         $project->update($validated);
+
+
+        // ✅ Send email if status changed to "sent_to_client"
+        if (
+            isset($validated['status']) &&
+            strtolower($validated['status']) === 'sent_to_client' &&
+            strtolower($oldStatus) !== 'sent_to_client'
+        ) {
+            if ($project->client && $project->client->email) {
+                Mail::to($project->client->email)->send(new ProjectSentToClientMail($project));
+            }
+        }
 
         return back()->with('success', 'Project updated successfully.');
     }

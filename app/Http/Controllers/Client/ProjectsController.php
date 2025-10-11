@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Mail\NewProjectNotification;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class ProjectsController extends Controller
@@ -70,8 +72,6 @@ class ProjectsController extends Controller
         $validated = $request->validate([
             "service_id" => ['required', 'exists:services,id'],
             "style" => ['required', 'string'],
-            "company_name" => ['required', 'string'],
-            "contact" => ['required', 'string'],
             "project_name" => ['required', 'string'],
             "format" => ['nullable', 'string'],
             "camera" => ['nullable', 'string'],
@@ -91,7 +91,10 @@ class ProjectsController extends Controller
         $validated['client_id'] = Auth::id(); 
         $validated['status'] = $validated['status'] ?? 'pending';
 
-        Project::create($validated);
+        $project = Project::create($validated);
+
+        // 📧 Send email notification to admin
+        // Mail::to('storageestate21@gmail.com')->send(new NewProjectNotification($project));
 
         return redirect(route("projects"))->with('message', 'Order placed successfully!');
     }
@@ -106,8 +109,6 @@ class ProjectsController extends Controller
         $validated = $request->validate([
             "service_id" => ['required', 'exists:services,id'],
             "style" => ['required', 'string'],
-            "company_name" => ['required', 'string'],
-            "contact" => ['required', 'string'],
             "project_name" => ['required', 'string'],
             "format" => ['nullable', 'string'],
             "camera" => ['nullable', 'string'],

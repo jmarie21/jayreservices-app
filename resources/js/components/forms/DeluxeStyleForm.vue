@@ -25,8 +25,6 @@ const perPropertyOption = ref<'add-per-property' | 'no' | ''>('');
 // Initialize form
 const form = useForm<DeluxeForm>({
     style: props.project?.style ?? '',
-    company_name: props.project?.company_name ?? '',
-    contact: props.project?.contact ?? '',
     project_name: props.project?.project_name ?? '',
     format: props.project?.format ?? '',
     camera: props.project?.camera ?? '',
@@ -105,6 +103,12 @@ const formatOptions = computed(() => {
     }
 });
 
+// Computed to get the label of the selected format
+const selectedFormatLabel = computed(() => {
+    const option = formatOptions.value.find((o) => o.value === form.format);
+    return option ? option.label : '';
+});
+
 // Watch project prop to initialize form
 watch(
     () => props.project,
@@ -112,8 +116,6 @@ watch(
         if (project) {
             form.style = project.style ?? '';
             form.format = project.format ?? '';
-            form.company_name = project.company_name ?? '';
-            form.contact = project.contact ?? '';
             form.project_name = project.project_name ?? '';
             form.camera = project.camera ?? '';
             form.quality = project.quality ?? '';
@@ -128,8 +130,6 @@ watch(
             // Reset for new project
             form.style = '';
             form.format = '';
-            form.company_name = '';
-            form.contact = '';
             form.project_name = '';
             form.camera = '';
             form.quality = '';
@@ -204,20 +204,6 @@ const handleSubmit = () => {
                         <span v-if="form.errors.style" class="text-sm text-red-500">{{ form.errors.style }}</span>
                     </div>
 
-                    <!-- Company Name -->
-                    <div class="space-y-2">
-                        <Label>Company Name</Label>
-                        <Input v-model="form.company_name" placeholder="Enter your company name" />
-                        <span v-if="form.errors.company_name" class="text-sm text-red-500">{{ form.errors.company_name }}</span>
-                    </div>
-
-                    <!-- Contact -->
-                    <div class="space-y-2">
-                        <Label>Email or Social Media</Label>
-                        <Input v-model="form.contact" placeholder="Enter your email or any social media" />
-                        <span v-if="form.errors.contact" class="text-sm text-red-500">{{ form.errors.contact }}</span>
-                    </div>
-
                     <!-- Project Name -->
                     <div class="space-y-2">
                         <Label>Project Name</Label>
@@ -230,7 +216,10 @@ const handleSubmit = () => {
                         <Label>Video Format</Label>
                         <Select v-model="form.format">
                             <SelectTrigger class="w-full">
-                                <SelectValue placeholder="Format" />
+                                <!-- Display selected label -->
+                                <SelectValue :value="form.format" placeholder="Format">
+                                    {{ selectedFormatLabel }}
+                                </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem v-for="option in formatOptions" :key="option.value" :value="option.value">

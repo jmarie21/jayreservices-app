@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AppPageProps, Projects } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
+import { linkify } from '@/utils/linkify';
 import { mapStatusForClient } from '@/utils/statusMapper';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import { Textarea } from '../ui/textarea';
 
 const props = defineProps<{
     isOpen: boolean;
@@ -18,8 +18,6 @@ const props = defineProps<{
 }>();
 
 const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any }>>();
-// const comments = ref(props.project.comments ? [...props.project.comments] : []);
-// const comments = computed(() => page.props.projects.data.flatMap((project) => project.comments ?? []));
 const comments = computed(() => {
     const projectFromPage = page.props.projects.data.find((p) => p.id === props.project.id);
     return projectFromPage?.comments ?? [];
@@ -35,17 +33,33 @@ const mappedStatus = computed(() => mapStatusForClient(props.project.status));
 
 const outputLink = ref(props.project.output_link || '');
 
+function openNativeFullscreen(event: MouseEvent) {
+    const img = event.target as HTMLElement;
+
+    // Make sure we're targeting an element
+    if (!img) return;
+
+    // Enter fullscreen
+    if (img.requestFullscreen) {
+        img.requestFullscreen().catch((err) => {
+            console.error('Failed to enter fullscreen:', err);
+        });
+    }
+}
+
 const saveOutputLink = () => {
     if (!outputLink.value) return;
 
+    const routeName = props.role === 'admin' ? 'projects.admin_update' : 'editor.projects.update';
+
     router.patch(
-        route('editor.projects.update', props.project.id),
+        route(routeName, props.project.id),
         { output_link: outputLink.value },
         {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
-                props.project.output_link = outputLink.value; // update local view
+                props.project.output_link = outputLink.value;
             },
         },
     );
@@ -53,21 +67,62 @@ const saveOutputLink = () => {
 
 const commentForm = useForm({
     body: '',
+    image: null as File | null,
 });
 
+const previewUrl = computed(() => (commentForm.image ? URL.createObjectURL(commentForm.image) : null));
+
+const removeImage = () => {
+    commentForm.image = null;
+};
+
+const getS3Url = (path: string) => {
+    return `https://jayre-services.s3.us-east-1.amazonaws.com/${path}`;
+};
+
 const submitComment = () => {
-    if (!commentForm.body) return;
+    if (!commentForm.body && !commentForm.image) return;
+
+    console.log('Submitting comment with:', {
+        hasBody: !!commentForm.body,
+        hasImage: !!commentForm.image,
+        imageDetails: commentForm.image
+            ? {
+                  name: commentForm.image.name,
+                  size: commentForm.image.size,
+                  type: commentForm.image.type,
+              }
+            : null,
+    });
 
     commentForm.post(route('projects.comments.store', props.project.id), {
         preserveScroll: true,
-        onSuccess: (page) => {
-            const newComment = (page.props.flash as any)?.newComment;
-            if (newComment) {
-                comments.value.push(newComment); // ✅ reactive update
-            }
-            commentForm.reset('body');
+        forceFormData: true,
+        onSuccess: () => {
+            console.log('Comment submitted successfully');
+            commentForm.reset('body', 'image');
+        },
+        onError: (errors) => {
+            console.error('Comment submission failed:', errors);
+        },
+        onFinish: () => {
+            console.log('Request finished');
         },
     });
+};
+
+const handlePaste = (event: ClipboardEvent) => {
+    if (!event.clipboardData) return;
+
+    for (const item of event.clipboardData.items) {
+        if (item.type.startsWith('image/')) {
+            const file = item.getAsFile();
+            if (file) {
+                console.log('File captured:', file.name, file.size, file.type);
+                commentForm.image = file;
+            }
+        }
+    }
 };
 </script>
 
@@ -285,7 +340,17 @@ const submitComment = () => {
                                                       : 'Unknown'
                                         }}
                                     </p>
-                                    <p class="text-sm whitespace-pre-line text-gray-700">{{ comment.body }}</p>
+                                    <p class="text-sm break-words whitespace-pre-line text-gray-700" v-html="linkify(comment.body)"></p>
+
+                                    <div v-if="comment.image_url" class="mt-2">
+                                        <img
+                                            :src="getS3Url(comment.image_url)"
+                                            alt="comment screenshot"
+                                            class="max-w-[300px] cursor-pointer rounded-lg border transition hover:opacity-80"
+                                            @click="openNativeFullscreen"
+                                        />
+                                    </div>
+
                                     <span class="text-xs text-gray-400">
                                         {{ new Date(comment.created_at).toLocaleString() }}
                                     </span>
@@ -294,23 +359,41 @@ const submitComment = () => {
                         </div>
                     </ScrollArea>
 
-                    <!-- New comment input -->
-                    <div class="flex items-center space-x-2 border-t p-4">
-                        <Textarea
-                            v-model="commentForm.body"
-                            placeholder="Write a comment..."
-                            class="max-h-[150px] min-h-[40px] flex-1 resize-none overflow-y-auto"
-                            rows="1"
-                            @input="
-                                (e: Event) => {
-                                    const target = e.target as HTMLTextAreaElement;
-                                    target.style.height = 'auto';
-                                    target.style.height = target.scrollHeight + 'px';
-                                }
-                            "
-                            @keydown.enter.exact.prevent="() => submitComment()"
-                        />
-                        <Button size="sm" @click="submitComment" :disabled="commentForm.processing">Send</Button>
+                    <!-- Comment Input -->
+                    <div class="flex flex-col border-t p-4">
+                        <!-- Image preview -->
+                        <div v-if="previewUrl" class="relative mb-2 inline-block">
+                            <img :src="previewUrl" alt="screenshot preview" class="max-w-[150px] cursor-pointer rounded-lg border hover:opacity-80" />
+                            <button
+                                type="button"
+                                @click="removeImage"
+                                class="absolute -top-2 -right-2 rounded-full bg-black/70 px-1.5 py-0.5 text-xs text-white hover:bg-black"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <!-- Textarea + Send button -->
+                        <div class="flex items-end space-x-2">
+                            <textarea
+                                v-model="commentForm.body"
+                                placeholder="Write a comment or paste a screenshot..."
+                                class="max-h-[150px] min-h-[40px] flex-1 resize-none overflow-y-auto rounded border p-2"
+                                @input="
+                                    (e: Event) => {
+                                        const target = e.target as HTMLTextAreaElement;
+                                        target.style.height = 'auto';
+                                        target.style.height = target.scrollHeight + 'px';
+                                    }
+                                "
+                                @keydown.enter.exact.prevent="submitComment"
+                                @paste="handlePaste"
+                            ></textarea>
+
+                            <Button size="sm" @click="submitComment" :disabled="commentForm.processing || (!commentForm.body && !commentForm.image)">
+                                Send
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -11,6 +11,7 @@ class ProjectComment extends Model
         'user_id',
         'project_id',
         'body',
+        'image_url',
     ];
 
     public function project(): BelongsTo

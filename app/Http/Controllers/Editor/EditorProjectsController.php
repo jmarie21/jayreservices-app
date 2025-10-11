@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Editor;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ProjectSentToClientMail;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class EditorProjectsController extends Controller
@@ -43,9 +45,13 @@ class EditorProjectsController extends Controller
     public function update(Request $request, Project $project)
     {
         // Ensure only editors assigned to the project can update it
-        if ($request->user()->id !== $project->editor_id) {
+        if (
+            $request->user()->role !== 'admin' &&
+            $request->user()->id !== $project->editor_id
+        ) {
             abort(403, 'Unauthorized');
         }
+
 
         $validated = $request->validate([
             'editor_id' => 'nullable|exists:users,id',
@@ -57,7 +63,20 @@ class EditorProjectsController extends Controller
             $validated['output_link'] = 'https://' . $validated['output_link'];
         }
 
+        $oldStatus = $project->status;
+
         $project->update($validated);
+
+        // ✅ Send email if status changed to "sent_to_client"
+        if (
+            isset($validated['status']) &&
+            strtolower($validated['status']) === 'sent_to_client' &&
+            strtolower($oldStatus) !== 'sent_to_client'
+        ) {
+            if ($project->client && $project->client->email) {
+                Mail::to($project->client->email)->send(new ProjectSentToClientMail($project));
+            }
+        }
 
         return back()->with('success', 'Project updated successfully.');
     }

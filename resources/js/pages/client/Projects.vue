@@ -181,11 +181,30 @@ const markForRevision = (projectId: number) => {
                             </Badge>
                         </TableCell>
                         <TableCell>${{ project.total_price }}</TableCell>
-                        <TableCell>{{ project.output_link }}</TableCell>
+                        <TableCell>
+                            <template v-if="project.output_link">
+                                <a
+                                    :href="project.output_link.startsWith('http') ? project.output_link : `https://${project.output_link}`"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="text-blue-500 hover:underline"
+                                >
+                                    Finished Output
+                                </a>
+                            </template>
+                            <template v-else> No Output Yet </template>
+                        </TableCell>
+
                         <TableCell class="space-x-4">
                             <Button @click="openEditModal(project)" :disabled="mapStatusForClient(project.status) === 'completed'"> Edit </Button>
                             <Button @click="openViewModal(project)" class="bg-blue-500 hover:bg-blue-600 focus:ring-blue-300">View order</Button>
-                            <Button @click="markForRevision(project.id)" variant="destructive">Mark for revision</Button>
+                            <Button
+                                @click="markForRevision(project.id)"
+                                variant="destructive"
+                                :disabled="mapStatusForClient(project.status) !== 'completed'"
+                            >
+                                Mark for revision
+                            </Button>
                         </TableCell>
                     </TableRow>
                 </TableBody>

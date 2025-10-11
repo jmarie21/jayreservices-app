@@ -27,6 +27,7 @@ class Project extends Model
         'total_price',
         'output_link',
         'status',
+        'priority',
         'extra_fields',
         'with_agent',
         'editor_price',

@@ -17,6 +17,7 @@ import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
 type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
+type Priority = 'urgent' | 'high' | 'normal' | 'low';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Project Management', href: '/project-mgmt' }];
 
@@ -60,11 +61,18 @@ watch(
     { immediate: true },
 );
 
-const form = useForm<{ editor_id: number | null; status: Status; editor_price: number | null; total_price: number | null }>({
+const form = useForm<{
+    editor_id: number | null;
+    status: Status;
+    editor_price: number | null;
+    total_price: number | null;
+    priority: Priority;
+}>({
     editor_id: null,
     status: 'todo',
     editor_price: null,
     total_price: null,
+    priority: 'normal',
 });
 
 // Status labels for badges
@@ -254,6 +262,7 @@ const goToPage = (pageNumber: number) => {
                         <TableHead>Service</TableHead>
                         <TableHead>Editor</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Priority Level</TableHead>
                         <TableHead>Total Price</TableHead>
                         <TableHead>Editor Price</TableHead>
                         <TableHead>Created At</TableHead>
@@ -316,6 +325,32 @@ const goToPage = (pageNumber: number) => {
                                     >
                                         {{ label }}
                                     </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </TableCell>
+
+                        <!-- Priority Select -->
+                        <TableCell>
+                            <Select :modelValue="project.priority" @update:modelValue="(value) => updateProject(project.id, 'priority', value)">
+                                <SelectTrigger
+                                    class="w-[180px]"
+                                    :class="{
+                                        'font-semibold text-red-600': project.priority === 'urgent',
+                                        'text-orange-500': project.priority === 'high',
+                                        'text-blue-500': project.priority === 'normal',
+                                        'text-gray-400': project.priority === 'low',
+                                    }"
+                                >
+                                    <SelectValue placeholder="Select a priority" />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem value="urgent">Urgent</SelectItem>
+                                        <SelectItem value="high">High</SelectItem>
+                                        <SelectItem value="normal">Normal</SelectItem>
+                                        <SelectItem value="low">Low</SelectItem>
+                                    </SelectGroup>
                                 </SelectContent>
                             </Select>
                         </TableCell>

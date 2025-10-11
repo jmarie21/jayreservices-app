@@ -86,6 +86,7 @@ export interface Projects {
     per_property?: boolean;
 
     status: 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
+    priority: 'urgent' | 'high' | 'normal' | 'low';
     extra_fields?: Record<string, any>;
 
     created_at: string;
@@ -103,6 +104,7 @@ export interface Comment {
         name: string;
         role: string;
     };
+    image_url: string;
 }
 
 // Invoice interface
