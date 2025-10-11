@@ -17,7 +17,7 @@
         </p>
     @endif
 
-    <p>If you have any feedback or requests, feel free to comment it out on the website.</p>
+    <p>If you have any feedback or requests, feel free to leave a comment on the website.</p>
 
     <hr>
     <p>Thank you for choosing our video editing services!</p>
