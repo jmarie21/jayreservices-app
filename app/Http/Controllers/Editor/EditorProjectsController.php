@@ -57,6 +57,7 @@ class EditorProjectsController extends Controller
             'editor_id' => 'nullable|exists:users,id',
             'status' => 'nullable|string',
             'output_link' => 'nullable|string',
+            'priority' => 'nullable|in:urgent,high,normal,low',
         ]);
 
         if (!empty($validated['output_link']) && !preg_match('/^https?:\/\//', $validated['output_link'])) {
