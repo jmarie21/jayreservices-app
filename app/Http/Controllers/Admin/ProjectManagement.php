@@ -119,9 +119,10 @@ class ProjectManagement extends Controller
             strtolower($oldStatus) !== 'sent_to_client'
         ) {
             if ($project->client && $project->client->email) {
-                Mail::to($project->client->email)->send(new ProjectSentToClientMail($project));
+                Mail::to($project->client->email)->queue(new ProjectSentToClientMail($project));
             }
         }
+
 
         return back()->with('success', 'Project updated successfully.');
     }
