@@ -85,7 +85,7 @@ class ProjectManagement extends Controller
         }
 
         // Paginate results
-        $projects = $query->paginate(10)->withQueryString();
+        $projects = $query->paginate(20)->withQueryString();
 
         $editors = User::where('role', 'editor')->get(['id', 'name']);
         $clients = User::where('role', 'client')->get(['id', 'name']);
