@@ -26,6 +26,7 @@ export type AppPageProps = {
 
 export type BasicForm = {
     id?: number;
+    client_id?: number | null;
     service_id: number;
     style: string;
     project_name: string;
@@ -39,10 +40,12 @@ export type BasicForm = {
     total_price: number;
     with_agent?: boolean;
     per_property?: boolean;
+    rush?: boolean;
 };
 
 export type DeluxeForm = {
     id?: number;
+    client_id?: number | null;
     service_id: number;
     style: string;
     project_name: string;
@@ -56,10 +59,12 @@ export type DeluxeForm = {
     total_price: number;
     with_agent?: boolean;
     per_property?: boolean;
+    rush?: boolean;
 };
 
 export type PremiumForm = {
     id?: number;
+    client_id?: number | null;
     service_id: number;
     style: string;
     project_name: string;
@@ -77,10 +82,12 @@ export type PremiumForm = {
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
     per_property?: boolean;
+    rush?: boolean;
 };
 
 export type LuxuryForm = {
     id?: number;
+    client_id?: number | null;
     service_id: number;
     style: string;
     project_name: string;
@@ -98,6 +105,7 @@ export type LuxuryForm = {
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
     per_property?: boolean;
+    rush?: boolean;
 };
 
 // ✅ Generic pagination type

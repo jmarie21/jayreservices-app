@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER', 'mailtrap'),
 
     /*
     |--------------------------------------------------------------------------
@@ -36,6 +36,29 @@ return [
     */
 
     'mailers' => [
+
+        'brevo' => [
+            'transport' => 'brevo',
+        ],
+
+        'resend' => [
+            'key' => env('RESEND_KEY'),
+        ],
+
+        'mailgun' => [
+            'transport' => 'mailgun',
+            // 'client' => [
+            //     'timeout' => 5,
+            // ],
+        ],
+
+        'mailersend' => [
+            'transport' => 'mailersend',
+        ],
+
+        'sendgrid' => [
+            'api_key' => env('SENDGRID_API_KEY'),
+        ],
 
         'mailtrap' => [
             'transport' => 'mailtrap'

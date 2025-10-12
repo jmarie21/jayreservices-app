@@ -84,6 +84,7 @@ export interface Projects {
     output_link?: string;
     with_agent?: boolean;
     per_property?: boolean;
+    rush?: boolean;
 
     status: 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
     priority: 'urgent' | 'high' | 'normal' | 'low';

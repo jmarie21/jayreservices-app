@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Mail\NewProjectNotification;
 use App\Models\Project;
+use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -86,6 +87,7 @@ class ProjectsController extends Controller
             "extra_fields" => ['nullable', 'array'],
             "with_agent" => ['required', 'boolean'],
             "per_property" => ['nullable', 'boolean'],
+            "rush" => ['nullable', 'boolean'],
         ]);
 
         $validated['client_id'] = Auth::id(); 
@@ -123,6 +125,7 @@ class ProjectsController extends Controller
             "extra_fields" => ['nullable', 'array'],
             "with_agent" => ['required', 'boolean'],
             "per_property" => ['nullable', 'boolean'],
+            "rush" => ['nullable', 'boolean'],
         ]);
 
         $project->update($validated);

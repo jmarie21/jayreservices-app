@@ -4,8 +4,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AppPageProps, User } from '@/types';
 import { BasicForm } from '@/types/app-page-prop';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -15,6 +16,11 @@ const props = defineProps<{
     serviceId: number;
     project?: BasicForm | null;
 }>();
+const { props: page } = usePage<AppPageProps>();
+const userRole = page.auth.user.role;
+const isAdmin = computed(() => userRole === 'admin');
+const { clients } = usePage<AppPageProps<{ clients: User[] }>>().props;
+
 const emit = defineEmits<{
     (e: 'close'): void;
 }>();
@@ -37,7 +43,9 @@ const form = useForm<BasicForm>({
     total_price: Number(props.project?.total_price ?? props.basePrice),
     with_agent: props.project?.with_agent ?? false,
     service_id: props.serviceId,
+    rush: props.project?.rush ?? false,
     per_property: props.project?.per_property,
+    ...(isAdmin.value ? { client_id: props.project?.client_id ?? null } : {}),
 });
 
 // const calculateExtraPrice = () => {
@@ -178,11 +186,18 @@ watch(
 const handleSubmit = () => {
     const isEditing = !!props.project;
 
+    // Determine if the current user is an admin
+    const isAdminUser = isAdmin.value; // assuming you already have `isAdmin` ref/computed
+
+    // Choose the correct route names based on role
+    const createRoute = isAdminUser ? 'admin.project.create' : 'projects.store';
+    const updateRoute = isAdminUser ? 'admin.project.update' : 'projects.client_update';
+
     if (isEditing) {
-        form.put(route('projects.client_update', props.project!.id), {
+        form.put(route(updateRoute, props.project!.id), {
             onSuccess: () => {
                 toast.success('Updated successfully!', {
-                    description: 'Your order was updated successfully!',
+                    description: isAdminUser ? 'Project updated successfully (admin side).' : 'Your order was updated successfully!',
                     position: 'top-right',
                 });
                 emit('close');
@@ -192,10 +207,10 @@ const handleSubmit = () => {
             },
         });
     } else {
-        form.post(route('projects.store'), {
+        form.post(route(createRoute), {
             onSuccess: () => {
-                toast.success('Order placed', {
-                    description: 'Your order has been placed.',
+                toast.success('Project created!', {
+                    description: isAdminUser ? 'Project has been created successfully (admin side).' : 'Your order has been placed.',
                     position: 'top-right',
                 });
                 emit('close');
@@ -219,6 +234,22 @@ const handleSubmit = () => {
 
             <form @submit.prevent="handleSubmit">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <!-- Client Dropdown (Admin only) -->
+                    <div v-if="isAdmin" class="space-y-2">
+                        <Label>Client</Label>
+                        <Select v-model="form.client_id">
+                            <SelectTrigger class="w-full">
+                                <SelectValue placeholder="Select a client" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="client in clients" :key="client.id" :value="client.id">
+                                    {{ client.name }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <span v-if="form.errors.client_id" class="text-sm text-red-500">{{ form.errors.client_id }}</span>
+                    </div>
+
                     <!-- Style -->
                     <div class="space-y-2">
                         <Label>Select Style</Label>
@@ -340,6 +371,24 @@ const handleSubmit = () => {
                         <Label>File Link</Label>
                         <Input v-model="form.file_link" placeholder="Enter your file link" />
                         <span v-if="form.errors.file_link" class="text-sm text-red-500">{{ form.errors.file_link }}</span>
+                    </div>
+
+                    <!-- Rush Option -->
+                    <div class="space-y-2">
+                        <Label>Rush (with additional charges)</Label>
+                        <Select :modelValue="form.rush ? 'true' : 'false'" @update:modelValue="(val) => (form.rush = val === 'true')">
+                            <SelectTrigger class="w-full">
+                                <SelectValue placeholder="Select option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="true">Yes</SelectItem>
+                                <SelectItem value="false">No</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <span v-if="form.errors.rush" class="text-sm text-red-500">
+                            {{ form.errors.rush }}
+                        </span>
                     </div>
 
                     <!-- Notes -->

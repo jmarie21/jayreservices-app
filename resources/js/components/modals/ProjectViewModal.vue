@@ -244,6 +244,13 @@ const handlePaste = (event: ClipboardEvent) => {
                                 </span>
                             </div>
 
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-500">Rush</span>
+                                <span class="text-base">
+                                    {{ project.rush === true ? 'Yes' : 'No' }}
+                                </span>
+                            </div>
+
                             <!-- Extra Fields -->
                             <div v-if="project.extra_fields" class="space-y-4">
                                 <!-- Captions -->

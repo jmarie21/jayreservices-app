@@ -31,14 +31,16 @@ class Project extends Model
         'extra_fields',
         'with_agent',
         'editor_price',
-        'per_property'
+        'per_property',
+        'rush'
     ];
 
     protected $casts = [
         'extra_fields' => 'array',
         'total_price' => 'decimal:2',
         'with_agent' => 'boolean',
-        'per_property' => 'boolean'
+        'per_property' => 'boolean',
+        'rush' => 'boolean'
     ];
 
     public function client(): BelongsTo

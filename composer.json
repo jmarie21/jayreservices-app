@@ -16,6 +16,11 @@
         "laravel/tinker": "^2.10.1",
         "league/flysystem-aws-s3-v3": "^3.29",
         "mailersend/laravel-driver": "^2.11",
+        "nyholm/psr7": "^1.8",
+        "railsware/mailtrap-php": "^3.8",
+        "resend/resend-php": "^0.21.0",
+        "symfony/brevo-mailer": "^7.3",
+        "symfony/http-client": "^7.3",
         "tightenco/ziggy": "^2.4"
     },
     "require-dev": {

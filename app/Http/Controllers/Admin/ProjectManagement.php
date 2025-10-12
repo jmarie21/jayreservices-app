@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Mail\ProjectSentToClientMail;
 use App\Models\Project;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -87,11 +88,13 @@ class ProjectManagement extends Controller
         $projects = $query->paginate(10)->withQueryString();
 
         $editors = User::where('role', 'editor')->get(['id', 'name']);
+        $clients = User::where('role', 'client')->get(['id', 'name']);
 
         return Inertia::render("admin/AllProjects", [
             'projects' => $projects,
             'filters' => $request->only(['status', 'date_from', 'date_to', 'search']),
             'editors' => $editors,
+            'clients' => $clients,
         ]);
     }
 
@@ -145,5 +148,73 @@ class ProjectManagement extends Controller
         $project->delete();
 
         return back()->with('success', 'Project deleted successfully.');
+    }
+
+    public function services()
+    {
+        $services = Service::all();
+
+        return Inertia::render("admin/Services", [
+            "services" => $services
+        ]);
+    }
+
+
+    public function adminCreateProject(Request $request)
+    {
+        $validated = $request->validate([
+            "client_id" => ['required', 'exists:users,id'],
+            "service_id" => ['required', 'exists:services,id'],
+            "style" => ['required', 'string'],
+            "project_name" => ['required', 'string'],
+            "format" => ['nullable', 'string'],
+            "camera" => ['nullable', 'string'],
+            "quality" => ['nullable', 'string'],
+            "music" => ['nullable', 'string'],
+            "music_link" => ['nullable', 'string'],
+            "file_link" => ['required', 'string'],
+            "notes" => ['nullable', 'string'],
+            "total_price" => ['required', 'numeric'],
+            "output_link" => ['nullable', 'string'],
+            "status" => ['nullable', 'in:pending,in_progress,completed'],
+            "extra_fields" => ['nullable', 'array'],
+            "with_agent" => ['required', 'boolean'],
+            "per_property" => ['nullable', 'boolean'],
+            "rush" => ['required', 'boolean'],
+        ]);
+
+        $validated['status'] = $validated['status'] ?? 'pending';
+
+        Project::create($validated);
+
+        return back()->with('message', 'Project created successfully!');
+    }
+
+    public function adminUpdateProject(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            "client_id" => ['required', 'exists:users,id'],
+            "service_id" => ['required', 'exists:services,id'],
+            "style" => ['required', 'string'],
+            "project_name" => ['required', 'string'],
+            "format" => ['nullable', 'string'],
+            "camera" => ['nullable', 'string'],
+            "quality" => ['nullable', 'string'],
+            "music" => ['nullable', 'string'],
+            "music_link" => ['nullable', 'string'],
+            "file_link" => ['required', 'string'],
+            "notes" => ['nullable', 'string'],
+            "total_price" => ['required', 'numeric'],
+            "output_link" => ['nullable', 'string'],
+            "status" => ['nullable', 'in:pending,in_progress,completed'],
+            "extra_fields" => ['nullable', 'array'],
+            "with_agent" => ['required', 'boolean'],
+            "per_property" => ['nullable', 'boolean'],
+            "rush" => ['required', 'boolean'],
+        ]);
+
+        $project->update($validated);
+
+        return back()->with('message', 'Project updated successfully!');
     }
 }
