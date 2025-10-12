@@ -181,6 +181,9 @@ class InvoiceManagementController extends Controller
         $invoice = Invoice::findOrFail($id);
 
         if (!in_array($invoice->status, ['paid', 'cancelled'])) {
+            // Detach all projects linked to this invoice
+            $invoice->projects()->detach();
+
             $invoice->status = 'cancelled';
             $invoice->save();
             
