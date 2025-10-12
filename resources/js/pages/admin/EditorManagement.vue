@@ -127,7 +127,7 @@ const goToPage = (pageNumber: number) => {
             <div class="flex justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <div class="space-y-2">
                     <Label class="text-xl font-bold">Filter by:</Label>
-                    <ProjectFilters :filters="filters" @update:filters="applyFilters" />
+                    <ProjectFilters :filters="filters" role="admin" @update:filters="applyFilters" />
                 </div>
 
                 <div class="w-[320px] space-y-2">
