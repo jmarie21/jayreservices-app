@@ -38,11 +38,16 @@ interface Option {
 
 const effectsOptions: Option[] = [
     { id: 'Ken Burns', label: 'Ken Burns', link: 'https://www.youtube.com/watch?v=lIK2S0eIvwY&list=TLGG7aKmePKcyR8xMzEwMjAyNQ' },
-    { id: 'House Drop', label: 'House Drop' },
-    { id: 'Pillar Masking', label: 'Pillar Masking  (This is only applicable if you have the footage)' },
+    { id: 'House Drop', label: 'House Drop', link: 'https://youtu.be/3vVfB8AZkMw ' },
+    {
+        id: 'Pillar Masking',
+        label: 'Pillar Masking',
+        link: 'https://www.youtube.com/watch?v=byh1nKAE3Pk&list=TLGG_YXdMMvhwfsxMzEwMjAyNQ&t=2s',
+    },
     { id: 'Virtual Staging AI', label: 'Virtual Staging AI ($20 per clip)', link: 'https://youtu.be/79vg5WqKgYE?si=TkXflrhPmUfTAQFX' },
     { id: 'Day to Night AI', label: 'Day to Night AI ($15 per clip)', link: 'https://youtu.be/OPpyyb77ijs?si=q-IjufGmarVw8kMu' },
     { id: 'Painting Transition', label: 'Painting Transition (Add $10)', link: 'https://youtu.be/vCW4H7puU1c?si=GoI72aCscroTvYqk)' },
+    { id: 'Earth Zoom Transition', label: 'Earth Zoom Transition (Add $15)', link: 'https://www.youtube.com/watch?v=dyuRMbjDJas&feature=youtu.be' },
     { id: 'No Effects', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
 ];
 
@@ -104,6 +109,7 @@ function calculateTotalPrice() {
     if (form.extra_fields.effects.includes('Virtual Staging AI')) total += 20;
     if (form.extra_fields.effects.includes('Day to Night AI')) total += 15;
     if (form.extra_fields.effects.includes('Painting Transition')) total += 10;
+    if (form.extra_fields.effects.includes('Earth Zoom Transition')) total += 15;
 
     form.total_price = total;
 }

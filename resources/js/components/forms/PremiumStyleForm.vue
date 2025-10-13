@@ -37,8 +37,9 @@ interface Option {
 // Effects & captions options
 const effectsOptions: Option[] = [
     { id: 'Ken Burns', label: 'Ken Burns', link: 'https://www.youtube.com/watch?v=lIK2S0eIvwY&list=TLGG7aKmePKcyR8xMzEwMjAyNQ' },
-    { id: 'Building A House Transition', label: 'Building A House Transition' },
+    { id: 'Building A House Transition', label: 'Building A House Transition', link: 'https://www.youtube.com/watch?v=ERrkbiFAOow' },
     { id: 'Painting Transition', label: 'Painting Transition (Add $10)', link: 'https://youtu.be/vCW4H7puU1c?si=GoI72aCscroTvYqk)' },
+    { id: 'Earth Zoom Transition', label: 'Earth Zoom Transition (Add $15)', link: 'https://www.youtube.com/watch?v=dyuRMbjDJas&feature=youtu.be' },
     { id: 'No Effects', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
 ];
 
@@ -96,6 +97,7 @@ const totalPrice = computed(() => {
 
     //Effects
     if (form.extra_fields.effects.includes('Painting Transition')) total += 10;
+    if (form.extra_fields.effects.includes('Earth Zoom Transition')) total += 15;
     // if (form.extra_fields.effects.includes('Day to Night AI')) total += 15;
 
     return total;
