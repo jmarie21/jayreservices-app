@@ -178,7 +178,7 @@ class ProjectManagement extends Controller
             "output_link" => ['nullable', 'string'],
             "status" => ['nullable', 'in:pending,in_progress,completed'],
             "extra_fields" => ['nullable', 'array'],
-            "with_agent" => ['required', 'boolean'],
+            "with_agent" => ['nullable', 'boolean'],
             "per_property" => ['nullable', 'boolean'],
             "rush" => ['required', 'boolean'],
         ]);
@@ -208,7 +208,7 @@ class ProjectManagement extends Controller
             "output_link" => ['nullable', 'string'],
             "status" => ['nullable', 'in:pending,in_progress,completed'],
             "extra_fields" => ['nullable', 'array'],
-            "with_agent" => ['required', 'boolean'],
+            "with_agent" => ['nullable', 'boolean'],
             "per_property" => ['nullable', 'boolean'],
             "rush" => ['required', 'boolean'],
         ]);

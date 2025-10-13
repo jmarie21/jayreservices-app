@@ -31,12 +31,14 @@ const perPropertyOption = ref<'add-per-property' | 'no' | ''>('');
 interface Option {
     id: string;
     label: string;
+    link?: string | null;
 }
 
 // Effects & captions options
 const effectsOptions: Option[] = [
-    { id: 'Ken Burns', label: 'Ken Burns' },
+    { id: 'Ken Burns', label: 'Ken Burns', link: 'https://www.youtube.com/watch?v=lIK2S0eIvwY&list=TLGG7aKmePKcyR8xMzEwMjAyNQ' },
     { id: 'Building A House Transition', label: 'Building A House Transition' },
+    { id: 'Painting Transition', label: 'Painting Transition (Add $10)', link: 'https://youtu.be/vCW4H7puU1c?si=GoI72aCscroTvYqk)' },
     { id: 'No Effects', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
 ];
 
@@ -93,7 +95,7 @@ const totalPrice = computed(() => {
     if (form.extra_fields.captions.includes('Captions while the agent is talking')) total += 10;
 
     //Effects
-    // if (form.extra_fields.effects.includes('Virtual Staging AI')) total += 20;
+    if (form.extra_fields.effects.includes('Painting Transition')) total += 10;
     // if (form.extra_fields.effects.includes('Day to Night AI')) total += 15;
 
     return total;
@@ -426,6 +428,15 @@ const handleSubmit = () => {
                                     @update:model-value="(value) => handleEffectChange(effect.id, value)"
                                 />
                                 <label :for="effect.id" class="cursor-pointer">{{ effect.label }}</label>
+                                <a
+                                    v-if="effect.link"
+                                    :href="effect.link"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="text-sm text-blue-400 hover:underline"
+                                >
+                                    (see sample)
+                                </a>
                             </div>
                         </div>
                     </div>

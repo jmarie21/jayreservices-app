@@ -3,6 +3,7 @@ import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
 import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
 import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
+import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem, Services } from '@/types';
@@ -20,8 +21,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const selectedService = ref<Services | null>(null);
 
-const isStyle = (style: string): style is 'Basic Style' | 'Deluxe Style' | 'Premium Style' | 'Luxury Style' => {
-    return ['Basic Style', 'Deluxe Style', 'Premium Style', 'Luxury Style'].includes(style);
+const isStyle = (style: string): style is 'Basic Style' | 'Deluxe Style' | 'Premium Style' | 'Luxury Style' | 'Talking Heads' => {
+    return ['Basic Style', 'Deluxe Style', 'Premium Style', 'Luxury Style', 'Talking Heads'].includes(style);
 };
 
 function openModal(service: Services) {
@@ -39,7 +40,7 @@ function closeModal() {
     <Toaster />
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head title="Services" />
-        <div class="grid gap-4 p-4 md:grid-cols-4">
+        <div class="grid gap-4 p-4 md:grid-cols-5">
             <div v-for="service in services" :key="service.id" class="flex h-full min-h-[450px] flex-col rounded-xl border bg-white shadow">
                 <!-- Video at top (no padding) -->
                 <div v-if="service.video_link" class="aspect-video w-full">
@@ -57,7 +58,7 @@ function closeModal() {
                 <div class="flex flex-1 flex-col p-4">
                     <h3 class="mb-2 text-lg font-semibold">{{ service.name }}</h3>
 
-                    <ul class="list-inside list-disc text-sm text-muted-foreground">
+                    <ul v-if="service.name !== 'Talking Heads'" class="list-inside list-disc text-sm text-muted-foreground">
                         <li v-for="(feature, index) in service.features" :key="index">
                             {{ feature }}
                         </li>
@@ -86,6 +87,15 @@ function closeModal() {
             :service-id="selectedService.id"
             @close="closeModal"
         />
+
+        <TalkingHeadsForm
+            v-if="selectedService?.name === 'Talking Heads'"
+            :open="true"
+            :base-price="selectedService.price"
+            :service-id="selectedService.id"
+            @close="closeModal"
+        />
+
         <PremiumStyleForm
             v-if="selectedService?.name === 'Premium Style'"
             :open="true"

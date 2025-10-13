@@ -38,6 +38,16 @@ class ServicesSeeder extends Seeder
                 'video_link' => 'https://www.youtube.com/embed/oaqW7kBki1c',
             ],
             [
+                'name' => 'Talking Heads',
+                'features' => [
+                    'Retiming the clip with beat of the music',
+                    'With 2-3 smooth speed ramps only',
+                    'Some simple transitions like zoom after speed ramps',
+                ],
+                'price' => 0,
+                'video_link' => 'https://www.youtube.com/embed/PCTdP__t9bI'
+            ],
+            [
                 'name' => 'Premium Style',
                 'features' => [
                     'Retiming the clip with beat of the music',
