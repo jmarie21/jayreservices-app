@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\ProjectComment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -50,6 +52,56 @@ class CommentController extends Controller
         $comment->load('user');
 
         return back()->with('newComment', $comment);
+    }
+
+    public function update(Request $request, ProjectComment $comment)
+    {
+        // Only owner or admin can update
+        if ($comment->user_id !== Auth::id() && Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'body' => 'required|string|max:2000',
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        if ($request->hasFile('image')) {
+            // Optionally delete old image if exists
+            if ($comment->image_url) {
+                Storage::disk('s3')->delete($comment->image_url);
+            }
+
+            $path = $request->file('image')->store('comments', 's3');
+            $validated['image_url'] = $path;
+        }
+
+        $comment->update([
+            'body' => $validated['body'],
+            'image_url' => $validated['image_url'] ?? $comment->image_url,
+        ]);
+
+        return back()->with('success', 'Comment updated successfully.');
+    }
+
+    /**
+     * Delete a comment
+     */
+    public function destroy(ProjectComment $comment)
+    {
+        // Only owner or admin can delete
+        if ($comment->user_id !== Auth::id() && Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Optionally delete attached image
+        if ($comment->image_url) {
+            Storage::disk('s3')->delete($comment->image_url);
+        }
+
+        $comment->delete();
+
+        return back()->with('success', 'Comment deleted successfully.');
     }
 
     

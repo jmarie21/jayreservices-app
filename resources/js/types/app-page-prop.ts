@@ -75,7 +75,7 @@ export type DeluxeForm = {
     notes?: string;
     total_price: number;
     with_agent?: boolean;
-    extra_fields: {
+    extra_fields?: {
         effects: string[]; // e.g., ["Ken Burns"]
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
@@ -98,7 +98,7 @@ export type PremiumForm = {
     notes?: string;
     total_price: number;
     with_agent?: boolean;
-    extra_fields: {
+    extra_fields?: {
         effects: string[]; // e.g., ["Ken Burns"]
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
@@ -121,7 +121,7 @@ export type LuxuryForm = {
     notes?: string;
     total_price: number;
     with_agent?: boolean;
-    extra_fields: {
+    extra_fields?: {
         effects: string[]; // e.g., ["Ken Burns"]
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };

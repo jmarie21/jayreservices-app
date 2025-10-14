@@ -10,6 +10,7 @@ import { useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Checkbox } from '../ui/checkbox';
+import { Textarea } from '../ui/textarea';
 
 interface Option {
     id: string;
@@ -170,6 +171,7 @@ watch(
 
 // Handle checkbox changes
 function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
+    form.extra_fields ??= { effects: [], captions: [] };
     const isChecked = checked === true;
     const arr = [...form.extra_fields.effects];
     if (isChecked && !arr.includes(id)) arr.push(id);
@@ -390,7 +392,7 @@ const handleSubmit = () => {
                     <!-- Notes -->
                     <div class="space-y-2">
                         <Label>More Instructions (Optional)</Label>
-                        <Input v-model="form.notes" placeholder="Enter more instructions" />
+                        <Textarea v-model="form.notes" placeholder="Enter more instructions" class="min-h-[120px]" />
                     </div>
 
                     <!-- Customize the Effects -->
@@ -400,7 +402,7 @@ const handleSubmit = () => {
                             <div v-for="effect in effectsOptions" :key="effect.id" class="mb-1 flex items-center gap-2">
                                 <Checkbox
                                     :id="effect.id"
-                                    :model-value="form.extra_fields.effects.includes(effect.id)"
+                                    :model-value="form.extra_fields?.effects.includes(effect.id)"
                                     @update:model-value="(value: any) => handleEffectChange(effect.id, value)"
                                 />
                                 <label :for="effect.id" class="cursor-pointer">{{ effect.label }}</label>

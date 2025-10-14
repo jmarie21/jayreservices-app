@@ -9,6 +9,7 @@ import { BasicForm, TalkingHeadsForm } from '@/types/app-page-prop';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
 import { toast } from 'vue-sonner';
+import { Textarea } from '../ui/textarea';
 
 const props = defineProps<{
     open: boolean;
@@ -376,7 +377,7 @@ const handleSubmit = () => {
                     <!-- Notes -->
                     <div class="space-y-2">
                         <Label>More Instructions (Optional)</Label>
-                        <Input v-model="form.notes" placeholder="Enter more instructions" />
+                        <Textarea v-model="form.notes" placeholder="Enter more instructions" class="min-h-[120px]" />
                     </div>
                 </div>
                 <!-- Total & Submit -->

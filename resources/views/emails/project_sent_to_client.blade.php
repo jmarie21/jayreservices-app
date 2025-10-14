@@ -5,21 +5,15 @@
     <title>Your Project Has Been Delivered</title>
 </head>
 <body>
-    <h2>🎉 Your project is ready!</h2>
+    <h2>Your project {{ $project->project_name }} is ready! 🎉</h2>
 
     <p>Hi {{ $project->client->name ?? 'Client' }},</p>
 
-    <p>Your project <strong>{{ $project->project_name }}</strong> has been completed
-
-    @if($project->output_link)
-        <p>You can download your final video here: 
-            <a href="{{ $project->output_link }}">{{ $project->output_link }}</a>
-        </p>
-    @endif
-
-    <p>If you have any feedback or requests, feel free to leave a comment on the website. And if you want a revision, don't forget to click "Mark as Revision" after commenting your request.</p>
+    <p>We're excited to inform you that your project is now complete!
+        You can access the project link in the comment section within your project page on our website.
+    </p>
 
     <hr>
-    <p>Thank you for choosing our video editing services!</p>
+    <p>Thank you for choosing us!</p>
 </body>
 </html>

@@ -1,14 +1,25 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AppPageProps, Projects } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { linkify } from '@/utils/linkify';
 import { mapStatusForClient } from '@/utils/statusMapper';
 import { router, useForm, usePage } from '@inertiajs/vue3';
+import { MoreVertical } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '../ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 const props = defineProps<{
     isOpen: boolean;
@@ -22,6 +33,8 @@ const comments = computed(() => {
     const projectFromPage = page.props.projects.data.find((p) => p.id === props.project.id);
     return projectFromPage?.comments ?? [];
 });
+
+const linkedNotes = computed(() => linkify(props.project.notes));
 
 const statusLabels: Record<'pending' | 'in_progress' | 'completed', string> = {
     pending: 'Pending',
@@ -83,30 +96,36 @@ const getS3Url = (path: string) => {
 const submitComment = () => {
     if (!commentForm.body && !commentForm.image) return;
 
-    console.log('Submitting comment with:', {
-        hasBody: !!commentForm.body,
-        hasImage: !!commentForm.image,
-        imageDetails: commentForm.image
-            ? {
-                  name: commentForm.image.name,
-                  size: commentForm.image.size,
-                  type: commentForm.image.type,
-              }
-            : null,
-    });
+    // If editing an existing comment
+    if (editingCommentId.value) {
+        const formData = new FormData();
+        formData.append('body', commentForm.body);
+        if (commentForm.image) formData.append('image', commentForm.image);
+        formData.append('_method', 'PUT');
 
+        router.post(route('comments.update', editingCommentId.value), formData, {
+            preserveScroll: true,
+            forceFormData: true,
+            onSuccess: () => {
+                editingCommentId.value = null;
+                commentForm.reset('body', 'image');
+            },
+            onError: (errors) => {
+                console.error('Edit failed:', errors);
+            },
+        });
+        return;
+    }
+
+    // Otherwise, create a new comment
     commentForm.post(route('projects.comments.store', props.project.id), {
         preserveScroll: true,
         forceFormData: true,
         onSuccess: () => {
-            console.log('Comment submitted successfully');
             commentForm.reset('body', 'image');
         },
         onError: (errors) => {
             console.error('Comment submission failed:', errors);
-        },
-        onFinish: () => {
-            console.log('Request finished');
         },
     });
 };
@@ -123,6 +142,38 @@ const handlePaste = (event: ClipboardEvent) => {
             }
         }
     }
+};
+
+const showDeleteDialog = ref(false);
+const commentToDelete = ref<any>(null);
+const editingCommentId = ref<number | null>(null);
+
+const canManage = (comment: any) => {
+    const user = page.props.auth.user;
+    return comment.user_id === user.id || user.role === 'admin';
+};
+
+const editComment = (comment: any) => {
+    editingCommentId.value = comment.id;
+    commentForm.body = comment.body;
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); // optional
+};
+
+const openDeleteDialog = (comment: any) => {
+    commentToDelete.value = comment;
+    showDeleteDialog.value = true;
+};
+
+const confirmDelete = () => {
+    if (!commentToDelete.value) return;
+
+    router.delete(route('comments.destroy', commentToDelete.value.id), {
+        onFinish: () => {
+            showDeleteDialog.value = false;
+            commentToDelete.value = null;
+        },
+        preserveScroll: true,
+    });
 };
 </script>
 
@@ -278,7 +329,7 @@ const handlePaste = (event: ClipboardEvent) => {
                         <!-- Notes -->
                         <div class="mb-4 rounded-xl bg-white p-5 shadow">
                             <h1 class="text-lg font-bold">Notes</h1>
-                            <p class="whitespace-pre-line text-gray-700">{{ project.notes || 'No notes available.' }}</p>
+                            <p class="break-words whitespace-pre-wrap text-gray-700" v-html="linkedNotes || 'No notes available.'"></p>
                         </div>
 
                         <!-- Links Section -->
@@ -301,10 +352,10 @@ const handlePaste = (event: ClipboardEvent) => {
                             </a>
 
                             <!-- Editor Upload Output Link -->
-                            <div v-if="role === 'editor' || role === 'admin'" class="space-y-2">
+                            <!-- <div v-if="role === 'editor' || role === 'admin'" class="space-y-2">
                                 <Input v-model="outputLink" placeholder="Paste output link..." />
                                 <Button class="w-full" @click="saveOutputLink">Upload Output Link</Button>
-                            </div>
+                            </div> -->
                         </div>
                     </ScrollArea>
                 </div>
@@ -319,48 +370,71 @@ const handlePaste = (event: ClipboardEvent) => {
                     <ScrollArea class="min-h-0 flex-1 p-4">
                         <div v-if="comments.length === 0" class="text-sm text-gray-500">No comments yet.</div>
                         <div v-else class="space-y-4">
-                            <div v-for="comment in comments" :key="comment.id" class="flex items-start space-x-3">
-                                <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-bold">
-                                    {{
-                                        role === 'admin'
-                                            ? comment.user?.name?.charAt(0).toUpperCase()
-                                            : comment.user?.role === 'client'
-                                              ? 'C'
-                                              : comment.user?.role === 'editor'
-                                                ? 'E'
-                                                : comment.user?.role === 'admin'
-                                                  ? 'A'
-                                                  : '?'
-                                    }}
-                                </div>
-                                <div class="break-words">
-                                    <p class="text-sm font-semibold">
+                            <div v-for="comment in comments" :key="comment.id" class="flex items-start justify-between space-x-3">
+                                <!-- Left side: avatar + content -->
+                                <div class="flex space-x-3">
+                                    <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-bold">
                                         {{
                                             role === 'admin'
-                                                ? comment.user?.name
+                                                ? comment.user?.name?.charAt(0).toUpperCase()
                                                 : comment.user?.role === 'client'
-                                                  ? 'Client'
+                                                  ? 'C'
                                                   : comment.user?.role === 'editor'
-                                                    ? 'Editor'
+                                                    ? 'E'
                                                     : comment.user?.role === 'admin'
-                                                      ? 'Admin'
-                                                      : 'Unknown'
+                                                      ? 'A'
+                                                      : '?'
                                         }}
-                                    </p>
-                                    <p class="text-sm break-words whitespace-pre-line text-gray-700" v-html="linkify(comment.body)"></p>
-
-                                    <div v-if="comment.image_url" class="mt-2">
-                                        <img
-                                            :src="getS3Url(comment.image_url)"
-                                            alt="comment screenshot"
-                                            class="max-w-[300px] cursor-pointer rounded-lg border transition hover:opacity-80"
-                                            @click="openNativeFullscreen"
-                                        />
                                     </div>
 
-                                    <span class="text-xs text-gray-400">
-                                        {{ new Date(comment.created_at).toLocaleString() }}
-                                    </span>
+                                    <div class="break-words">
+                                        <p class="text-sm font-semibold">
+                                            {{
+                                                role === 'admin'
+                                                    ? comment.user?.name
+                                                    : comment.user?.role === 'client'
+                                                      ? 'Client'
+                                                      : comment.user?.role === 'editor'
+                                                        ? 'Editor'
+                                                        : comment.user?.role === 'admin'
+                                                          ? 'Admin'
+                                                          : 'Unknown'
+                                            }}
+                                        </p>
+
+                                        <p class="text-sm break-words whitespace-pre-line text-gray-700" v-html="linkify(comment.body)"></p>
+
+                                        <div v-if="comment.image_url" class="mt-2">
+                                            <img
+                                                :src="getS3Url(comment.image_url)"
+                                                alt="comment screenshot"
+                                                class="max-w-[300px] cursor-pointer rounded-lg border transition hover:opacity-80"
+                                                @click="openNativeFullscreen"
+                                            />
+                                        </div>
+
+                                        <span class="text-xs text-gray-400">
+                                            {{ new Date(comment.created_at).toLocaleString() }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Right side: three-dot menu -->
+                                <div v-if="canManage(comment)" class="relative">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger as-child>
+                                            <button class="rounded p-1 text-gray-500 hover:bg-gray-100" aria-label="Comment options">
+                                                <MoreVertical class="h-5 w-5" />
+                                            </button>
+                                        </DropdownMenuTrigger>
+
+                                        <DropdownMenuContent align="end" class="w-36">
+                                            <DropdownMenuItem @click="editComment(comment)"> <Pencil class="mr-2 h-4 w-4" /> Edit </DropdownMenuItem>
+                                            <DropdownMenuItem @click="openDeleteDialog(comment)" class="text-red-600 focus:text-red-700">
+                                                <Trash2 class="mr-2 h-4 w-4" /> Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </div>
                             </div>
                         </div>
@@ -397,8 +471,22 @@ const handlePaste = (event: ClipboardEvent) => {
                                 @paste="handlePaste"
                             ></textarea>
 
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                v-if="editingCommentId"
+                                @click="
+                                    () => {
+                                        editingCommentId = null;
+                                        commentForm.reset('body', 'image');
+                                    }
+                                "
+                            >
+                                Cancel
+                            </Button>
+
                             <Button size="sm" @click="submitComment" :disabled="commentForm.processing || (!commentForm.body && !commentForm.image)">
-                                Send
+                                {{ editingCommentId ? 'Update' : 'Send' }}
                             </Button>
                         </div>
                     </div>
@@ -406,4 +494,19 @@ const handlePaste = (event: ClipboardEvent) => {
             </div>
         </DialogContent>
     </Dialog>
+
+    <!-- Delete Comment Confirmation Dialog -->
+    <AlertDialog v-model:open="showDeleteDialog">
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+                <AlertDialogDescription> Are you sure you want to delete this comment? This action cannot be undone. </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter>
+                <AlertDialogCancel @click="showDeleteDialog = false"> Cancel </AlertDialogCancel>
+                <AlertDialogAction @click="confirmDelete" class="bg-red-600 text-white hover:bg-red-700"> Delete </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
 </template>

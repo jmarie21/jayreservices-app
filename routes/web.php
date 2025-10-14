@@ -42,7 +42,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/all-projects', [ProjectManagement::class, 'showAllProjects'])->name('projects.all');
     Route::get('/admin-services', [ProjectManagement::class, 'services'])->name('services.all');
     Route::post('/services', [ProjectManagement:: class, 'adminCreateProject'])->name('admin.project.create');
-    Route::put('/services', [ProjectManagement:: class, 'adminUpdateProject'])->name('admin.project.update');
+    Route::put('/project-mgmt/{project}', [ProjectManagement:: class, 'adminUpdateProject'])->name('admin.project.update');
+
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
 
 
 

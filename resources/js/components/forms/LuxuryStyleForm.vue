@@ -10,6 +10,7 @@ import { useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Checkbox } from '../ui/checkbox';
+import { Textarea } from '../ui/textarea';
 
 const props = defineProps<{
     open: boolean;
@@ -101,15 +102,15 @@ function calculateTotalPrice() {
     if (perPropertyOption.value === 'add-per-property') total += 5;
 
     // Captions cost
-    if (form.extra_fields.captions.includes('3D Text behind the Agent Talking')) total += 10;
-    if (form.extra_fields.captions.includes('3D Text tracked on the ground etc.')) total += 15;
-    if (form.extra_fields.captions.includes('Captions while the agent is talking')) total += 10;
+    if (form.extra_fields?.captions.includes('3D Text behind the Agent Talking')) total += 10;
+    if (form.extra_fields?.captions.includes('3D Text tracked on the ground etc.')) total += 15;
+    if (form.extra_fields?.captions.includes('Captions while the agent is talking')) total += 10;
 
     //Effects
-    if (form.extra_fields.effects.includes('Virtual Staging AI')) total += 20;
-    if (form.extra_fields.effects.includes('Day to Night AI')) total += 15;
-    if (form.extra_fields.effects.includes('Painting Transition')) total += 10;
-    if (form.extra_fields.effects.includes('Earth Zoom Transition')) total += 15;
+    if (form.extra_fields?.effects.includes('Virtual Staging AI')) total += 20;
+    if (form.extra_fields?.effects.includes('Day to Night AI')) total += 15;
+    if (form.extra_fields?.effects.includes('Painting Transition')) total += 10;
+    if (form.extra_fields?.effects.includes('Earth Zoom Transition')) total += 15;
 
     form.total_price = total;
 }
@@ -150,7 +151,7 @@ watch(perPropertyOption, () => {
     form.per_property = perPropertyOption.value === 'add-per-property';
     calculateTotalPrice();
 });
-watch(() => form.extra_fields.captions, calculateTotalPrice, { deep: true });
+watch(() => form.extra_fields?.captions, calculateTotalPrice, { deep: true });
 watch(() => form.style, calculateTotalPrice);
 watch(() => form.format, calculateTotalPrice);
 
@@ -209,6 +210,7 @@ watch(
 
 // Handle checkbox changes
 function handleEffectChange(effectId: string, value: boolean | 'indeterminate') {
+    form.extra_fields ??= { effects: [], captions: [] };
     const checked = value === true;
     const current = [...form.extra_fields.effects];
     if (checked && !current.includes(effectId)) {
@@ -221,6 +223,7 @@ function handleEffectChange(effectId: string, value: boolean | 'indeterminate') 
 }
 
 function handleCaptionChange(captionId: string, value: boolean | 'indeterminate') {
+    form.extra_fields ??= { effects: [], captions: [] };
     const checked = value === true;
     const current = [...form.extra_fields.captions];
     if (checked && !current.includes(captionId)) {
@@ -444,7 +447,7 @@ const handleSubmit = () => {
                     <!-- Notes -->
                     <div class="space-y-2">
                         <Label>More Instructions (Optional)</Label>
-                        <Input v-model="form.notes" placeholder="Enter more instructions" />
+                        <Textarea v-model="form.notes" placeholder="Enter more instructions" class="min-h-[120px]" />
                     </div>
 
                     <!-- Customize the Effects -->
@@ -454,7 +457,7 @@ const handleSubmit = () => {
                             <div v-for="effect in effectsOptions" :key="effect.id" class="mb-1 flex items-center gap-2">
                                 <Checkbox
                                     :id="effect.id"
-                                    :model-value="form.extra_fields.effects.includes(effect.id)"
+                                    :model-value="form.extra_fields?.effects.includes(effect.id)"
                                     @update:model-value="(value) => handleEffectChange(effect.id, value)"
                                 />
                                 <label :for="effect.id" class="cursor-pointer">{{ effect.label }}</label>
@@ -478,7 +481,7 @@ const handleSubmit = () => {
                             <div v-for="caption in captionsOptions" :key="caption.id" class="mb-1 flex items-center gap-2">
                                 <Checkbox
                                     :id="caption.id"
-                                    :model-value="form.extra_fields.captions.includes(caption.id)"
+                                    :model-value="form.extra_fields?.captions.includes(caption.id)"
                                     @update:model-value="(value) => handleCaptionChange(caption.id, value)"
                                 />
                                 <label :for="caption.id" class="cursor-pointer">

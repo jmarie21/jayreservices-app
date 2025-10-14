@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
+import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
+import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
+import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
+import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Button } from '@/components/ui/button';
@@ -44,6 +49,7 @@ const projects = computed(() => pageProps.projects);
 
 const showModal = ref(false);
 const selectedProject = ref<Projects | null>(null);
+const editProject = ref<Projects | null>(null);
 
 const showDeleteModal = ref(false);
 const projectToDelete = ref<Projects | null>(null);
@@ -154,6 +160,20 @@ const closeDeleteModal = () => {
     projectToDelete.value = null;
     showDeleteModal.value = false;
 };
+
+const isEditModalOpen = ref(false);
+const basePrice = ref<number>(0);
+
+function openEditModal(project: Projects) {
+    editProject.value = project;
+    isEditModalOpen.value = true;
+    basePrice.value = project.service?.price ?? 0; // example: if your project has service.price
+}
+
+function closeEditModal() {
+    isEditModalOpen.value = false;
+    editProject.value = null;
+}
 
 const deleteProject = () => {
     if (!projectToDelete.value) return;
@@ -389,9 +409,10 @@ const goToPage = (pageNumber: number) => {
                         </TableCell>
 
                         <TableCell>{{ new Date(project.created_at).toLocaleDateString() }}</TableCell>
-                        <TableCell>
+                        <TableCell class="space-x-4">
+                            <Button @click="openEditModal(project)">Edit</Button>
                             <Button @click="openViewModal(project)">View Details</Button>
-                            <Button variant="destructive" class="ml-2" @click="confirmDelete(project)"> Delete </Button>
+                            <Button variant="destructive" @click="confirmDelete(project)"> Delete </Button>
                         </TableCell>
                     </TableRow>
                 </TableBody>
@@ -425,6 +446,51 @@ const goToPage = (pageNumber: number) => {
             :project="selectedProject"
             :role="page.props.auth.user.role"
             @close="closeViewModal"
+        />
+
+        <BasicStyleForm
+            v-if="editProject && editProject.service?.name === 'Basic Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <DeluxeStyleForm
+            v-else-if="editProject && editProject.service?.name === 'Deluxe Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <PremiumStyleForm
+            v-else-if="editProject && editProject.service?.name === 'Premium Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <LuxuryStyleForm
+            v-else-if="editProject && editProject.service?.name === 'Luxury Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <TalkingHeadsForm
+            v-else-if="editProject && editProject.service?.name === 'Talking Heads'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
         />
 
         <!-- Confirmation Delete Modal -->

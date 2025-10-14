@@ -10,6 +10,7 @@ import { PremiumForm } from '@/types/app-page-prop';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
+import { Textarea } from '../ui/textarea';
 
 const props = defineProps<{
     open: boolean;
@@ -92,12 +93,12 @@ const totalPrice = computed(() => {
     if (perPropertyOption.value === 'add-per-property') total += 5;
 
     // Captions
-    if (form.extra_fields.captions.includes('3D Text behind the Agent Talking')) total += 10;
-    if (form.extra_fields.captions.includes('Captions while the agent is talking')) total += 10;
+    if (form.extra_fields?.captions.includes('3D Text behind the Agent Talking')) total += 10;
+    if (form.extra_fields?.captions.includes('Captions while the agent is talking')) total += 10;
 
     //Effects
-    if (form.extra_fields.effects.includes('Painting Transition')) total += 10;
-    if (form.extra_fields.effects.includes('Earth Zoom Transition')) total += 15;
+    if (form.extra_fields?.effects.includes('Painting Transition')) total += 10;
+    if (form.extra_fields?.effects.includes('Earth Zoom Transition')) total += 15;
     // if (form.extra_fields.effects.includes('Day to Night AI')) total += 15;
 
     return total;
@@ -147,6 +148,7 @@ const selectedFormatLabel = computed(() => {
 
 // Handle checkbox changes
 function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
+    form.extra_fields ??= { effects: [], captions: [] };
     const isChecked = checked === true;
     const arr = [...form.extra_fields.effects];
     if (isChecked && !arr.includes(id)) arr.push(id);
@@ -156,6 +158,7 @@ function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
 }
 
 function handleCaptionChange(id: string, checked: boolean | 'indeterminate') {
+    form.extra_fields ??= { effects: [], captions: [] };
     const isChecked = checked === true;
     const arr = [...form.extra_fields.captions];
     if (isChecked && !arr.includes(id)) arr.push(id);
@@ -416,7 +419,7 @@ const handleSubmit = () => {
                     <!-- Notes -->
                     <div class="space-y-2">
                         <Label>More Instructions (Optional)</Label>
-                        <Input v-model="form.notes" placeholder="Enter more instructions" />
+                        <Textarea v-model="form.notes" placeholder="Enter more instructions" class="min-h-[120px]" />
                     </div>
 
                     <!-- Customize the Effects -->
@@ -426,7 +429,7 @@ const handleSubmit = () => {
                             <div v-for="effect in effectsOptions" :key="effect.id" class="mb-1 flex items-center gap-2">
                                 <Checkbox
                                     :id="effect.id"
-                                    :model-value="form.extra_fields.effects.includes(effect.id)"
+                                    :model-value="form.extra_fields?.effects.includes(effect.id)"
                                     @update:model-value="(value) => handleEffectChange(effect.id, value)"
                                 />
                                 <label :for="effect.id" class="cursor-pointer">{{ effect.label }}</label>
@@ -450,7 +453,7 @@ const handleSubmit = () => {
                             <div v-for="caption in captionsOptions" :key="caption.id" class="mb-1 flex items-center gap-2">
                                 <Checkbox
                                     :id="caption.id"
-                                    :model-value="form.extra_fields.captions.includes(caption.id)"
+                                    :model-value="form.extra_fields?.captions.includes(caption.id)"
                                     @update:model-value="(value) => handleCaptionChange(caption.id, value)"
                                 />
                                 <label :for="caption.id" class="cursor-pointer">
