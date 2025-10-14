@@ -150,7 +150,6 @@ const goToPage = (pageNumber: number) => {
                     <TableRow>
                         <TableHead>Project Name</TableHead>
                         <TableHead>Service</TableHead>
-                        <TableHead>Client</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Priority Level</TableHead>
                         <TableHead>Total Price</TableHead>
@@ -163,7 +162,6 @@ const goToPage = (pageNumber: number) => {
                     <TableRow>
                         <TableCell>{{ project.project_name }}</TableCell>
                         <TableCell>{{ project.service?.name || 'N/A' }}</TableCell>
-                        <TableCell>{{ project.client?.name || 'N/A' }}</TableCell>
 
                         <!-- Status Select -->
                         <TableCell>
