@@ -397,7 +397,18 @@ const deleteProject = () => {
                             </div>
                         </TableCell>
 
-                        <TableCell>{{ new Date(project.created_at).toLocaleDateString() }}</TableCell>
+                        <TableCell>
+                            {{
+                                new Date(project.created_at).toLocaleString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                })
+                            }}
+                        </TableCell>
+
                         <TableCell>
                             <Button @click="openViewModal(project)">View Details</Button>
                             <Button variant="destructive" class="ml-2" @click="confirmDelete(project)"> Delete </Button>

@@ -29,6 +29,7 @@ const props = defineProps<{
 }>();
 
 const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any }>>();
+const user = usePage().props.auth.user;
 const comments = computed(() => {
     const projectFromPage = page.props.projects.data.find((p) => p.id === props.project.id);
     return projectFromPage?.comments ?? [];
@@ -40,6 +41,16 @@ const statusLabels: Record<'pending' | 'in_progress' | 'completed', string> = {
     pending: 'Pending',
     in_progress: 'In Progress',
     completed: 'Completed',
+};
+
+const renderMusicLink = (music: string) => {
+    // If it contains a valid URL, let linkify make it clickable
+    const urlRegex = /^(https?:\/\/|www\.)[^\s]+$/i;
+    if (urlRegex.test(music.trim())) {
+        return linkify(music.trim());
+    }
+    // Otherwise, return plain text (escaped for safety)
+    return music.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 };
 
 const mappedStatus = computed(() => mapStatusForClient(props.project.status));
@@ -228,8 +239,8 @@ const confirmDelete = () => {
                             </div>
 
                             <div v-if="project.music_link" class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-gray-500">Music Link</span>
-                                <a :href="project.music_link" target="_blank" class="text-blue-500 underline">View</a>
+                                <span class="text-sm font-medium text-gray-500">Music</span>
+                                <span class="text-right text-base" v-html="renderMusicLink(project.music_link)"></span>
                             </div>
 
                             <div class="flex items-center justify-between" v-if="role === 'admin'">
@@ -267,7 +278,13 @@ const confirmDelete = () => {
                                 <span class="text-sm font-medium text-gray-500">Created</span>
                                 <span class="text-base">
                                     {{
-                                        new Date(project.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                                        new Date(project.created_at).toLocaleString('en-US', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        })
                                     }}
                                 </span>
                             </div>
