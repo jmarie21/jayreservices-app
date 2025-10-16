@@ -156,7 +156,11 @@ const goToPage = (pageNumber: number) => {
 
                 <TableBody v-for="project in projects.data" :key="project.id">
                     <TableRow>
-                        <TableCell>{{ project.project_name }}</TableCell>
+                        <TableCell>
+                            <div class="max-w-[200px] truncate" :title="project.project_name">
+                                {{ project.project_name }}
+                            </div>
+                        </TableCell>
                         <TableCell>{{ project.service?.name || 'N/A' }}</TableCell>
 
                         <!-- Status Select -->

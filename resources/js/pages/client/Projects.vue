@@ -171,7 +171,11 @@ const markForRevision = (projectId: number) => {
                 <TableBody v-for="project in projects.data" :key="project.id">
                     <TableRow>
                         <TableCell class="font-bold">{{ project.service?.name }}</TableCell>
-                        <TableCell>{{ project.project_name }}</TableCell>
+                        <TableCell>
+                            <div class="max-w-[200px] truncate" :title="project.project_name">
+                                {{ project.project_name }}
+                            </div>
+                        </TableCell>
                         <TableCell>{{ project.style }}</TableCell>
                         <TableCell>{{ new Date(project.created_at).toLocaleDateString() }}</TableCell>
 
