@@ -13,7 +13,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
 type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
@@ -140,12 +140,12 @@ const updatePrice = (projectId: number, value: number | undefined) => {
 };
 
 // Format date
-function formatLocalDate(d: Date) {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
+// function formatLocalDate(d: Date) {
+//     const year = d.getFullYear();
+//     const month = String(d.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+//     const day = String(d.getDate()).padStart(2, '0');
+//     return `${year}-${month}-${day}`;
+// }
 
 // // Get current week
 // function getCurrentWeekRange() {
@@ -167,12 +167,12 @@ function formatLocalDate(d: Date) {
 // const weekRange = getCurrentWeekRange();
 
 // Filters state
-const today = formatLocalDate(new Date());
+// const today = formatLocalDate(new Date());
 
 const filters = ref({
     status: pageProps.filters?.status || '',
-    date_from: pageProps.filters?.date_from || today,
-    date_to: pageProps.filters?.date_to || today,
+    date_from: pageProps.filters?.date_from || '',
+    date_to: pageProps.filters?.date_to || '',
     search: pageProps.filters?.search || '',
     editor_id: pageProps.filters?.editor_id || '', // Add this line
 });
@@ -200,11 +200,11 @@ const goToPage = (pageNumber: number) => {
     );
 };
 
-onMounted(() => {
-    if (!pageProps.filters?.date_from && !pageProps.filters?.date_to) {
-        applyFilters(filters.value);
-    }
-});
+// onMounted(() => {
+//     if (!pageProps.filters?.date_from && !pageProps.filters?.date_to) {
+//         applyFilters(filters.value);
+//     }
+// });
 
 const confirmDelete = (project: Projects) => {
     projectToDelete.value = project;
