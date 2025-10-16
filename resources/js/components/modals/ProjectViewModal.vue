@@ -419,7 +419,11 @@ const confirmDelete = () => {
                                             }}
                                         </p>
 
-                                        <p class="text-sm break-words whitespace-pre-line text-gray-700" v-html="linkify(comment.body)"></p>
+                                        <p
+                                            class="overflow-wrap-anywhere text-sm break-words whitespace-pre-line text-gray-700"
+                                            style="word-break: break-word; overflow-wrap: anywhere"
+                                            v-html="linkify(comment.body)"
+                                        ></p>
 
                                         <div v-if="comment.image_url" class="mt-2">
                                             <img
