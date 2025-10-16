@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { User } from '@/types/app-page-prop';
 import { useForm } from '@inertiajs/vue3';
-import { watch } from 'vue';
+import { computed, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
@@ -23,7 +23,10 @@ const formData = useForm({
     email: '',
     password: '',
     role: '',
+    additional_emails: '',
 });
+
+const isClient = computed(() => formData.role === 'client');
 
 // Watch for prop changes and set/reset form values
 watch(
@@ -34,11 +37,12 @@ watch(
             formData.email = user.email ?? '';
             formData.password = '';
             formData.role = user.role ?? '';
+            formData.additional_emails = Array.isArray(user.additional_emails) ? user.additional_emails.join(', ') : (user.additional_emails ?? '');
         } else {
             formData.reset();
         }
     },
-    { immediate: true },
+    { immediate: true, flush: 'post' },
 );
 
 const handleSubmit = () => {
@@ -116,6 +120,16 @@ const handleSubmit = () => {
                             </SelectContent>
                         </Select>
                         <span v-if="formData.errors.role" class="text-sm text-red-500">{{ formData.errors.role }}</span>
+                    </div>
+
+                    <!-- ✅ Additional Notification Emails (only if role is client) -->
+                    <div v-if="isClient" class="grid grid-rows-2 items-center">
+                        <Label>Additional Notification Emails</Label>
+                        <Input v-model="formData.additional_emails" placeholder="assistant@email.com, manager@email.com" />
+                        <small class="text-gray-500">Separate multiple emails with commas</small>
+                        <span v-if="formData.errors.additional_emails" class="text-sm text-red-500">
+                            {{ formData.errors.additional_emails }}
+                        </span>
                     </div>
                 </div>
 

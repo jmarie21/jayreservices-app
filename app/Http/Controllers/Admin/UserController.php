@@ -13,7 +13,7 @@ class UserController extends Controller
     public function index()
     {
 
-        $users = User::select('id', 'name', 'email', 'role', 'created_at')
+        $users = User::select('id', 'name', 'email', 'additional_emails', 'role', 'created_at')
             ->orderBy('id')
             ->get();
 
@@ -28,7 +28,8 @@ class UserController extends Controller
             "name" => ['required', 'max:255'],
             "email" => ['required', 'email', 'max:255'],
             "password" => ['required'],
-            "role" => ['required']
+            "role" => ['required'],
+            'additional_emails' => 'nullable|string',
         ]);
 
         User::create($validated);
@@ -42,7 +43,8 @@ class UserController extends Controller
             "name" => ['required', 'max:255'],
             "email" => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             "password" => ['nullable', 'min:6'], // optional when editing
-            "role" => ['required']
+            "role" => ['required'],
+            'additional_emails' => 'nullable|string',
         ]);
 
         if (!empty($validated['password'])) {

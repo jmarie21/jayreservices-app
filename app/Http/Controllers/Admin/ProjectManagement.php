@@ -139,8 +139,12 @@ class ProjectManagement extends Controller
             strtolower($validated['status']) === 'sent_to_client' &&
             strtolower($oldStatus) !== 'sent_to_client'
         ) {
-            if ($project->client && $project->client->email) {
-                Mail::to($project->client->email)->queue(new ProjectSentToClientMail($project));
+            if ($project->client) {
+                $recipients = $project->client->getAllEmails();
+
+                if (!empty($recipients)) {
+                    Mail::to($recipients)->queue(new ProjectSentToClientMail($project));
+                }
             }
         }
 

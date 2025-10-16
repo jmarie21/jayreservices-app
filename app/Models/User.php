@@ -22,7 +22,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role'
+        'role',
+        'additional_emails'
     ];
 
     /**
@@ -40,6 +41,7 @@ class User extends Authenticatable
         'name',
         'email',
         'role',
+        'additional_emails'
     ];
 
     /**
@@ -52,6 +54,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'additional_emails' => 'array',
         ];
     }
 
@@ -85,6 +88,36 @@ class User extends Authenticatable
     {
         return $this->role === 'client';
     }
+
+
+
+    public function getAllEmails(): array
+    {
+        $emails = [];
+
+        // ✅ Add primary email if valid
+        if (!empty($this->email) && filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+            $emails[] = $this->email;
+        }
+
+        // ✅ Handle additional_emails if present
+        if (!empty($this->additional_emails)) {
+            if (is_array($this->additional_emails)) {
+                $extraEmails = $this->additional_emails;
+            } else {
+                $extraEmails = array_map('trim', explode(',', $this->additional_emails));
+            }
+
+            foreach ($extraEmails as $email) {
+                if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $emails[] = $email;
+                }
+            }
+        }
+
+        return $emails;
+    }
+
 
     
 }

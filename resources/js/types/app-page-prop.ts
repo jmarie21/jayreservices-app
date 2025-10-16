@@ -5,6 +5,7 @@ export type User = {
     name: string;
     email: string;
     role: UserRole;
+    additional_emails?: string | null;
 };
 
 export type Services = {

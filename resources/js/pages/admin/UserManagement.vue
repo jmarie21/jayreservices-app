@@ -84,6 +84,7 @@ const deleteUser = () => {
                     <TableRow>
                         <TableHead class="w-[240px]"> Name </TableHead>
                         <TableHead>Email</TableHead>
+                        <TableHead>Additional Emails</TableHead>
                         <TableHead>Role</TableHead>
                         <TableHead> Created At </TableHead>
                         <TableHead> Action </TableHead>
@@ -93,6 +94,23 @@ const deleteUser = () => {
                     <TableRow>
                         <TableCell class="font-medium"> {{ user.name }} </TableCell>
                         <TableCell>{{ user.email }}</TableCell>
+                        <!-- ✅ Display additional emails -->
+                        <TableCell>
+                            <div v-if="user.additional_emails && user.additional_emails.length">
+                                <!-- If array -->
+                                <template v-if="Array.isArray(user.additional_emails)">
+                                    <div v-for="(email, idx) in user.additional_emails" :key="idx" class="text-sm text-gray-700">
+                                        {{ email }}
+                                    </div>
+                                </template>
+
+                                <!-- If string -->
+                                <template v-else>
+                                    {{ user.additional_emails }}
+                                </template>
+                            </div>
+                            <span v-else class="text-gray-400 italic">—</span>
+                        </TableCell>
                         <TableCell>{{ user.role }}</TableCell>
                         <TableCell> {{ new Date(user.created_at).toLocaleDateString() }} </TableCell>
                         <TableCell class="space-x-4">
