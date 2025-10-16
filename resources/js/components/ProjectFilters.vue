@@ -9,8 +9,10 @@ interface Props {
         status?: string;
         date_from?: string;
         date_to?: string;
+        editor_id?: string;
     };
     role?: 'admin' | 'editor' | 'client';
+    editors?: { id: number; name: string }[];
 }
 
 const props = defineProps<Props>();
@@ -29,6 +31,10 @@ watch(
 const handleStatusChange = (value: any) => {
     localFilters.status = value === 'all' || !value ? '' : String(value);
 };
+
+const handleEditorChange = (value: any) => {
+    localFilters.editor_id = value === 'all' || !value ? '' : String(value);
+};
 </script>
 
 <template>
@@ -43,7 +49,6 @@ const handleStatusChange = (value: any) => {
                 <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
 
-                    <!-- Admin sees raw statuses -->
                     <!-- Admin & Editor see raw statuses -->
                     <template v-if="props.role === 'admin' || props.role === 'editor'">
                         <SelectItem value="todo">To Do</SelectItem>
@@ -62,6 +67,23 @@ const handleStatusChange = (value: any) => {
                         <SelectItem value="in_progress">In Progress</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
                     </template>
+                </SelectContent>
+            </Select>
+        </div>
+
+        <!-- Editor filter (Admin only) -->
+        <div v-if="props.role === 'admin'" class="space-y-2">
+            <Label for="editor-select">Editor</Label>
+            <Select :model-value="localFilters.editor_id || 'all'" @update:model-value="handleEditorChange">
+                <SelectTrigger id="editor-select" class="w-[180px]">
+                    <SelectValue placeholder="Select editor" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Editors</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    <SelectItem v-for="editor in props.editors" :key="editor.id" :value="String(editor.id)">
+                        {{ editor.name }}
+                    </SelectItem>
                 </SelectContent>
             </Select>
         </div>

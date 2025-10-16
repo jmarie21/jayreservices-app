@@ -24,6 +24,15 @@ class ProjectManagement extends Controller
             $query->where('status', $request->status);
         }
 
+        // Filter by editor
+        if ($request->filled('editor_id')) {
+            if ($request->editor_id === 'unassigned') {
+                $query->whereNull('editor_id');
+            } else {
+                $query->where('editor_id', $request->editor_id);
+            }
+        }
+
         // Filter by date range
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
@@ -50,7 +59,7 @@ class ProjectManagement extends Controller
         return Inertia::render("admin/ClientProjects", [
             'client' => $client->only(['id', 'name', 'email']),
             'projects' => $projects,
-            'filters' => $request->only(['status', 'date_from', 'date_to', 'search']),
+            'filters' => $request->only(['status', 'date_from', 'date_to', 'search', 'editor_id']),
             'editors' => $editors,
         ]);
     }
@@ -63,6 +72,15 @@ class ProjectManagement extends Controller
         // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        // Filter by editor
+        if ($request->filled('editor_id')) {
+            if ($request->editor_id === 'unassigned') {
+                $query->whereNull('editor_id');
+            } else {
+                $query->where('editor_id', $request->editor_id);
+            }
         }
 
         // Filter by date range
@@ -92,7 +110,7 @@ class ProjectManagement extends Controller
 
         return Inertia::render("admin/AllProjects", [
             'projects' => $projects,
-            'filters' => $request->only(['status', 'date_from', 'date_to', 'search']),
+            'filters' => $request->only(['status', 'date_from', 'date_to', 'search', 'editor_id']),
             'editors' => $editors,
             'clients' => $clients,
         ]);

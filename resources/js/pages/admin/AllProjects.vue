@@ -26,7 +26,7 @@ const pageProps = usePage<
         client: { id: number; name: string; email: string };
         projects: Paginated<Projects>;
         editors: { id: number; name: string }[];
-        filters?: { status?: string; date_from?: string; date_to?: string; search?: string };
+        filters?: { status?: string; date_from?: string; date_to?: string; search?: string; editor_id: string };
     }>
 >().props;
 
@@ -168,11 +168,13 @@ function formatLocalDate(d: Date) {
 
 // Filters state
 const today = formatLocalDate(new Date());
+
 const filters = ref({
     status: pageProps.filters?.status || '',
     date_from: pageProps.filters?.date_from || today,
     date_to: pageProps.filters?.date_to || today,
     search: pageProps.filters?.search || '',
+    editor_id: pageProps.filters?.editor_id || '', // Add this line
 });
 
 // Apply filters
@@ -246,11 +248,7 @@ const deleteProject = () => {
                 <!-- Status & Date filters -->
                 <div class="space-y-2">
                     <Label class="text-xl font-bold">Filter by:</Label>
-                    <ProjectFilters
-                        :filters="filters"
-                        :role="page.props.auth.user.role === 'client' ? 'client' : 'admin'"
-                        @update:filters="applyFilters"
-                    />
+                    <ProjectFilters :filters="filters" :role="page.props.auth.user.role" :editors="editors" @update:filters="applyFilters" />
                 </div>
 
                 <!-- Search input -->
