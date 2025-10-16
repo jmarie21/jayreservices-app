@@ -190,13 +190,15 @@ const confirmDelete = () => {
 
 <template>
     <Dialog :open="isOpen" @update:open="onClose">
-        <DialogContent class="!max-w-7xl overflow-hidden p-0">
-            <div class="flex h-[80vh]">
+        <DialogContent class="max-h-[90vh] !w-[95vw] !max-w-7xl overflow-y-auto rounded-xl p-0 sm:p-2 md:p-0">
+            <div class="flex h-[80vh] flex-col md:flex-row">
                 <!-- Left Column: Project Details (Scrollable) -->
                 <div class="flex flex-1 flex-col bg-gray-50">
-                    <ScrollArea class="min-h-0 flex-1 space-y-6 p-6">
+                    <ScrollArea class="min-h-0 flex-1 space-y-6 p-4 sm:p-6">
                         <DialogHeader>
-                            <DialogTitle class="mb-4 text-3xl font-bold">{{ project.project_name }}</DialogTitle>
+                            <DialogTitle class="mb-4 text-2xl font-bold sm:text-3xl">
+                                {{ project.project_name }}
+                            </DialogTitle>
                         </DialogHeader>
 
                         <!-- Project Overview -->
@@ -378,13 +380,13 @@ const confirmDelete = () => {
                 </div>
 
                 <!-- Right Column: Comments -->
-                <div class="flex w-[460px] flex-col border-l bg-white">
+                <div class="flex w-full flex-col border-t bg-white md:w-[460px] md:border-t-0 md:border-l">
                     <div class="border-b p-4">
                         <h3 class="text-lg font-semibold">Comments</h3>
                     </div>
 
                     <!-- Scrollable comments area -->
-                    <ScrollArea class="min-h-0 flex-1 p-4">
+                    <ScrollArea class="min-h-0 flex-1 p-3 sm:p-4">
                         <div v-if="comments.length === 0" class="text-sm text-gray-500">No comments yet.</div>
                         <div v-else class="space-y-4">
                             <div v-for="comment in comments" :key="comment.id" class="flex items-start justify-between space-x-3">

@@ -13,6 +13,17 @@
         You can access the project link in the comment section within your project page on our website.
     </p>
 
+    <p>
+        👉 
+        <a 
+            href="https://app.jayreservices.com/projects" 
+            target="_blank" 
+            style="color: #1a73e8; text-decoration: none; font-weight: bold;"
+        >
+            View Your Project
+        </a>
+    </p>
+
     <hr>
     <p>Thank you for choosing us!</p>
 </body>
