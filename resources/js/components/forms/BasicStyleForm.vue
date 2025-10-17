@@ -164,6 +164,7 @@ watch(
             // Set agent and per-property options
             agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
             perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
+            rushOption.value = project.rush ? 'true' : 'false';
 
             form.with_agent = project.with_agent ?? false;
             form.per_property = project.per_property ?? false;
@@ -180,6 +181,7 @@ watch(
             form.notes = '';
             agentOption.value = '';
             perPropertyOption.value = '';
+            rushOption.value = '';
             form.with_agent = false;
             form.per_property = false;
         }
@@ -386,7 +388,7 @@ const handleSubmit = () => {
                                 <SelectValue placeholder="Select option" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="true">Yes</SelectItem>
+                                <SelectItem value="true">Yes ($10)</SelectItem>
                                 <SelectItem value="false">No</SelectItem>
                             </SelectContent>
                         </Select>

@@ -189,6 +189,7 @@ watch(
                 });
                 agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
                 perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
+                rushOption.value = project.rush ? 'true' : 'false';
                 calculateTotalPrice();
             } else {
                 // Reset for new project
@@ -207,10 +208,12 @@ watch(
                     total_price: props.basePrice,
                     with_agent: false,
                     per_property: false,
+                    rushOption: false,
                     extra_fields: { effects: [], captions: [] },
                 });
                 agentOption.value = '';
                 perPropertyOption.value = '';
+                rushOption.value = '';
             }
         }
     },
@@ -443,7 +446,7 @@ const handleSubmit = () => {
                                 <SelectValue placeholder="Select option" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="true">Yes</SelectItem>
+                                <SelectItem value="true">Yes ($20)</SelectItem>
                                 <SelectItem value="false">No</SelectItem>
                             </SelectContent>
                         </Select>

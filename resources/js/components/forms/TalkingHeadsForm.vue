@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AppPageProps, User } from '@/types';
 import { BasicForm, TalkingHeadsForm } from '@/types/app-page-prop';
 import { useForm, usePage } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Textarea } from '../ui/textarea';
 
@@ -29,6 +29,7 @@ const emit = defineEmits<{
 // Agent selection
 // const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
 // const perPropertyOption = ref<'add-per-property' | 'no' | ''>(props.project?.per_property ? 'add-per-property' : '');
+const rushOption = ref<'true' | 'false' | ''>('');
 
 // Form initialization
 const form = useForm<TalkingHeadsForm>({
@@ -88,6 +89,9 @@ const totalPrice = computed(() => {
 
     // // Price based on per property
     // if (perPropertyOption.value === 'add-per-property') extra += 5;
+
+    // Rush extra price
+    if (rushOption.value === 'true') extra += 5;
 
     return extra; // basePrice is 0, so we just return extras
 });
@@ -149,6 +153,7 @@ watch(
             form.music_link = project.music_link ?? '';
             form.file_link = project.file_link ?? '';
             form.notes = project.notes ?? '';
+            rushOption.value = project.rush ? 'true' : 'false';
         } else {
             // Reset form
             form.style = '';
@@ -160,6 +165,7 @@ watch(
             form.music_link = '';
             form.file_link = '';
             form.notes = '';
+            rushOption.value = '';
         }
     },
     { immediate: true },
@@ -359,12 +365,12 @@ const handleSubmit = () => {
                     <!-- Rush Option -->
                     <div class="space-y-2">
                         <Label>Rush (with additional charges)</Label>
-                        <Select :modelValue="form.rush ? 'true' : 'false'" @update:modelValue="(val) => (form.rush = val === 'true')">
+                        <Select v-model="rushOption" @update:modelValue="(val) => (form.rush = val === 'true')">
                             <SelectTrigger class="w-full">
                                 <SelectValue placeholder="Select option" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="true">Yes</SelectItem>
+                                <SelectItem value="true">Yes ($5)</SelectItem>
                                 <SelectItem value="false">No</SelectItem>
                             </SelectContent>
                         </Select>

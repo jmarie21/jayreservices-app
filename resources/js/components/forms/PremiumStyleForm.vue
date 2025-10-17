@@ -186,6 +186,7 @@ watch(
             form.notes = project.notes || '';
             agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
             perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
+            rushOption.value = project.rush ? 'true' : 'false';
             form.extra_fields = {
                 effects: project.extra_fields?.effects ? [...project.extra_fields.effects] : [],
                 captions: project.extra_fields?.captions ? [...project.extra_fields.captions] : [],
@@ -202,6 +203,7 @@ watch(
             form.notes = '';
             agentOption.value = '';
             perPropertyOption.value = '';
+            rushOption.value = '';
             form.extra_fields = { effects: [], captions: [] };
         }
     },
@@ -408,7 +410,7 @@ const handleSubmit = () => {
                                 <SelectValue placeholder="Select option" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="true">Yes</SelectItem>
+                                <SelectItem value="true">Yes ($20)</SelectItem>
                                 <SelectItem value="false">No</SelectItem>
                             </SelectContent>
                         </Select>
