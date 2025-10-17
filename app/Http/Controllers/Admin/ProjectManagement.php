@@ -207,6 +207,8 @@ class ProjectManagement extends Controller
 
         $validated['status'] = $validated['status'] ?? 'pending';
 
+        $validated['priority'] = $validated['rush'] ? 'urgent' : null;
+
         Project::create($validated);
 
         return back()->with('message', 'Project created successfully!');
@@ -234,6 +236,8 @@ class ProjectManagement extends Controller
             "per_property" => ['nullable', 'boolean'],
             "rush" => ['required', 'boolean'],
         ]);
+
+        $validated['priority'] = $validated['rush'] ? 'urgent' : null;
 
         $project->update($validated);
 

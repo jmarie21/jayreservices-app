@@ -9,6 +9,7 @@ import { mapStatusForClient } from '@/utils/statusMapper';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import { MoreVertical } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import { toast } from 'vue-sonner';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -102,6 +103,25 @@ const removeImage = () => {
 
 const getS3Url = (path: string) => {
     return `https://jayre-services.s3.us-east-1.amazonaws.com/${path}`;
+};
+
+const markForRevision = (projectId: number) => {
+    router.put(
+        route('projects.updateStatus', projectId),
+        {
+            status: 'revision',
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Status updated successfully!', {
+                    description: 'The status was updated successfully!',
+                    position: 'top-right',
+                });
+                console.log('success');
+            },
+        },
+    );
 };
 
 const submitComment = () => {
@@ -380,7 +400,7 @@ const confirmDelete = () => {
                 </div>
 
                 <!-- Right Column: Comments -->
-                <div class="flex w-full flex-col border-t bg-white md:w-[460px] md:border-t-0 md:border-l">
+                <div class="flex w-full flex-col border-t bg-white md:w-[520px] md:border-t-0 md:border-l">
                     <div class="border-b p-4">
                         <h3 class="text-lg font-semibold">Comments</h3>
                     </div>
@@ -508,9 +528,24 @@ const confirmDelete = () => {
                                 Cancel
                             </Button>
 
-                            <Button size="sm" @click="submitComment" :disabled="commentForm.processing || (!commentForm.body && !commentForm.image)">
-                                {{ editingCommentId ? 'Update' : 'Send' }}
-                            </Button>
+                            <div class="flex flex-col space-y-4">
+                                <Button
+                                    v-if="role === 'client'"
+                                    @click="markForRevision(project.id)"
+                                    variant="destructive"
+                                    :disabled="mapStatusForClient(project.status) !== 'completed'"
+                                >
+                                    Mark for revision
+                                </Button>
+
+                                <Button
+                                    size="sm"
+                                    @click="submitComment"
+                                    :disabled="commentForm.processing || (!commentForm.body && !commentForm.image)"
+                                >
+                                    {{ editingCommentId ? 'Update' : 'Send' }}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>

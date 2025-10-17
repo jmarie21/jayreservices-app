@@ -29,6 +29,7 @@ const emit = defineEmits<{
 // Agent selection
 const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
 const perPropertyOption = ref<'add-per-property' | 'no' | ''>(props.project?.per_property ? 'add-per-property' : '');
+const rushOption = ref<'true' | 'false' | ''>('');
 
 // Form initialization
 const form = useForm<BasicForm>({
@@ -92,6 +93,9 @@ const totalPrice = computed(() => {
 
     // Price based on per property
     if (perPropertyOption.value === 'add-per-property') extra += 5;
+
+    // Rush extra
+    if (rushOption.value === 'true') extra += 10;
 
     return extra; // basePrice is 0, so we just return extras
 });
@@ -377,7 +381,7 @@ const handleSubmit = () => {
                     <!-- Rush Option -->
                     <div class="space-y-2">
                         <Label>Rush (with additional charges)</Label>
-                        <Select :modelValue="form.rush ? 'true' : 'false'" @update:modelValue="(val) => (form.rush = val === 'true')">
+                        <Select v-model="rushOption" @update:modelValue="(val) => (form.rush = val === 'true')">
                             <SelectTrigger class="w-full">
                                 <SelectValue placeholder="Select option" />
                             </SelectTrigger>

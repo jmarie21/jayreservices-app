@@ -28,6 +28,7 @@ const emit = defineEmits<{
 
 const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
 const perPropertyOption = ref<'add-per-property' | 'no' | ''>('');
+const rushOption = ref<'true' | 'false' | ''>('');
 
 interface Option {
     id: string;
@@ -88,9 +89,10 @@ const totalPrice = computed(() => {
         else if (form.format === 'horizontal and vertical package') total += 85;
     }
 
-    // Agent & per-property
+    // Agent, per-property & rush
     if (agentOption.value === 'with-agent') total += 10;
     if (perPropertyOption.value === 'add-per-property') total += 5;
+    if (rushOption.value === 'true') total += 20;
 
     // Captions
     if (form.extra_fields?.captions.includes('3D Text behind the Agent Talking')) total += 10;
@@ -401,7 +403,7 @@ const handleSubmit = () => {
                     <!-- Rush Option -->
                     <div class="space-y-2">
                         <Label>Rush (with additional charges)</Label>
-                        <Select :modelValue="form.rush ? 'true' : 'false'" @update:modelValue="(val) => (form.rush = val === 'true')">
+                        <Select v-model="rushOption" @update:modelValue="(val) => (form.rush = val === 'true')">
                             <SelectTrigger class="w-full">
                                 <SelectValue placeholder="Select option" />
                             </SelectTrigger>

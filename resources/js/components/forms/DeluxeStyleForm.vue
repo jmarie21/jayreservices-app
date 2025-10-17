@@ -34,6 +34,7 @@ const emit = defineEmits<{
 // Agent & per-property options
 const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
 const perPropertyOption = ref<'add-per-property' | 'no' | ''>('');
+const rushOption = ref<'true' | 'false' | ''>('');
 
 // Effects & captions options
 const effectsOptions: Option[] = [
@@ -84,6 +85,9 @@ const totalPrice = computed(() => {
 
     // Per property extra
     if (perPropertyOption.value === 'add-per-property') extra += 5;
+
+    // Rush extra
+    if (rushOption.value === 'true') extra += 10;
 
     return extra;
 });
@@ -374,7 +378,7 @@ const handleSubmit = () => {
                     <!-- Rush Option -->
                     <div class="space-y-2">
                         <Label>Rush (with additional charges)</Label>
-                        <Select :modelValue="form.rush ? 'true' : 'false'" @update:modelValue="(val) => (form.rush = val === 'true')">
+                        <Select v-model="rushOption" @update:modelValue="(val) => (form.rush = val === 'true')">
                             <SelectTrigger class="w-full">
                                 <SelectValue placeholder="Select option" />
                             </SelectTrigger>

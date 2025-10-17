@@ -93,6 +93,8 @@ class ProjectsController extends Controller
         $validated['client_id'] = Auth::id(); 
         $validated['status'] = $validated['status'] ?? 'pending';
 
+        $validated['priority'] = $validated['rush'] ? 'urgent' : null;
+
         $project = Project::create($validated);
 
         // 📧 Send email notification to admin
@@ -127,6 +129,8 @@ class ProjectsController extends Controller
             "per_property" => ['nullable', 'boolean'],
             "rush" => ['nullable', 'boolean'],
         ]);
+        
+        $validated['priority'] = $validated['rush'] ? 'urgent' : null;
 
         $project->update($validated);
 

@@ -30,6 +30,7 @@ const emit = defineEmits<{
 
 const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
 const perPropertyOption = ref<'add-per-property' | 'no' | ''>(props.project ? (props.project.per_property ? 'add-per-property' : 'no') : 'no');
+const rushOption = ref<'true' | 'false' | ''>('');
 
 interface Option {
     id: string;
@@ -101,6 +102,9 @@ function calculateTotalPrice() {
     // Per property line
     if (perPropertyOption.value === 'add-per-property') total += 5;
 
+    // Rush extra
+    if (rushOption.value === 'true') total += 20;
+
     // Captions cost
     if (form.extra_fields?.captions.includes('3D Text behind the Agent Talking')) total += 10;
     if (form.extra_fields?.captions.includes('3D Text tracked on the ground etc.')) total += 15;
@@ -151,6 +155,11 @@ watch(perPropertyOption, () => {
     form.per_property = perPropertyOption.value === 'add-per-property';
     calculateTotalPrice();
 });
+watch(rushOption, () => {
+    form.rush = rushOption.value === 'true';
+    calculateTotalPrice();
+});
+
 watch(() => form.extra_fields?.captions, calculateTotalPrice, { deep: true });
 watch(() => form.style, calculateTotalPrice);
 watch(() => form.format, calculateTotalPrice);
@@ -429,7 +438,7 @@ const handleSubmit = () => {
                     <!-- Rush Option -->
                     <div class="space-y-2">
                         <Label>Rush (with additional charges)</Label>
-                        <Select :modelValue="form.rush ? 'true' : 'false'" @update:modelValue="(val) => (form.rush = val === 'true')">
+                        <Select v-model="rushOption" @update:modelValue="(val) => (form.rush = val === 'true')">
                             <SelectTrigger class="w-full">
                                 <SelectValue placeholder="Select option" />
                             </SelectTrigger>
