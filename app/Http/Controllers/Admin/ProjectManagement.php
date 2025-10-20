@@ -8,6 +8,8 @@ use App\Models\Project;
 use App\Models\Service;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
+use App\Notifications\ProjectRevisionNotification;
+use App\Notifications\ProjectStatusNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -166,21 +168,35 @@ class ProjectManagement extends Controller
             }
         }
 
+        // 🔔 Notify assigned editor if status changed to "revision" or "done_qa"
+        if (
+            isset($validated['status']) &&
+            in_array(strtolower($validated['status']), ['revision', 'done_qa']) &&
+            strtolower($oldStatus) !== strtolower($validated['status'])
+        ) {
+            $editor = $project->editor;
+            if ($editor) {
+                $status = strtolower($validated['status']) === 'revision' ? 'for_revision' : 'done_qa';
+                $editor->notify(new ProjectStatusNotification($project, $status, 'admin'));
+            }
+        }
+
+
 
         // ✅ Send email if status changed to "sent_to_client"
-        // if (
-        //     isset($validated['status']) &&
-        //     strtolower($validated['status']) === 'sent_to_client' &&
-        //     strtolower($oldStatus) !== 'sent_to_client'
-        // ) {
-        //     if ($project->client) {
-        //         $recipients = $project->client->getAllEmails();
+        if (
+            isset($validated['status']) &&
+            strtolower($validated['status']) === 'sent_to_client' &&
+            strtolower($oldStatus) !== 'sent_to_client'
+        ) {
+            if ($project->client) {
+                $recipients = $project->client->getAllEmails();
 
-        //         if (!empty($recipients)) {
-        //             Mail::to($recipients)->queue(new ProjectSentToClientMail($project));
-        //         }
-        //     }
-        // }
+                if (!empty($recipients)) {
+                    Mail::to($recipients)->queue(new ProjectSentToClientMail($project));
+                }
+            }
+        }
 
 
         return back()->with('success', 'Project updated successfully.');

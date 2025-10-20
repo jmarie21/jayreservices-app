@@ -53,6 +53,8 @@ class CommentController extends Controller
 
         $comment->load('user');
 
+        $user = auth()->user();
+
 
         // 🔔 Send notification if comment is from client
         if (auth()->user()->role === 'client') {
@@ -70,6 +72,24 @@ class CommentController extends Controller
                 }
             }
         }
+
+        if ($user->role === 'admin') {
+            // Notify assigned editor only
+            if ($project->editor_id) {
+                $editor = User::find($project->editor_id);
+                if ($editor) {
+                    $editor->notify(new ClientCommentNotification($comment, $project));
+                }
+            }
+        }
+
+        // if ($user->role === 'editor') {
+        //     // Notify all admins
+        //     $admins = User::where('role', 'admin')->get();
+        //     foreach ($admins as $admin) {
+        //         $admin->notify(new ClientCommentNotification($comment, $project));
+        //     }
+        // }
 
         return back()->with('newComment', $comment);
     }

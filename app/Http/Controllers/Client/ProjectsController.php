@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Notifications\NewProjectCreatedNotification;
 use App\Notifications\ProjectRevisionNotification;
+use App\Notifications\ProjectStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -149,6 +150,7 @@ class ProjectsController extends Controller
 
     public function updateStatus(Request $request, Project $project)
     {
+        // Only the project client can trigger this
         if ($project->client_id !== Auth::id()) {
             abort(403, 'Unauthorized');
         }
@@ -157,39 +159,43 @@ class ProjectsController extends Controller
             "status" => ['required', 'in:todo,in_progress,for_qa,done_qa,sent_to_client,revision,revision_completed,backlog'],
         ]);
 
-        $project->update(['status' => $validated['status']]);
+        $newStatus = strtolower($validated['status']);
+        $project->update(['status' => $newStatus]);
 
-        if ($validated['status'] === 'revision') {
+        // Define statuses that trigger notifications
+        $notifiableStatuses = ['revision', 'for_qa', 'done_qa', 'revision_completed', 'sent_to_client'];
+
+        if (in_array($newStatus, $notifiableStatuses, true)) {
             // 🔔 Notify all admins
             $admins = User::where('role', 'admin')->get();
-            
+
             foreach ($admins as $admin) {
-                // Check if notification was sent in last 5 minutes to prevent duplicates
                 $recentNotification = $admin->notifications()
-                    ->where('type', ProjectRevisionNotification::class)
+                    ->where('type', ProjectStatusNotification::class)
                     ->where('data->project_id', $project->id)
+                    ->where('data->status', $newStatus)
                     ->where('created_at', '>', now()->subMinutes(5))
                     ->exists();
-                    
+
                 if (!$recentNotification) {
-                    $admin->notify(new ProjectRevisionNotification($project));
+                    $admin->notify(new ProjectStatusNotification($project, $newStatus, 'client'));
                 }
             }
 
             // 🔔 Notify assigned editor (if any)
             if ($project->editor_id) {
                 $editor = User::find($project->editor_id);
-                
+
                 if ($editor) {
-                    // Check if notification was sent in last 5 minutes to prevent duplicates
                     $recentNotification = $editor->notifications()
-                        ->where('type', ProjectRevisionNotification::class)
+                        ->where('type', ProjectStatusNotification::class)
                         ->where('data->project_id', $project->id)
+                        ->where('data->status', $newStatus)
                         ->where('created_at', '>', now()->subMinutes(5))
                         ->exists();
-                        
+
                     if (!$recentNotification) {
-                        $editor->notify(new ProjectRevisionNotification($project));
+                        $editor->notify(new ProjectStatusNotification($project, $newStatus, 'client'));
                     }
                 }
             }

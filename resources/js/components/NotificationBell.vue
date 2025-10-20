@@ -184,7 +184,10 @@ const formatDate = (date) => {
             leave-from-class="transform opacity-100 scale-100"
             leave-to-class="transform opacity-0 scale-95"
         >
-            <div v-if="isOpen" class="ring-opacity-5 absolute right-0 z-50 mt-2 w-120 rounded-lg bg-white shadow-lg ring-1 ring-black">
+            <div
+                v-if="isOpen"
+                class="ring-opacity-5 absolute right-0 z-50 mt-2 w-[28rem] max-w-[95vw] overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black sm:max-w-[24rem]"
+            >
                 <!-- Header -->
                 <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
                     <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
@@ -218,10 +221,8 @@ const formatDate = (date) => {
                         >
                             <div class="flex items-start justify-between">
                                 <div @click="handleNotificationClick(notification)" class="flex-1">
-                                    <p class="text-sm text-gray-900" v-html="notification.data.message"></p>
-                                    <p class="mt-1 text-xs text-gray-500">
-                                        {{ formatDate(notification.created_at) }}
-                                    </p>
+                                    <p class="text-sm break-words text-gray-900" v-html="notification.data.message"></p>
+                                    <p class="mt-1 text-xs text-gray-500">{{ formatDate(notification.created_at) }}</p>
                                 </div>
                                 <button @click.stop="deleteNotification(notification.id)" class="ml-2 text-gray-400 hover:text-red-600">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

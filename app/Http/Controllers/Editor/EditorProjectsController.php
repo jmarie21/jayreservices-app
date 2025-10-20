@@ -69,6 +69,34 @@ class EditorProjectsController extends Controller
 
         $project->update($validated);
 
+        /* ✅ Notify admin if editor changes the project status to:
+        * for_qa, done_qa, revision_completed, or sent_to_client
+        */
+        if (
+            isset($validated['status']) &&
+            in_array(strtolower($validated['status']), ['for_qa', 'revision_completed',  'sent_to_client'])
+        ) {
+            $newStatus = strtolower($validated['status']);
+
+            // Get all admin users
+            $admins = \App\Models\User::where('role', 'admin')->get();
+
+            foreach ($admins as $admin) {
+                // Avoid sending duplicates (within last 5 mins)
+                $recentNotification = $admin->notifications()
+                    ->where('type', \App\Notifications\ProjectStatusNotification::class)
+                    ->where('data->project_id', $project->id)
+                    ->where('data->status', $newStatus)
+                    ->where('created_at', '>', now()->subMinutes(5))
+                    ->exists();
+
+                if (!$recentNotification) {
+                    $admin->notify(new \App\Notifications\ProjectStatusNotification($project, $newStatus, 'editor'));
+                }
+            }
+        }
+
+
         // ✅ Send email if status changed to "sent_to_client"
         if (
             isset($validated['status']) &&

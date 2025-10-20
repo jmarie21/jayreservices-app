@@ -43,21 +43,35 @@ class ClientCommentNotification extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
-        // Determine route based on user role
+        // Determine route based on recipient role
         $routeName = $notifiable->role === 'admin'
             ? 'projects.all'
             : 'editor.projects.index';
 
+        $role = strtolower($this->comment->user->role ?? '');
+        $originalName = $this->comment->user->name ?? 'User';
+
+        // Determine display name based on both commenter and recipient roles
+        if ($role === 'admin') {
+            $commenterName = 'Admin';
+        } elseif ($role === 'client') {
+            // Admins see the actual client name; editors just see "Client"
+            $commenterName = $notifiable->role === 'admin' ? $originalName : 'Client';
+        } else {
+            $commenterName = $originalName;
+        }
+
         Log::info('Client Comment Notification', [
             'recipient' => $notifiable->name,
-            'role' => $notifiable->role,
+            'recipient_role' => $notifiable->role,
+            'commenter_role' => $role,
+            'displayed_as' => $commenterName,
             'project' => $this->project->project_name,
-            'client' => $this->comment->user->name,
         ]);
 
-        $commentPreview = $this->comment->body 
-            ? (strlen($this->comment->body) > 50 
-                ? substr($this->comment->body, 0, 50) . '...' 
+        $commentPreview = $this->comment->body
+            ? (strlen($this->comment->body) > 50
+                ? substr($this->comment->body, 0, 50) . '...'
                 : $this->comment->body)
             : '[Image attached]';
 
@@ -65,9 +79,9 @@ class ClientCommentNotification extends Notification implements ShouldQueue
             'project_id' => $this->project->id,
             'comment_id' => $this->comment->id,
             'project_name' => $this->project->project_name,
-            'client_name' => $this->comment->user->name ?? 'Client',
+            'commenter_name' => $commenterName,
             'comment_preview' => $commentPreview,
-            'message' => "<strong>{$this->comment->user->name}</strong> commented on project <strong>'{$this->project->project_name}'</strong>: {$commentPreview}",
+            'message' => "<strong>{$commenterName}</strong> commented on project <strong>'{$this->project->project_name}'</strong>: {$commentPreview}",
             'type' => 'client_comment',
             'route_name' => $routeName,
             'route_params' => [
@@ -76,4 +90,6 @@ class ClientCommentNotification extends Notification implements ShouldQueue
             'created_at' => now()->toDateTimeString(),
         ];
     }
+
+
 }
