@@ -7,6 +7,7 @@ use App\Mail\ProjectSentToClientMail;
 use App\Models\Project;
 use App\Models\Service;
 use App\Models\User;
+use App\Notifications\ProjectAssignedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -113,6 +114,7 @@ class ProjectManagement extends Controller
             'filters' => $request->only(['status', 'date_from', 'date_to', 'search', 'editor_id']),
             'editors' => $editors,
             'clients' => $clients,
+            'viewProjectId' => $request->query('view') ? (int) $request->query('view') : null, // 👈 Add this
         ]);
     }
 
@@ -129,24 +131,37 @@ class ProjectManagement extends Controller
         ]);
 
         $oldStatus = $project->status;
+        $oldEditorId = $project->editor_id;
 
         $project->update($validated);
 
-
-        // ✅ Send email if status changed to "sent_to_client"
+        // 🔔 Notify editor if newly assigned
         if (
-            isset($validated['status']) &&
-            strtolower($validated['status']) === 'sent_to_client' &&
-            strtolower($oldStatus) !== 'sent_to_client'
+            isset($validated['editor_id']) && 
+            $validated['editor_id'] !== null && 
+            $validated['editor_id'] !== $oldEditorId
         ) {
-            if ($project->client) {
-                $recipients = $project->client->getAllEmails();
-
-                if (!empty($recipients)) {
-                    Mail::to($recipients)->queue(new ProjectSentToClientMail($project));
-                }
+            $editor = User::find($validated['editor_id']);
+            if ($editor) {
+                $editor->notify(new ProjectAssignedNotification($project));
             }
         }
+
+
+        // ✅ Send email if status changed to "sent_to_client"
+        // if (
+        //     isset($validated['status']) &&
+        //     strtolower($validated['status']) === 'sent_to_client' &&
+        //     strtolower($oldStatus) !== 'sent_to_client'
+        // ) {
+        //     if ($project->client) {
+        //         $recipients = $project->client->getAllEmails();
+
+        //         if (!empty($recipients)) {
+        //             Mail::to($recipients)->queue(new ProjectSentToClientMail($project));
+        //         }
+        //     }
+        // }
 
 
         return back()->with('success', 'Project updated successfully.');

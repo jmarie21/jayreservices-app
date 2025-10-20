@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
+import NotificationBell from '@/components/NotificationBell.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 
 type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
 type Priority = 'urgent' | 'high' | 'normal' | 'low';
@@ -23,6 +25,7 @@ const pageProps = usePage<
         editor: { id: number; name: string; email: string };
         projects: Paginated<Projects>;
         filters?: { status?: string; date_from?: string; date_to?: string; search?: string };
+        viewProjectId?: number;
     }>
 >().props;
 
@@ -40,6 +43,7 @@ const projects = computed(() => pageProps.projects);
 
 const showModal = ref(false);
 const selectedProject = ref<Projects | null>(null);
+const openedFromNotification = ref(false);
 
 const form = useForm<{ status: Status; priority: Priority }>({
     status: 'todo',
@@ -70,14 +74,28 @@ const statusLabels: Record<Status, string> = {
     sent_to_client: 'Sent to Client',
 };
 
-const openViewModal = (project: Projects) => {
+const openViewModal = (project: Projects, fromNotification = false) => {
     selectedProject.value = project;
     showModal.value = true;
+    openedFromNotification.value = fromNotification; // 👈 Add this line
 };
 
 const closeViewModal = () => {
     showModal.value = false;
     selectedProject.value = null;
+
+    // Only clean up if modal was opened from notification
+    if (openedFromNotification.value) {
+        filters.value.search = ''; // Clear search
+
+        router.visit(route('editor.projects.index', filters.value), {
+            preserveState: false,
+            preserveScroll: true,
+            replace: true,
+        });
+
+        openedFromNotification.value = false;
+    }
 };
 
 const updateProject = <K extends keyof typeof form>(projectId: number, field: K, value: any) => {
@@ -116,15 +134,30 @@ const applyFilters = (newFilters?: typeof filters.value) => {
 const goToPage = (pageNumber: number) => {
     router.get(route('editor.projects.index'), { ...filters.value, page: pageNumber }, { preserveScroll: true, replace: true });
 };
+
+// 👇 Add this: Handle opening modal from notification
+onMounted(() => {
+    if (pageProps.viewProjectId) {
+        const project = projects.value.data.find((p) => p.id === pageProps.viewProjectId);
+
+        if (project) {
+            // Open the modal automatically
+            openViewModal(project, true);
+        } else {
+            // Project not on current page
+            toast.error('Project not found. Please search for it.', { position: 'top-right' });
+        }
+    }
+});
 </script>
 
 <template>
     <Head :title="`My Projects - ${editor.name}`" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-            <div class="mb-2 flex flex-col gap-4">
+            <div class="mb-2 flex items-center justify-between">
                 <h1 class="text-3xl font-bold">My Assigned Projects</h1>
-                <p class="text-muted-foreground">{{ editor.email }}</p>
+                <NotificationBell />
             </div>
 
             <!-- Filters -->

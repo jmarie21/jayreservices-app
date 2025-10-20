@@ -39,6 +39,7 @@ class EditorProjectsController extends Controller
             'editor' => $editor,
             'projects' => $projects,
             'filters' => $filters,
+            'viewProjectId' => $request->query('view') ? (int) $request->query('view') : null, // 👈 Add this
         ]);
     }
 

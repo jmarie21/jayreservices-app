@@ -10,6 +10,7 @@ use App\Http\Controllers\Client\ProjectsController;
 use App\Http\Controllers\Client\ServicesController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Editor\EditorProjectsController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -47,9 +48,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
 
-
-
-    Route::get('/editor-mgmt/{editor}', [EditorManagement::class, 'showEditorProjects'])->name('editor.projects');
+    Route::get('/editor-mgmt/{editor}', [EditorManagement::class, 'showEditorProjects'])->name('admin.editor.projects');
 
     Route::get('/invoice-mgmt', [InvoiceManagementController::class, 'index'])->name('invoice.index');
     Route::get('/invoice-mgmt/{invoice}/view', [InvoiceManagementController::class, 'view'])->name('invoice.view');
@@ -73,6 +72,10 @@ Route::middleware(['auth', 'editor'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::post('/projects/{project}/comments', [CommentController::class, 'store'])
          ->name('projects.comments.store');
+
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
 

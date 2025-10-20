@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
+import NotificationBell from '@/components/NotificationBell.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,7 +14,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
 type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
@@ -27,17 +28,19 @@ const pageProps = usePage<
         projects: Paginated<Projects>;
         editors: { id: number; name: string }[];
         filters?: { status?: string; date_from?: string; date_to?: string; search?: string; editor_id: string };
+        viewProjectId?: number;
     }>
 >().props;
 
-const page = usePage<
-    AppPageProps<{
-        client: { id: number; name: string; email: string };
-        projects: Paginated<Projects>;
-        editors: { id: number; name: string }[];
-        filters?: { status?: string; date_from?: string; date_to?: string; search?: string };
-    }>
->();
+// const page = usePage<
+//     AppPageProps<{
+//         client: { id: number; name: string; email: string };
+//         projects: Paginated<Projects>;
+//         editors: { id: number; name: string }[];
+//         filters?: { status?: string; date_from?: string; date_to?: string; search?: string };
+//         viewProjectId?: number;
+//     }>
+// >();
 
 const { client, editors } = pageProps;
 const projects = computed(() => pageProps.projects);
@@ -89,6 +92,18 @@ const openViewModal = (project: Projects) => {
 const closeViewModal = () => {
     showModal.value = false;
     selectedProject.value = null;
+
+    // If we came from a notification (has viewProjectId), reset the search filter
+    if (pageProps.viewProjectId) {
+        filters.value.search = ''; // Clear the search filter
+
+        // Apply filters without the search term
+        router.visit(route('projects.all', filters.value), {
+            preserveState: false, // 👈 Changed to false to reload projects
+            preserveScroll: true,
+            replace: true,
+        });
+    }
 };
 
 const totalPrices = ref<Record<number, number | undefined>>({});
@@ -232,6 +247,24 @@ const deleteProject = () => {
         },
     });
 };
+
+// 👇 Add this: Handle opening modal from notification
+onMounted(() => {
+    console.log('Page mounted'); // 👈 Debug
+    console.log('viewProjectId:', pageProps.viewProjectId); // 👈 Debug
+    console.log('Projects data:', projects.value.data); // 👈 Debug
+    if (pageProps.viewProjectId) {
+        const project = projects.value.data.find((p) => p.id === pageProps.viewProjectId);
+
+        if (project) {
+            // Open the modal automatically
+            openViewModal(project);
+        } else {
+            // Project not on current page, try to fetch or show message
+            toast.error('Project not found. Please search for it.', { position: 'top-right' });
+        }
+    }
+});
 </script>
 
 <template>
@@ -239,8 +272,10 @@ const deleteProject = () => {
     <Toaster />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-            <div class="mb-2 flex flex-col gap-4">
+            <div class="mb-2 flex items-center justify-between">
                 <h1 class="text-3xl font-bold">All Projects</h1>
+
+                <NotificationBell />
             </div>
 
             <!-- Filters section -->
@@ -248,7 +283,7 @@ const deleteProject = () => {
                 <!-- Status & Date filters -->
                 <div class="space-y-2">
                     <Label class="text-xl font-bold">Filter by:</Label>
-                    <ProjectFilters :filters="filters" :role="page.props.auth.user.role" :editors="editors" @update:filters="applyFilters" />
+                    <ProjectFilters :filters="filters" :role="pageProps.auth.user.role" :editors="editors" @update:filters="applyFilters" />
                 </div>
 
                 <!-- Search input -->
@@ -445,7 +480,7 @@ const deleteProject = () => {
             v-if="selectedProject"
             :isOpen="showModal"
             :project="selectedProject"
-            :role="page.props.auth.user.role"
+            :role="pageProps.auth.user.role"
             @close="closeViewModal"
         />
 

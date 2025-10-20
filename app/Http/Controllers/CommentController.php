@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\ProjectComment;
+use App\Models\User;
+use App\Notifications\ClientCommentNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -51,6 +53,24 @@ class CommentController extends Controller
 
         $comment->load('user');
 
+
+        // 🔔 Send notification if comment is from client
+        if (auth()->user()->role === 'client') {
+            // Notify all admins
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new ClientCommentNotification($comment, $project));
+            }
+
+            // Notify assigned editor (if any)
+            if ($project->editor_id) {
+                $editor = User::find($project->editor_id);
+                if ($editor) {
+                    $editor->notify(new ClientCommentNotification($comment, $project));
+                }
+            }
+        }
+
         return back()->with('newComment', $comment);
     }
 
@@ -80,6 +100,8 @@ class CommentController extends Controller
             'body' => $validated['body'],
             'image_url' => $validated['image_url'] ?? $comment->image_url,
         ]);
+
+        
 
         return back()->with('success', 'Comment updated successfully.');
     }
