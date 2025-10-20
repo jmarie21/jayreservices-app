@@ -130,7 +130,7 @@ onUnmounted(() => {
             leave-from-class="transform opacity-100 scale-100"
             leave-to-class="transform opacity-0 scale-95"
         >
-            <div v-if="isOpen" class="ring-opacity-5 absolute right-0 z-50 mt-2 w-80 rounded-lg bg-white shadow-lg ring-1 ring-black">
+            <div v-if="isOpen" class="ring-opacity-5 absolute right-0 z-50 mt-2 w-120 rounded-lg bg-white shadow-lg ring-1 ring-black">
                 <!-- Header -->
                 <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
                     <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>

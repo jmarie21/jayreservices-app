@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\Service;
 use App\Models\User;
 use App\Notifications\ProjectAssignedNotification;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -34,12 +35,21 @@ class ProjectManagement extends Controller
             }
         }
 
-        // Filter by date range
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+        // Filter by date range - FIXED with proper timezone handling
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            // Parse dates and set proper time boundaries
+            $dateFrom = Carbon::parse($request->date_from)->startOfDay();
+            $dateTo = Carbon::parse($request->date_to)->endOfDay();
+            
+            $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+        } elseif ($request->filled('date_from')) {
+            // Only date_from is provided
+            $dateFrom = Carbon::parse($request->date_from)->startOfDay();
+            $query->where('created_at', '>=', $dateFrom);
+        } elseif ($request->filled('date_to')) {
+            // Only date_to is provided
+            $dateTo = Carbon::parse($request->date_to)->endOfDay();
+            $query->where('created_at', '<=', $dateTo);
         }
 
         // Search
@@ -84,12 +94,21 @@ class ProjectManagement extends Controller
             }
         }
 
-        // Filter by date range
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+        // Filter by date range - FIXED with proper timezone handling
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            // Parse dates and set proper time boundaries
+            $dateFrom = Carbon::parse($request->date_from)->startOfDay();
+            $dateTo = Carbon::parse($request->date_to)->endOfDay();
+            
+            $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+        } elseif ($request->filled('date_from')) {
+            // Only date_from is provided
+            $dateFrom = Carbon::parse($request->date_from)->startOfDay();
+            $query->where('created_at', '>=', $dateFrom);
+        } elseif ($request->filled('date_to')) {
+            // Only date_to is provided
+            $dateTo = Carbon::parse($request->date_to)->endOfDay();
+            $query->where('created_at', '<=', $dateTo);
         }
 
         // Search
