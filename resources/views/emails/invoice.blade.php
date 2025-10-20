@@ -79,11 +79,11 @@
             <h3>Total: ${{ number_format($invoice->projects->sum('total_price'), 2) }}</h3>
         </div>
 
-        {{-- @if($invoice->paypal_link)
+
         <div class="paypal">
-            <a href="{{ $invoice->paypal_link }}" target="_blank">Pay with PayPal</a>
+            <a href="https://www.paypal.com/paypalme/jmalpas98?country.x=PH&locale.x=en_US&fbclid=IwAR2LRYpasW41135pB8qZ0sf3ahS79rju7XcmgrkTlmxZc7B3Y-M2NrxjAMg" target="_blank">Pay with PayPal</a>
         </div>
-        @endif --}}
+
     </div>
 </body>
 </html>

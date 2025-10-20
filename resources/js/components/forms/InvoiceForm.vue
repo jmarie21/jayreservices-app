@@ -133,6 +133,11 @@ const handleSubmit = () => {
         });
     }
 };
+
+const truncate = (text: string, length = 25) => {
+    if (!text) return '';
+    return text.length > length ? text.substring(0, length) + '...' : text;
+};
 </script>
 
 <template>
@@ -213,7 +218,7 @@ const handleSubmit = () => {
                                                 "
                                             />
                                         </TableCell>
-                                        <TableCell>{{ project.project_name }}</TableCell>
+                                        <TableCell>{{ truncate(project.project_name) }}</TableCell>
                                         <TableCell>{{ project.client?.name ?? 'N/A' }}</TableCell>
                                         <TableCell>{{ project.service?.name ?? 'N/A' }}</TableCell>
                                         <TableCell>{{ new Date(project.created_at).toLocaleDateString() }}</TableCell>

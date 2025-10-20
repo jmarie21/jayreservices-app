@@ -45,9 +45,9 @@ class InvoiceMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.invoice', // Your Blade view for invoice
+            view: 'emails.invoice-message', // ✅ New email message view
             with: [
-                'invoice' => $this->invoice
+                'invoice' => $this->invoice,
             ]
         );
     }
