@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
-
+use App\Events\NewProjectCreatedEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\User;
@@ -107,6 +107,8 @@ class ProjectsController extends Controller
         foreach ($admins as $admin) {
             $admin->notify(new NewProjectCreatedNotification($project));
         }
+
+        // broadcast(new NewProjectCreatedEvent($project))->toOthers();
 
         return redirect(route("projects"))->with('message', 'Order placed successfully!');
     }

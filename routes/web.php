@@ -57,6 +57,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/invoice-mgmt/{invoice}', [InvoiceManagementController::class, 'update'])->name('invoice.update');
     Route::post('/invoice-mgmt/{id}/paid', [InvoiceManagementController::class, 'markAsPaid'])->name('invoice.markPaid');
     Route::post('/invoice-mgmt/{id}/cancel', [InvoiceManagementController::class, 'cancel'])->name('invoice.cancel');
+    Route::delete('/notifications/delete-all', [NotificationController::class, 'destroyAll'])
+    ->name('notifications.destroyAll');
 
 });
 
@@ -76,6 +78,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications/delete-all', [NotificationController::class, 'destroyAll'])
+    ->name('notifications.destroyAll');
+
 });
 
 

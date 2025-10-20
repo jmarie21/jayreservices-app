@@ -1,13 +1,61 @@
 <script setup>
 import { router, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 
 const page = usePage();
 const isOpen = ref(false);
+const notifications = ref(page.props.notifications?.recent || []);
+const unreadCount = ref(page.props.notifications?.unread_count || 0);
 
-// Get notifications from shared Inertia data
-const notifications = computed(() => page.props.notifications?.recent || []);
-const unreadCount = computed(() => page.props.notifications?.unread_count || 0);
+const user = page.props.auth.user; // assuming you share auth user globally
+
+onMounted(() => {
+    if (!user?.id) return;
+
+    const audio = new Audio(`${window.location.origin}/sounds/notification.mp3`);
+    audio.preload = 'auto';
+
+    // Unlock audio after first user click
+    document.addEventListener(
+        'click',
+        () => {
+            audio
+                .play()
+                .then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                })
+                .catch(() => {});
+        },
+        { once: true },
+    );
+
+    const channel = window.Echo.private(`App.Models.User.${user.id}`);
+
+    channel.notification((notification) => {
+        console.log('🔔 New notification received:', notification);
+
+        // 🔊 Play sound
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+
+        // 📨 Add notification
+        notifications.value.unshift({
+            id: notification.id ?? Date.now(),
+            data: notification,
+            created_at: new Date().toISOString(),
+            read_at: null,
+        });
+
+        unreadCount.value++;
+    });
+});
+
+onUnmounted(() => {
+    if (user?.id) {
+        window.Echo.leave(`private-App.Models.User.${user.id}`);
+    }
+});
 
 let reloadInterval = null;
 
@@ -26,7 +74,14 @@ const markAllAsRead = () => {
         {
             preserveState: true,
             preserveScroll: true,
-            only: ['notifications'],
+            onSuccess: () => {
+                // Instantly update frontend state
+                notifications.value = notifications.value.map((n) => ({
+                    ...n,
+                    read_at: new Date().toISOString(),
+                }));
+                unreadCount.value = 0;
+            },
         },
     );
 };
@@ -67,6 +122,18 @@ const deleteNotification = (id) => {
     });
 };
 
+// ✅ NEW: Delete all notifications
+const deleteAllNotifications = () => {
+    router.delete('/notifications/delete-all', {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            notifications.value = [];
+            unreadCount.value = 0;
+        },
+    });
+};
+
 const formatDate = (date) => {
     const now = new Date();
     const notificationDate = new Date(date);
@@ -79,19 +146,6 @@ const formatDate = (date) => {
 
     return notificationDate.toLocaleDateString();
 };
-
-onMounted(() => {
-    // Poll for new notifications every 30 seconds
-    reloadInterval = setInterval(() => {
-        router.reload({ only: ['notifications'], preserveState: true, preserveScroll: true });
-    }, 30000);
-});
-
-onUnmounted(() => {
-    if (reloadInterval) {
-        clearInterval(reloadInterval);
-    }
-});
 </script>
 
 <template>
@@ -99,8 +153,8 @@ onUnmounted(() => {
         <!-- Notification Bell Button -->
         <button
             @click="toggleDropdown"
-            class="relative rounded-full p-2 text-gray-600 hover:text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
             type="button"
+            class="relative rounded-full border border-gray-300 bg-white p-2 text-gray-600 transition hover:border-indigo-400 hover:text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
         >
             <!-- Bell Icon -->
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,7 +235,9 @@ onUnmounted(() => {
 
                 <!-- Footer -->
                 <div v-if="notifications.length > 0" class="border-t border-gray-200 px-4 py-3 text-center">
-                    <a href="#" class="text-sm text-indigo-600 hover:text-indigo-800"> View all notifications </a>
+                    <button @click="deleteAllNotifications" class="text-sm font-medium text-red-600 hover:text-red-800">
+                        Clear all notifications
+                    </button>
                 </div>
             </div>
         </transition>
