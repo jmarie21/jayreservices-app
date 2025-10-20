@@ -67,20 +67,4 @@ class NewProjectCreatedNotification extends Notification implements ShouldQueue
             'created_at' => now()->toDateTimeString(),
         ];
     }
-
-    public function toBroadcast(object $notifiable): BroadcastMessage
-    {
-        return new BroadcastMessage([
-            'project_id' => $this->project->id,
-            'project_name' => $this->project->project_name,
-            'client_name' => $this->project->client->name ?? 'Unknown Client',
-            'message' => "New project <strong>'{$this->project->project_name}'</strong> has been created by <strong>{$this->project->client->name}</strong>.",
-            'type' => 'project_created',
-            'route_name' => $notifiable->role === 'admin' ? 'projects.all' : 'editor.projects.index',
-            'route_params' => [
-                'view' => $this->project->id,
-            ],
-            'created_at' => now()->toDateTimeString(),
-        ]);
-    }
 }
