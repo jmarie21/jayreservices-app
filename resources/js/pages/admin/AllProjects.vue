@@ -19,6 +19,14 @@ import { toast } from 'vue-sonner';
 
 type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
 type Priority = 'urgent' | 'high' | 'normal' | 'low';
+interface Filters {
+    status?: string;
+    date_from?: string;
+    date_to?: string;
+    search?: string;
+    editor_id?: string;
+    [key: string]: string | undefined; // Add index signature
+}
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Project Management', href: '/project-mgmt' }];
 
@@ -193,11 +201,22 @@ const filters = ref({
 });
 
 // Apply filters
-const applyFilters = (newFilters?: typeof filters.value) => {
-    const query = newFilters || filters.value;
-    filters.value = { ...filters.value, ...query };
+const applyFilters = (newFilters: Filters) => {
+    // Update local filters
+    filters.value = { ...filters.value, ...newFilters };
 
-    router.get(route('projects.all'), filters.value, {
+    // Clean up empty values before sending
+    const cleanFilters = Object.entries(filters.value).reduce((acc, [key, value]) => {
+        if (value !== '' && value !== null && value !== undefined) {
+            acc[key as keyof Filters] = value;
+        }
+        return acc;
+    }, {} as Filters);
+
+    // Debug log (remove after fixing)
+    console.log('Applying filters to backend:', cleanFilters);
+
+    router.get(route('projects.all'), cleanFilters, {
         preserveScroll: true,
         replace: true,
     });
