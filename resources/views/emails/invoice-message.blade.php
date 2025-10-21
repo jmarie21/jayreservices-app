@@ -10,12 +10,8 @@
     <p>Good day! 😊</p>
 
     <p>
-        Please be informed that your weekly invoice has been prepared and is now ready for your review.
-        Kindly check it at your earliest convenience.
-    </p>
-
-    <p>
-        Once everything looks good, please click the PayPal link below to proceed with payment and make sure to pay the exact amount stated in the invoice.
+        Please see the attached invoice for this week's project.
+        Once reviewed, kindly click the PayPal link below to pay the exact amount stated.
     </p>
 
     <p>
@@ -28,16 +24,14 @@
     </p>
 
     <p>
-        After completing your payment, please send us a copy of your receipt through Messenger or via email at 
+        After payment, please send your receipt via Messenger or email at 
         <a href="mailto:jayrealestate98@gmail.com">jayrealestate98@gmail.com</a>
-        so we can mark it as paid on our end.
+        so we can mark it as paid.
     </p>
 
     <p>
-        If you have any questions or need clarification, please don't hesitate to let us know.
+        Thank you for your prompt response and continued support!
     </p>
-
-    <p>Thank you for your continued trust and partnership!</p>
 
     <p>Best regards,<br>
     <strong>Jay Re Services Team</strong></p>
