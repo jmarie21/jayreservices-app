@@ -60,7 +60,6 @@
             <thead>
                 <tr>
                     <th>Project</th>
-                    <th>Description</th>
                     <th>Amount</th>
                 </tr>
             </thead>
@@ -68,7 +67,6 @@
                 @foreach($invoice->projects as $project)
                     <tr>
                         <td>{{ $project->project_name }}</td>
-                        <td>{{ $project->notes ?? '-' }}</td>
                         <td>${{ number_format($project->total_price, 2) }}</td>
                     </tr>
                 @endforeach
