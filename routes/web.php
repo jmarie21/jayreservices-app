@@ -74,6 +74,7 @@ Route::middleware(['auth', 'editor'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::post('/projects/{project}/comments', [CommentController::class, 'store'])
          ->name('projects.comments.store');
+    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
 
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
