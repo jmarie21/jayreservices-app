@@ -317,7 +317,7 @@ const goToPage = (pageNumber: number) => {
 
                                         <!-- Edit Invoice -->
                                         <Button
-                                            v-if="invoice.status === 'pending'"
+                                            v-if="invoice.status === 'pending' || invoice.status === 'sent'"
                                             @click="openEditInvoice(invoice)"
                                             class="disabled:cursor-not-allowed disabled:opacity-50"
                                         >

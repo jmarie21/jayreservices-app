@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AddUserForm from '@/components/forms/AddUserForm.vue';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, User, type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/vue3';
@@ -79,7 +79,6 @@ const deleteUser = () => {
 
         <div class="p-4">
             <Table>
-                <TableCaption>A list of your recent invoices.</TableCaption>
                 <TableHeader>
                     <TableRow>
                         <TableHead class="w-[240px]"> Name </TableHead>

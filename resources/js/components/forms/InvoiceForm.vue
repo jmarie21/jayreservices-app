@@ -3,13 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Invoice, Projects } from '@/types';
 import { router, useForm } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+
+import { onClickOutside } from '@vueuse/core';
+import { Check, ChevronsUpDown } from 'lucide-vue-next';
 
 const props = defineProps<{
     isOpen: boolean;
@@ -22,6 +24,10 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['close', 'createInvoice', 'update:selectedClient', 'update:dateFrom', 'update:dateTo']);
+const open = ref(false);
+const searchTerm = ref('');
+
+const dropdownRef = ref<HTMLElement | null>(null);
 
 const formatDate = (date: string | undefined | null) => {
     if (!date) return '';
@@ -65,10 +71,17 @@ watch(
 
 watch(
     () => form.client_id,
-    (val) => {
-        emit('update:selectedClient', val);
-        // updateFilters(); // fetch projects for new client
+    (newId) => {
+        if (newId) {
+            const client = props.clients.find((c) => c.id === newId);
+            if (client) searchTerm.value = client.name;
+        } else {
+            searchTerm.value = '';
+        }
+
+        emit('update:selectedClient', newId);
     },
+    { immediate: true },
 );
 
 // const selectedProjects = reactive<number[]>(form.projects);
@@ -138,6 +151,34 @@ const truncate = (text: string, length = 25) => {
     if (!text) return '';
     return text.length > length ? text.substring(0, length) + '...' : text;
 };
+
+// 🔍 Filtered list of clients
+const filteredClients = computed(() => {
+    const term = searchTerm.value.toLowerCase();
+
+    // Always start from a sorted list (case-insensitive)
+    const sorted = [...props.clients].sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+
+    if (!term) return sorted;
+
+    // Filter THEN return in alphabetical order
+    return sorted.filter((c) => c.name.toLowerCase().includes(term));
+});
+
+// 🧠 When user selects a client
+function selectClient(client: { id: number; name: string }) {
+    form.client_id = client.id;
+    searchTerm.value = client.name;
+    open.value = false;
+}
+
+// 🧩 Toggle dropdown manually
+function toggleDropdown() {
+    open.value = !open.value;
+}
+
+// 🧹 Close dropdown when clicking outside
+onClickOutside(dropdownRef, () => (open.value = false));
 </script>
 
 <template>
@@ -148,19 +189,37 @@ const truncate = (text: string, length = 25) => {
             </DialogHeader>
 
             <div class="space-y-4">
-                <!-- Client Select -->
+                <!-- Client Search + Dropdown -->
                 <div class="space-y-2">
                     <Label>Client</Label>
-                    <Select v-model="form.client_id">
-                        <SelectTrigger class="w-full">
-                            <SelectValue placeholder="Select a client" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem v-for="client in props.clients" :key="client.id" :value="client.id">
+
+                    <div class="relative" ref="dropdownRef">
+                        <!-- Input for searching -->
+                        <Input v-model="searchTerm" type="text" placeholder="Search client..." class="pr-10" @input="open = true" />
+
+                        <!-- Dropdown toggle button -->
+                        <Button type="button" variant="ghost" size="icon" class="absolute top-0 right-0 h-full" @click="toggleDropdown">
+                            <ChevronsUpDown class="h-4 w-4 opacity-60" />
+                        </Button>
+
+                        <!-- Dropdown list -->
+                        <div
+                            v-if="open"
+                            class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md"
+                        >
+                            <div
+                                v-for="client in filteredClients"
+                                :key="client.id"
+                                class="flex cursor-pointer items-center px-3 py-2 hover:bg-accent hover:text-accent-foreground"
+                                @click="selectClient(client)"
+                            >
+                                <Check class="mr-2 h-4 w-4" :class="client.id === form.client_id ? 'opacity-100' : 'opacity-0'" />
                                 {{ client.name }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
+                            </div>
+
+                            <div v-if="filteredClients.length === 0" class="px-3 py-2 text-sm text-muted-foreground">No clients found.</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Date Range -->

@@ -26,23 +26,27 @@ const mainNavItems = computed<NavItem[]>(() => {
     let navItems = [...(allNavItems[role.value] ?? [])];
 
     if (role.value === 'admin') {
+        // Sort alphabetically by name
+        const sortedClients = [...clients.value].sort((a, b) => a.name.localeCompare(b.name));
+        const sortedEditors = [...editors.value].sort((a, b) => a.name.localeCompare(b.name));
+
         navItems = navItems.map((item) => {
-            // Project Management (already done for clients)
+            // Project Management section
             if (item.title === 'Project Management') {
                 return {
                     ...item,
-                    children: clients.value.map((client) => ({
+                    children: sortedClients.map((client) => ({
                         title: client.name,
                         href: `/project-mgmt/${client.id}`,
                     })),
                 };
             }
 
-            // Editor Management (new)
+            // Editor Management section
             if (item.title === 'Editor Management') {
                 return {
                     ...item,
-                    children: editors.value.map((editor: any) => ({
+                    children: sortedEditors.map((editor) => ({
                         title: editor.name,
                         href: `/editor-mgmt/${editor.id}`,
                     })),

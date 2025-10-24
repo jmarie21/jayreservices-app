@@ -118,6 +118,8 @@ class InvoiceManagementController extends Controller
             'date_from' => $request->date_from,
             'date_to' => $request->date_to,
             'total_amount' => Project::whereIn('id', $request->projects)->sum('total_price'),
+            // 👇 Reset status if invoice was previously sent
+            'status' => $invoice->status === 'sent' ? 'pending' : $invoice->status,
         ]);
 
         $invoice->projects()->sync($request->projects);
