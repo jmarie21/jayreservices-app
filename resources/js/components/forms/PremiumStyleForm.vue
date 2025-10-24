@@ -67,14 +67,65 @@ const form = useForm<PremiumForm>({
     service_id: props.serviceId,
     rush: props.project?.rush ?? false,
     extra_fields: {
-        effects: props.project?.extra_fields?.effects ? [...props.project.extra_fields.effects] : [],
+        effects: props.project?.extra_fields?.effects ? formatEffectsFromBackend(props.project.extra_fields.effects) : [],
         captions: props.project?.extra_fields?.captions ? [...props.project.extra_fields.captions] : [],
     },
     per_property: props.project?.per_property ?? false,
     ...(isAdmin.value ? { client_id: props.project?.client_id ?? null } : {}),
 });
 
-// Computed total price
+// Helper function to format effects from backend (handles both old and new format)
+function formatEffectsFromBackend(effects: any): Array<{ id: string; quantity: number }> {
+    if (!Array.isArray(effects)) return [];
+
+    return effects.map((effect) => {
+        if (typeof effect === 'string') {
+            return { id: effect, quantity: 1 };
+        }
+        return effect;
+    });
+}
+
+// Check if effect is selected
+function isEffectSelected(id: string): boolean {
+    return form.extra_fields?.effects.some((e) => e.id === id) ?? false;
+}
+
+// Get effect quantity
+function getEffectQuantity(id: string): number {
+    const effect = form.extra_fields?.effects.find((e) => e.id === id);
+    return effect?.quantity ?? 1;
+}
+
+// Increment effect quantity
+function incrementEffect(id: string) {
+    if (!form.extra_fields) return;
+
+    const arr = [...form.extra_fields.effects];
+    const effect = arr.find((e) => e.id === id);
+
+    if (effect) {
+        effect.quantity = (effect.quantity || 1) + 1;
+        form.extra_fields.effects = arr;
+        form.extra_fields = { ...form.extra_fields };
+    }
+}
+
+// Decrement effect quantity
+function decrementEffect(id: string) {
+    if (!form.extra_fields) return;
+
+    const arr = [...form.extra_fields.effects];
+    const effect = arr.find((e) => e.id === id);
+
+    if (effect && effect.quantity > 1) {
+        effect.quantity -= 1;
+        form.extra_fields.effects = arr;
+        form.extra_fields = { ...form.extra_fields };
+    }
+}
+
+// Update the totalPrice computed to account for quantities
 const totalPrice = computed(() => {
     let total = 0;
 
@@ -98,10 +149,12 @@ const totalPrice = computed(() => {
     if (form.extra_fields?.captions.includes('3D Text behind the Agent Talking')) total += 10;
     if (form.extra_fields?.captions.includes('Captions while the agent is talking')) total += 10;
 
-    //Effects
-    if (form.extra_fields?.effects.includes('Painting Transition')) total += 10;
-    if (form.extra_fields?.effects.includes('Earth Zoom Transition')) total += 15;
-    // if (form.extra_fields.effects.includes('Day to Night AI')) total += 15;
+    // Effects with quantities
+    form.extra_fields?.effects.forEach((effect) => {
+        const quantity = effect.quantity || 1;
+        if (effect.id === 'Painting Transition') total += 10 * quantity;
+        if (effect.id === 'Earth Zoom Transition') total += 15 * quantity;
+    });
 
     return total;
 });
@@ -153,8 +206,16 @@ function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
     form.extra_fields ??= { effects: [], captions: [] };
     const isChecked = checked === true;
     const arr = [...form.extra_fields.effects];
-    if (isChecked && !arr.includes(id)) arr.push(id);
-    if (!isChecked && arr.includes(id)) arr.splice(arr.indexOf(id), 1);
+
+    if (isChecked) {
+        if (!arr.some((e) => e.id === id)) {
+            arr.push({ id, quantity: 1 });
+        }
+    } else {
+        const index = arr.findIndex((e) => e.id === id);
+        if (index !== -1) arr.splice(index, 1);
+    }
+
     form.extra_fields.effects = arr;
     form.extra_fields = { ...form.extra_fields };
 }
@@ -188,7 +249,7 @@ watch(
             perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
             rushOption.value = project.rush ? 'true' : 'false';
             form.extra_fields = {
-                effects: project.extra_fields?.effects ? [...project.extra_fields.effects] : [],
+                effects: project.extra_fields?.effects ? formatEffectsFromBackend(project.extra_fields.effects) : [],
                 captions: project.extra_fields?.captions ? [...project.extra_fields.captions] : [],
             };
         } else {
@@ -433,7 +494,7 @@ const handleSubmit = () => {
                             <div v-for="effect in effectsOptions" :key="effect.id" class="mb-1 flex items-center gap-2">
                                 <Checkbox
                                     :id="effect.id"
-                                    :model-value="form.extra_fields?.effects.includes(effect.id)"
+                                    :model-value="isEffectSelected(effect.id)"
                                     @update:model-value="(value) => handleEffectChange(effect.id, value)"
                                 />
                                 <label :for="effect.id" class="cursor-pointer">{{ effect.label }}</label>
@@ -446,6 +507,43 @@ const handleSubmit = () => {
                                 >
                                     (see sample)
                                 </a>
+                                <!-- Quantity Controls -->
+                                <div v-if="isEffectSelected(effect.id)" class="ml-1 flex items-center gap-1">
+                                    <button
+                                        type="button"
+                                        @click="decrementEffect(effect.id)"
+                                        class="flex h-6 w-6 items-center justify-center rounded border border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="h-4 w-4"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                        >
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                    </button>
+                                    <span class="min-w-[2rem] text-center font-medium">{{ getEffectQuantity(effect.id) }}</span>
+                                    <button
+                                        type="button"
+                                        @click="incrementEffect(effect.id)"
+                                        class="flex h-6 w-6 items-center justify-center rounded border border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="h-4 w-4"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                        >
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

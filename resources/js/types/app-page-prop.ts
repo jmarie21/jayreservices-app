@@ -100,7 +100,7 @@ export type PremiumForm = {
     total_price: number;
     with_agent?: boolean;
     extra_fields?: {
-        effects: string[]; // e.g., ["Ken Burns"]
+        effects: EffectItem[];
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
     per_property?: boolean;
@@ -123,11 +123,16 @@ export type LuxuryForm = {
     total_price: number;
     with_agent?: boolean;
     extra_fields?: {
-        effects: string[]; // e.g., ["Ken Burns"]
+        effects: EffectItem[];
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
     per_property?: boolean;
     rush?: boolean;
+};
+
+export type EffectItem = {
+    id: string;
+    quantity: number;
 };
 
 // ✅ Generic pagination type

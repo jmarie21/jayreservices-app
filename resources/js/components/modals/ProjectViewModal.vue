@@ -358,7 +358,7 @@ const confirmDelete = () => {
                                     <span class="text-sm font-medium text-gray-500">Effects</span>
                                     <ul class="list-inside list-disc space-y-1 text-right text-sm text-gray-700">
                                         <li v-for="(effect, index) in project.extra_fields.effects" :key="index">
-                                            {{ effect }}
+                                            {{ typeof effect === 'string' ? effect : `${effect.id} (x${effect.quantity})` }}
                                         </li>
                                     </ul>
                                 </div>
