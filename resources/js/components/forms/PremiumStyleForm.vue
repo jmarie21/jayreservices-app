@@ -310,6 +310,9 @@ const handleSubmit = () => {
         });
     }
 };
+
+// Sort clients alphabetically
+const sortedClients = computed(() => [...clients].sort((a, b) => a.name.localeCompare(b.name)));
 </script>
 
 <template>
@@ -331,7 +334,7 @@ const handleSubmit = () => {
                                 <SelectValue placeholder="Select a client" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem v-for="client in clients" :key="client.id" :value="client.id">
+                                <SelectItem v-for="client in sortedClients" :key="client.id" :value="client.id">
                                     {{ client.name }}
                                 </SelectItem>
                             </SelectContent>
