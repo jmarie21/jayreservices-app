@@ -41,6 +41,7 @@ export type BasicForm = {
     total_price: number;
     with_agent?: boolean;
     per_property?: boolean;
+    per_property_count?: number;
     rush?: boolean;
 };
 
@@ -81,6 +82,7 @@ export type DeluxeForm = {
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
     per_property?: boolean;
+    per_property_count?: number;
     rush?: boolean;
 };
 
@@ -104,6 +106,7 @@ export type PremiumForm = {
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
     per_property?: boolean;
+    per_property_count?: number;
     rush?: boolean;
 };
 
@@ -127,6 +130,7 @@ export type LuxuryForm = {
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
     };
     per_property?: boolean;
+    per_property_count?: number;
     rush?: boolean;
 };
 

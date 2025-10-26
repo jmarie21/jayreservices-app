@@ -30,6 +30,7 @@ const emit = defineEmits<{
 
 const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
 const perPropertyOption = ref<'add-per-property' | 'no' | ''>(props.project ? (props.project.per_property ? 'add-per-property' : 'no') : 'no');
+const perPropertyQuantity = ref(1);
 const rushOption = ref<'true' | 'false' | ''>('');
 
 interface Option {
@@ -79,6 +80,7 @@ const form = useForm<LuxuryForm>({
         captions: props.project?.extra_fields?.captions ? [...props.project.extra_fields.captions] : [],
     },
     per_property: props.project?.per_property,
+    per_property_count: props.project?.per_property_count ?? 0,
     ...(isAdmin.value ? { client_id: props.project?.client_id ?? null } : {}),
 });
 
@@ -151,7 +153,7 @@ function calculateTotalPrice() {
     if (agentOption.value === 'with-agent') total += 10;
 
     // Per property line
-    if (perPropertyOption.value === 'add-per-property') total += 5;
+    if (perPropertyOption.value === 'add-per-property') total += 5 * perPropertyQuantity.value;
 
     // Rush extra
     if (rushOption.value === 'true') total += 20;
@@ -209,6 +211,26 @@ watch(perPropertyOption, () => {
     form.per_property = perPropertyOption.value === 'add-per-property';
     calculateTotalPrice();
 });
+watch(perPropertyOption, (val) => {
+    form.per_property = val === 'add-per-property';
+    if (val === 'add-per-property' && perPropertyQuantity.value < 1) {
+        perPropertyQuantity.value = 1;
+    }
+    if (val !== 'add-per-property') {
+        perPropertyQuantity.value = 0; // set to 0 when disabled
+    }
+
+    calculateTotalPrice();
+});
+// ✅ NEW: Watch the quantity itself
+watch(perPropertyQuantity, () => {
+    calculateTotalPrice();
+});
+
+watch(perPropertyQuantity, (val) => {
+    form.per_property_count = val;
+});
+
 watch(rushOption, () => {
     form.rush = rushOption.value === 'true';
     calculateTotalPrice();
@@ -236,6 +258,7 @@ watch(
                     notes: project.notes || '',
                     with_agent: project.with_agent ?? false,
                     per_property: project.per_property ?? false,
+                    perPropertyQuantity: project.per_property_count ?? 1,
                     extra_fields: {
                         effects: project.extra_fields?.effects ? formatEffectsFromBackend(project.extra_fields.effects) : [],
                         captions: project.extra_fields?.captions ? [...project.extra_fields.captions] : [],
@@ -262,6 +285,7 @@ watch(
                     total_price: props.basePrice,
                     with_agent: false,
                     per_property: false,
+                    per_property_count: 0,
                     rushOption: false,
                     extra_fields: { effects: [], captions: [] },
                 });
@@ -348,6 +372,16 @@ const handleSubmit = () => {
 
 // Sort clients alphabetically
 const sortedClients = computed(() => [...clients].sort((a, b) => a.name.localeCompare(b.name)));
+
+function incrementPerProperty() {
+    perPropertyQuantity.value++;
+}
+
+function decrementPerProperty() {
+    if (perPropertyQuantity.value > 1) {
+        perPropertyQuantity.value--;
+    }
+}
 </script>
 
 <template>
@@ -482,15 +516,33 @@ const sortedClients = computed(() => [...clients].sort((a, b) => a.name.localeCo
                     <!-- Per Property Option -->
                     <div class="space-y-2">
                         <Label>With per property line?</Label>
-                        <Select v-model="perPropertyOption">
-                            <SelectTrigger class="w-full">
-                                <SelectValue placeholder="Select an option" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="add-per-property">Add per property line (Add $5)</SelectItem>
-                                <SelectItem value="no">No</SelectItem>
-                            </SelectContent>
-                        </Select>
+
+                        <!-- Wrapper for dropdown + buttons -->
+                        <div class="flex items-center gap-2">
+                            <!-- Dropdown (auto-resizes when buttons appear) -->
+                            <div :class="['flex-1 transition-all duration-200', perPropertyOption === 'add-per-property' ? 'w-[80%]' : 'w-full']">
+                                <Select v-model="perPropertyOption">
+                                    <SelectTrigger class="w-full">
+                                        <SelectValue placeholder="Select an option" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="add-per-property">Add per property line (Add $5)</SelectItem>
+                                        <SelectItem value="no">No</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <!-- Plus/Minus controls appear inline -->
+                            <div v-if="perPropertyOption === 'add-per-property'" class="flex items-center gap-1">
+                                <Button type="button" size="icon" variant="outline" class="h-8 w-8" @click="decrementPerProperty">
+                                    <span class="text-lg leading-none">−</span>
+                                </Button>
+                                <span class="w-5 text-center text-sm">{{ perPropertyQuantity }}</span>
+                                <Button type="button" size="icon" variant="outline" class="h-8 w-8" @click="incrementPerProperty">
+                                    <span class="text-lg leading-none">+</span>
+                                </Button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- File Link -->

@@ -260,6 +260,14 @@ class ProjectsController extends Controller
         }
 
         // =====================
+        // PER PROPERTY LINE ADD-ON
+        // =====================
+        if (!empty($validated['per_property']) && isset($extra['per_property_quantity'])) {
+            $qty = max(1, (int) $extra['per_property_quantity']);
+            $editorPrice += 100 * $qty;
+        }
+
+        // =====================
         // SAVE RESULT
         // =====================
         $validated['editor_price'] = $editorPrice;

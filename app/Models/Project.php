@@ -32,6 +32,7 @@ class Project extends Model
         'with_agent',
         'editor_price',
         'per_property',
+        'per_property_count',
         'rush'
     ];
 
@@ -40,6 +41,7 @@ class Project extends Model
         'total_price' => 'decimal:2',
         'with_agent' => 'boolean',
         'per_property' => 'boolean',
+        'per_property_count' => 'integer',
         'rush' => 'boolean'
     ];
 

@@ -253,6 +253,7 @@ class ProjectManagement extends Controller
             "extra_fields" => ['nullable', 'array'],
             "with_agent" => ['nullable', 'boolean'],
             "per_property" => ['nullable', 'boolean'],
+            "per_property_count" => ['nullable', 'integer'],
             "rush" => ['required', 'boolean'],
         ]);
 
@@ -421,6 +422,15 @@ class ProjectManagement extends Controller
         }
 
         // =====================
+        // PER PROPERTY LINE ADD-ON
+        // =====================
+        if (!empty($validated['per_property']) && !empty($validated['per_property_count'])) {
+            $qty = max(1, (int) $validated['per_property_count']);
+            $editorPrice += 100 * $qty;
+        }
+
+
+        // =====================
         // SAVE RESULT
         // =====================
         $validated['editor_price'] = $editorPrice;
@@ -431,6 +441,8 @@ class ProjectManagement extends Controller
             'effects' => $effectsRaw,
             'captions' => $captions,
             'with_agent' => $validated['with_agent'] ?? false,
+            'per_property' => $validated['per_property'] ?? false,
+            'per_property_count' => $validated['per_property_count'] ?? 0,
             'rush' => $validated['rush'] ?? false,
             'computed_editor_price' => $editorPrice,
         ]);
