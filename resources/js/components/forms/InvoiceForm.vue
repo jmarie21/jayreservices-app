@@ -29,6 +29,10 @@ const searchTerm = ref('');
 
 const dropdownRef = ref<HTMLElement | null>(null);
 
+// 🆕 Default PayPal link constant
+const DEFAULT_PAYPAL_LINK =
+    'https://www.paypal.com/paypalme/jmalpas98?country.x=PH&locale.x=en_US&fbclid=IwAR2LRYpasW41135pB8qZ0sf3ahS79rju7XcmgrkTlmxZc7B3Y-M2NrxjAMg';
+
 const formatDate = (date: string | undefined | null) => {
     if (!date) return '';
     return new Date(date).toISOString().split('T')[0]; // YYYY-MM-DD
@@ -40,12 +44,17 @@ const formatDate = (date: string | undefined | null) => {
 // --- Invoice form ---
 const form = useForm({
     client_id: props.invoice?.client_id ?? props.selectedClient ?? null,
-    // paypal_link: props.invoice?.paypal_link ?? '',
+    paypal_link: props.invoice?.paypal_link ?? '', // 🆕 Uncommented
     date_from: formatDate(props.invoice?.date_from ?? props.dateFrom),
     date_to: formatDate(props.invoice?.date_to ?? props.dateTo),
     projects: props.invoice
         ? props.invoice.projects.map((p: any) => (typeof p === 'number' ? p : p.id)) // ✅ IDs only
         : [],
+});
+
+// 🆕 Computed property to use default if empty
+const effectivePaypalLink = computed(() => {
+    return form.paypal_link && form.paypal_link.trim() !== '' ? form.paypal_link : DEFAULT_PAYPAL_LINK;
 });
 
 // Update form when invoice prop changes
@@ -54,13 +63,13 @@ watch(
     (invoice) => {
         if (invoice) {
             form.client_id = invoice.client_id;
-            // form.paypal_link = invoice.paypal_link ?? '';
+            form.paypal_link = invoice.paypal_link ?? ''; // 🆕 Uncommented
             form.date_from = formatDate(invoice.date_from);
             form.date_to = formatDate(invoice.date_to);
             form.projects = invoice.projects.map((p: any) => (typeof p === 'number' ? p : p.id));
         } else {
             form.client_id = props.selectedClient ?? null;
-            // form.paypal_link = '';
+            form.paypal_link = ''; // 🆕 Uncommented
             form.date_from = formatDate(props.dateFrom);
             form.date_to = formatDate(props.dateTo);
             form.projects = [];
@@ -126,9 +135,15 @@ watch(
 
 // --- Submit handler ---
 const handleSubmit = () => {
+    // 🆕 Use effective PayPal link before submitting
+    const submissionData = {
+        ...form.data(),
+        paypal_link: effectivePaypalLink.value,
+    };
+
     const isEditing = !!props.invoice;
     if (isEditing) {
-        form.put(route('invoice.update', props.invoice!.id), {
+        form.transform(() => submissionData).put(route('invoice.update', props.invoice!.id), {
             onSuccess: () => {
                 emit('close');
                 form.reset();
@@ -136,7 +151,7 @@ const handleSubmit = () => {
             },
         });
     } else {
-        form.post(route('invoice.store'), {
+        form.transform(() => submissionData).post(route('invoice.store'), {
             onSuccess: () => {
                 emit('close');
                 console.log(form);
@@ -152,7 +167,7 @@ const truncate = (text: string, length = 25) => {
     return text.length > length ? text.substring(0, length) + '...' : text;
 };
 
-// 🔍 Filtered list of clients
+// 📝 Filtered list of clients
 const filteredClients = computed(() => {
     const term = searchTerm.value.toLowerCase();
 
@@ -235,10 +250,11 @@ onClickOutside(dropdownRef, () => (open.value = false));
                 </div>
 
                 <!-- PayPal Link -->
-                <!-- <div class="space-y-2">
-                    <Label for="paypal">PayPal Link</Label>
+                <div class="space-y-2">
+                    <Label for="paypal">PayPal Link (Optional - Default link will be used if empty)</Label>
                     <Input id="paypal" v-model="form.paypal_link" placeholder="https://paypal.me/yourlink" />
-                </div> -->
+                    <p class="text-xs text-muted-foreground">Leave empty to use default PayPal link</p>
+                </div>
 
                 <!-- Projects Table -->
                 <div class="mt-6">
