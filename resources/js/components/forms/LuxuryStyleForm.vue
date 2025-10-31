@@ -12,6 +12,12 @@ import { toast } from 'vue-sonner';
 import { Checkbox } from '../ui/checkbox';
 import { Textarea } from '../ui/textarea';
 
+export interface CustomEffect {
+    id: string;
+    description: string;
+    price: number;
+}
+
 const props = defineProps<{
     open: boolean;
     basePrice: number;
@@ -32,6 +38,12 @@ const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
 const perPropertyOption = ref<'add-per-property' | 'no' | ''>(props.project ? (props.project.per_property ? 'add-per-property' : 'no') : 'no');
 const perPropertyQuantity = ref(1);
 const rushOption = ref<'true' | 'false' | ''>('');
+const isEditing = !!props.project;
+
+// Custom effects state
+const customEffects = ref<CustomEffect[]>([]);
+const newEffectDescription = ref('');
+const newEffectPrice = ref<number>(0);
 
 interface Option {
     id: string;
@@ -78,6 +90,7 @@ const form = useForm<LuxuryForm>({
     extra_fields: {
         effects: props.project?.extra_fields?.effects ? formatEffectsFromBackend(props.project.extra_fields.effects) : [],
         captions: props.project?.extra_fields?.captions ? [...props.project.extra_fields.captions] : [],
+        custom_effects: '[]', // Store as JSON string
     },
     per_property: props.project?.per_property,
     per_property_count: props.project?.per_property_count ?? 0,
@@ -172,6 +185,10 @@ function calculateTotalPrice() {
         if (effect.id === 'Virtual Staging AI') total += 20 * quantity;
     });
 
+    // Custom effects extra
+    const customEffectsTotal = customEffects.value.reduce((sum, effect) => sum + effect.price, 0);
+    total += customEffectsTotal;
+
     form.total_price = total;
 }
 
@@ -217,12 +234,11 @@ watch(perPropertyOption, (val) => {
         perPropertyQuantity.value = 1;
     }
     if (val !== 'add-per-property') {
-        perPropertyQuantity.value = 0; // set to 0 when disabled
+        perPropertyQuantity.value = 0;
     }
 
     calculateTotalPrice();
 });
-// ✅ NEW: Watch the quantity itself
 watch(perPropertyQuantity, () => {
     calculateTotalPrice();
 });
@@ -239,6 +255,9 @@ watch(rushOption, () => {
 watch(() => form.extra_fields?.captions, calculateTotalPrice, { deep: true });
 watch(() => form.style, calculateTotalPrice);
 watch(() => form.format, calculateTotalPrice);
+
+// Watch custom effects for price recalculation
+watch(customEffects, calculateTotalPrice, { deep: true });
 
 // Reset / load project data on modal open
 watch(
@@ -262,11 +281,28 @@ watch(
                     extra_fields: {
                         effects: project.extra_fields?.effects ? formatEffectsFromBackend(project.extra_fields.effects) : [],
                         captions: project.extra_fields?.captions ? [...project.extra_fields.captions] : [],
+                        custom_effects: '[]',
                     },
                 });
                 agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
                 perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
                 rushOption.value = project.rush ? 'true' : 'false';
+
+                // Load custom effects - parse if string, use directly if array
+                if (project.extra_fields?.custom_effects) {
+                    try {
+                        customEffects.value =
+                            typeof project.extra_fields.custom_effects === 'string'
+                                ? JSON.parse(project.extra_fields.custom_effects)
+                                : [...project.extra_fields.custom_effects];
+                    } catch (e) {
+                        console.error('Failed to parse custom_effects:', e);
+                        customEffects.value = [];
+                    }
+                } else {
+                    customEffects.value = [];
+                }
+
                 calculateTotalPrice();
             } else {
                 // Reset for new project
@@ -287,11 +323,12 @@ watch(
                     per_property: false,
                     per_property_count: 0,
                     rushOption: false,
-                    extra_fields: { effects: [], captions: [] },
+                    extra_fields: { effects: [], captions: [], custom_effects: '[]' },
                 });
                 agentOption.value = '';
                 perPropertyOption.value = '';
                 rushOption.value = '';
+                customEffects.value = [];
             }
         }
     },
@@ -300,7 +337,7 @@ watch(
 
 // Handle checkbox changes
 function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
-    form.extra_fields ??= { effects: [], captions: [] };
+    form.extra_fields ??= { effects: [], captions: [], custom_effects: '[]' };
     const isChecked = checked === true;
     const arr = [...form.extra_fields.effects];
 
@@ -318,7 +355,7 @@ function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
 }
 
 function handleCaptionChange(captionId: string, value: boolean | 'indeterminate') {
-    form.extra_fields ??= { effects: [], captions: [] };
+    form.extra_fields ??= { effects: [], captions: [], custom_effects: '[]' };
     const checked = value === true;
     const current = [...form.extra_fields.captions];
     if (checked && !current.includes(captionId)) {
@@ -330,19 +367,55 @@ function handleCaptionChange(captionId: string, value: boolean | 'indeterminate'
     form.extra_fields = { ...form.extra_fields };
 }
 
+// Custom effects functions
+function addCustomEffect() {
+    if (!newEffectDescription.value.trim()) {
+        toast.error('Please enter an effect description');
+        return;
+    }
+    if (newEffectPrice.value < 0) {
+        toast.error('Price cannot be negative');
+        return;
+    }
+
+    const newEffect: CustomEffect = {
+        id: `custom-${Date.now()}`,
+        description: newEffectDescription.value.trim(),
+        price: newEffectPrice.value,
+    };
+
+    customEffects.value.push(newEffect);
+
+    // Reset inputs
+    newEffectDescription.value = '';
+    newEffectPrice.value = 0;
+
+    toast.success('Custom effect added!');
+}
+
+function removeCustomEffect(id: string) {
+    customEffects.value = customEffects.value.filter((effect) => effect.id !== id);
+    toast.success('Custom effect removed');
+}
+
 // Submit handler
 const handleSubmit = () => {
     const isEditing = !!props.project;
-
-    // Determine if the current user is an admin
-    const isAdminUser = isAdmin.value; // assuming you already have `isAdmin` ref/computed
-
-    // Choose the correct route names based on role
+    const isAdminUser = isAdmin.value;
     const createRoute = isAdminUser ? 'admin.project.create' : 'projects.store';
     const updateRoute = isAdminUser ? 'admin.project.update' : 'projects.client_update';
 
+    // Serialize custom_effects to JSON string for FormData compatibility
+    const submissionData = {
+        ...form.data(),
+        extra_fields: {
+            ...form.extra_fields,
+            custom_effects: JSON.stringify(customEffects.value),
+        },
+    };
+
     if (isEditing) {
-        form.put(route(updateRoute, props.project!.id), {
+        form.transform(() => submissionData).put(route(updateRoute, props.project!.id), {
             onSuccess: () => {
                 toast.success('Updated successfully!', {
                     description: isAdminUser ? 'Project updated successfully (admin side).' : 'Your order was updated successfully!',
@@ -355,7 +428,7 @@ const handleSubmit = () => {
             },
         });
     } else {
-        form.post(route(createRoute), {
+        form.transform(() => submissionData).post(route(createRoute), {
             onSuccess: () => {
                 toast.success('Project created!', {
                     description: isAdminUser ? 'Project has been created successfully (admin side).' : 'Your order has been placed.',
@@ -438,7 +511,6 @@ function decrementPerProperty() {
                         <Label>Video Format</Label>
                         <Select v-model="form.format">
                             <SelectTrigger class="w-full">
-                                <!-- Display selected label -->
                                 <SelectValue :value="form.format" placeholder="Format">
                                     {{ selectedFormatLabel }}
                                 </SelectValue>
@@ -516,10 +588,7 @@ function decrementPerProperty() {
                     <!-- Per Property Option -->
                     <div class="space-y-2">
                         <Label>With per property line?</Label>
-
-                        <!-- Wrapper for dropdown + buttons -->
                         <div class="flex items-center gap-2">
-                            <!-- Dropdown (auto-resizes when buttons appear) -->
                             <div :class="['flex-1 transition-all duration-200', perPropertyOption === 'add-per-property' ? 'w-[80%]' : 'w-full']">
                                 <Select v-model="perPropertyOption">
                                     <SelectTrigger class="w-full">
@@ -531,8 +600,6 @@ function decrementPerProperty() {
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            <!-- Plus/Minus controls appear inline -->
                             <div v-if="perPropertyOption === 'add-per-property'" class="flex items-center gap-1">
                                 <Button type="button" size="icon" variant="outline" class="h-8 w-8" @click="decrementPerProperty">
                                     <span class="text-lg leading-none">−</span>
@@ -564,10 +631,7 @@ function decrementPerProperty() {
                                 <SelectItem value="false">No</SelectItem>
                             </SelectContent>
                         </Select>
-
-                        <span v-if="form.errors.rush" class="text-sm text-red-500">
-                            {{ form.errors.rush }}
-                        </span>
+                        <span v-if="form.errors.rush" class="text-sm text-red-500">{{ form.errors.rush }}</span>
                     </div>
 
                     <!-- Notes -->
@@ -598,23 +662,6 @@ function decrementPerProperty() {
                                 </a>
                                 <!-- Quantity Controls -->
                                 <div v-if="isEffectSelected(effect.id)" class="ml-1 flex items-center gap-1">
-                                    <button
-                                        type="button"
-                                        @click="decrementEffect(effect.id)"
-                                        class="flex h-6 w-6 items-center justify-center rounded border border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            class="h-4 w-4"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                        >
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                    </button>
-                                    <span class="min-w-[2rem] text-center font-medium">{{ getEffectQuantity(effect.id) }}</span>
                                     <button
                                         type="button"
                                         @click="incrementEffect(effect.id)"
@@ -654,11 +701,53 @@ function decrementPerProperty() {
                         </div>
                     </div>
                 </div>
+
+                <!-- Custom Effects Section -->
+                <div v-if="isEditing && isAdmin" class="mt-6 space-y-4 rounded-lg border border-gray-200 p-4">
+                    <div class="space-y-2">
+                        <Label class="text-base font-semibold">Additional Effects</Label>
+                        <p class="text-sm text-gray-600">Add any additional custom effects with their associated costs</p>
+                    </div>
+
+                    <!-- Add Custom Effect Form -->
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
+                        <div class="md:col-span-7">
+                            <Input v-model="newEffectDescription" placeholder="Describe the custom effect..." />
+                        </div>
+                        <div class="md:col-span-3">
+                            <Input v-model.number="newEffectPrice" type="number" step="0.01" min="0" placeholder="Price ($)" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <Button type="button" variant="outline" class="w-full" @click="addCustomEffect"> Add Effect </Button>
+                        </div>
+                    </div>
+
+                    <!-- List of Custom Effects -->
+                    <div v-if="customEffects.length > 0" class="space-y-2">
+                        <div class="text-sm font-medium">Added Custom Effects:</div>
+                        <div class="space-y-2">
+                            <div
+                                v-for="effect in customEffects"
+                                :key="effect.id"
+                                class="flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 p-3"
+                            >
+                                <div class="flex-1">
+                                    <span class="text-sm">{{ effect.description }}</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-semibold">${{ effect.price.toFixed(2) }}</span>
+                                    <Button type="button" variant="destructive" size="sm" @click="removeCustomEffect(effect.id)"> Remove </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Total & Submit -->
                 <div class="mt-8 text-xl font-semibold">Total: ${{ Number(form.total_price).toFixed(2) }}</div>
                 <div class="mt-8 flex justify-end">
                     <Button type="submit" :disabled="form.processing">
-                        <span v-if="form.processing" class="mr-2 animate-spin">⏳</span>
+                        <span v-if="form.processing" class="mr-2 animate-spin">⳨</span>
                         {{ props.project ? 'Save Changes' : 'Place Order' }}
                     </Button>
                 </div>

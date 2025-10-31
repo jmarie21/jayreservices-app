@@ -18,6 +18,12 @@ interface Option {
     link?: string | null;
 }
 
+export interface CustomEffect {
+    id: string;
+    description: string;
+    price: number;
+}
+
 const props = defineProps<{
     open: boolean;
     serviceId: number;
@@ -36,6 +42,12 @@ const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
 const perPropertyOption = ref<'add-per-property' | 'no' | ''>('');
 const perPropertyQuantity = ref(1);
 const rushOption = ref<'true' | 'false' | ''>('');
+const isEditing = !!props.project;
+
+// Custom effects state
+const customEffects = ref<CustomEffect[]>([]);
+const newEffectDescription = ref('');
+const newEffectPrice = ref<number>(0);
 
 // Effects & captions options
 const effectsOptions: Option[] = [
@@ -54,11 +66,12 @@ const form = useForm<DeluxeForm>({
     music_link: props.project?.music_link ?? '',
     file_link: props.project?.file_link ?? '',
     notes: props.project?.notes ?? '',
-    total_price: 0, // start at 0, will be calculated
+    total_price: 0,
     with_agent: props.project?.with_agent ?? false,
     extra_fields: {
         effects: props.project?.extra_fields?.effects ? [...props.project.extra_fields.effects] : [],
         captions: props.project?.extra_fields?.captions ? [...props.project.extra_fields.captions] : [],
+        custom_effects: '[]', // Store as JSON string
     },
     service_id: props.serviceId,
     rush: props.project?.rush ?? false,
@@ -91,6 +104,10 @@ const totalPrice = computed(() => {
     // Rush extra
     if (rushOption.value === 'true') extra += 10;
 
+    // Custom effects extra
+    const customEffectsTotal = customEffects.value.reduce((sum, effect) => sum + effect.price, 0);
+    extra += customEffectsTotal;
+
     return extra;
 });
 
@@ -109,7 +126,7 @@ watch(perPropertyOption, (val) => {
         perPropertyQuantity.value = 1;
     }
     if (val !== 'add-per-property') {
-        perPropertyQuantity.value = 0; // set to 0 when disabled
+        perPropertyQuantity.value = 0;
     }
 });
 
@@ -172,6 +189,21 @@ watch(
             perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
             perPropertyQuantity.value = project.per_property_count ?? 1;
             rushOption.value = project.rush ? 'true' : 'false';
+
+            // Load custom effects - parse if string, use directly if array
+            if (project.extra_fields?.custom_effects) {
+                try {
+                    customEffects.value =
+                        typeof project.extra_fields.custom_effects === 'string'
+                            ? JSON.parse(project.extra_fields.custom_effects)
+                            : [...project.extra_fields.custom_effects];
+                } catch (e) {
+                    console.error('Failed to parse custom_effects:', e);
+                    customEffects.value = [];
+                }
+            } else {
+                customEffects.value = [];
+            }
         } else {
             // Reset for new project
             form.style = '';
@@ -187,6 +219,7 @@ watch(
             perPropertyOption.value = '';
             perPropertyQuantity.value = 0;
             rushOption.value = '';
+            customEffects.value = [];
         }
     },
     { immediate: true },
@@ -194,7 +227,7 @@ watch(
 
 // Handle checkbox changes
 function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
-    form.extra_fields ??= { effects: [], captions: [] };
+    form.extra_fields ??= { effects: [], captions: [], custom_effects: '[]' };
     const isChecked = checked === true;
     const arr = [...form.extra_fields.effects];
     if (isChecked && !arr.includes(id)) arr.push(id);
@@ -203,19 +236,55 @@ function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
     form.extra_fields = { ...form.extra_fields };
 }
 
+// Custom effects functions
+function addCustomEffect() {
+    if (!newEffectDescription.value.trim()) {
+        toast.error('Please enter an effect description');
+        return;
+    }
+    if (newEffectPrice.value < 0) {
+        toast.error('Price cannot be negative');
+        return;
+    }
+
+    const newEffect: CustomEffect = {
+        id: `custom-${Date.now()}`,
+        description: newEffectDescription.value.trim(),
+        price: newEffectPrice.value,
+    };
+
+    customEffects.value.push(newEffect);
+
+    // Reset inputs
+    newEffectDescription.value = '';
+    newEffectPrice.value = 0;
+
+    toast.success('Custom effect added!');
+}
+
+function removeCustomEffect(id: string) {
+    customEffects.value = customEffects.value.filter((effect) => effect.id !== id);
+    toast.success('Custom effect removed');
+}
+
 // Submit handler
 const handleSubmit = () => {
     const isEditing = !!props.project;
-
-    // Determine if the current user is an admin
-    const isAdminUser = isAdmin.value; // assuming you already have `isAdmin` ref/computed
-
-    // Choose the correct route names based on role
+    const isAdminUser = isAdmin.value;
     const createRoute = isAdminUser ? 'admin.project.create' : 'projects.store';
     const updateRoute = isAdminUser ? 'admin.project.update' : 'projects.client_update';
 
+    // Serialize custom_effects to JSON string for FormData compatibility
+    const submissionData = {
+        ...form.data(),
+        extra_fields: {
+            ...form.extra_fields,
+            custom_effects: JSON.stringify(customEffects.value),
+        },
+    };
+
     if (isEditing) {
-        form.put(route(updateRoute, props.project!.id), {
+        form.transform(() => submissionData).put(route(updateRoute, props.project!.id), {
             onSuccess: () => {
                 toast.success('Updated successfully!', {
                     description: isAdminUser ? 'Project updated successfully (admin side).' : 'Your order was updated successfully!',
@@ -228,7 +297,7 @@ const handleSubmit = () => {
             },
         });
     } else {
-        form.post(route(createRoute), {
+        form.transform(() => submissionData).post(route(createRoute), {
             onSuccess: () => {
                 toast.success('Project created!', {
                     description: isAdminUser ? 'Project has been created successfully (admin side).' : 'Your order has been placed.',
@@ -311,7 +380,6 @@ function decrementPerProperty() {
                         <Label>Video Format</Label>
                         <Select v-model="form.format">
                             <SelectTrigger class="w-full">
-                                <!-- Display selected label -->
                                 <SelectValue :value="form.format" placeholder="Format">
                                     {{ selectedFormatLabel }}
                                 </SelectValue>
@@ -349,10 +417,7 @@ function decrementPerProperty() {
                     <!-- Per Property Option -->
                     <div class="space-y-2">
                         <Label>With per property line?</Label>
-
-                        <!-- Wrapper for dropdown + buttons -->
                         <div class="flex items-center gap-2">
-                            <!-- Dropdown (auto-resizes when buttons appear) -->
                             <div :class="['flex-1 transition-all duration-200', perPropertyOption === 'add-per-property' ? 'w-[80%]' : 'w-full']">
                                 <Select v-model="perPropertyOption">
                                     <SelectTrigger class="w-full">
@@ -364,8 +429,6 @@ function decrementPerProperty() {
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            <!-- Plus/Minus controls appear inline -->
                             <div v-if="perPropertyOption === 'add-per-property'" class="flex items-center gap-1">
                                 <Button type="button" size="icon" variant="outline" class="h-8 w-8" @click="decrementPerProperty">
                                     <span class="text-lg leading-none">−</span>
@@ -437,10 +500,7 @@ function decrementPerProperty() {
                                 <SelectItem value="false">No</SelectItem>
                             </SelectContent>
                         </Select>
-
-                        <span v-if="form.errors.rush" class="text-sm text-red-500">
-                            {{ form.errors.rush }}
-                        </span>
+                        <span v-if="form.errors.rush" class="text-sm text-red-500">{{ form.errors.rush }}</span>
                     </div>
 
                     <!-- Notes -->
@@ -473,11 +533,53 @@ function decrementPerProperty() {
                         </div>
                     </div>
                 </div>
+
+                <!-- Custom Effects Section -->
+                <div v-if="isEditing && isAdmin" class="mt-6 space-y-4 rounded-lg border border-gray-200 p-4">
+                    <div class="space-y-2">
+                        <Label class="text-base font-semibold">Additional Effects</Label>
+                        <p class="text-sm text-gray-600">Add any additional custom effects with their associated costs</p>
+                    </div>
+
+                    <!-- Add Custom Effect Form -->
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
+                        <div class="md:col-span-7">
+                            <Input v-model="newEffectDescription" placeholder="Describe the custom effect..." />
+                        </div>
+                        <div class="md:col-span-3">
+                            <Input v-model.number="newEffectPrice" type="number" step="0.01" min="0" placeholder="Price ($)" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <Button type="button" variant="outline" class="w-full" @click="addCustomEffect"> Add Effect </Button>
+                        </div>
+                    </div>
+
+                    <!-- List of Custom Effects -->
+                    <div v-if="customEffects.length > 0" class="space-y-2">
+                        <div class="text-sm font-medium">Added Custom Effects:</div>
+                        <div class="space-y-2">
+                            <div
+                                v-for="effect in customEffects"
+                                :key="effect.id"
+                                class="flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 p-3"
+                            >
+                                <div class="flex-1">
+                                    <span class="text-sm">{{ effect.description }}</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-semibold">${{ effect.price.toFixed(2) }}</span>
+                                    <Button type="button" variant="destructive" size="sm" @click="removeCustomEffect(effect.id)"> Remove </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Total & Submit -->
                 <div class="mt-8 text-xl font-semibold">Total: ${{ Number(form.total_price).toFixed(2) }}</div>
                 <div class="mt-8 flex justify-end">
                     <Button type="submit" :disabled="form.processing">
-                        <span v-if="form.processing" class="mr-2 animate-spin">⏳</span>
+                        <span v-if="form.processing" class="mr-2 animate-spin">Ⳡ</span>
                         {{ props.project ? 'Save Changes' : 'Place Order' }}
                     </Button>
                 </div>

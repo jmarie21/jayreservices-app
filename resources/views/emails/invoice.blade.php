@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -73,6 +71,7 @@
                         $extra = $project->extra_fields ?? [];
                         $effects = $extra['effects'] ?? [];
                         $captions = $extra['captions'] ?? [];
+                        $customEffects = $extra['custom_effects'] ?? null;
                         $details = [];
 
                         // =====================
@@ -103,7 +102,9 @@
 
                         // Per Property Line
                         if (!empty($project->per_property)) {
-                            $details[] = "Per Property Line (+$5)";
+                            $count = $project->per_property_count ?? 1;
+                            $perPropertyTotal = 5 * $count;
+                            $details[] = "Per Property Line (x{$count}) (+\${$perPropertyTotal})";
                         }
 
                         // Rush
@@ -146,7 +147,37 @@
                             ];
 
                             $price = ($effectPrices[$name] ?? 0) * $qty;
-                            $details[] = "{$name} (x{$qty}) (+\${$price})";
+                            if ($price > 0) {
+                                $details[] = "{$name} (x{$qty}) (+\${$price})";
+                            } else {
+                                $details[] = "{$name} (x{$qty})";
+                            }
+                        }
+
+                        // =====================
+                        //  CUSTOM EFFECTS
+                        // =====================
+                        if (!empty($customEffects)) {
+                            // Parse JSON if it's a string
+                            if (is_string($customEffects)) {
+                                try {
+                                    $customEffectsArray = json_decode($customEffects, true);
+                                } catch (\Exception $e) {
+                                    $customEffectsArray = [];
+                                }
+                            } else {
+                                $customEffectsArray = $customEffects;
+                            }
+
+                            // Add each custom effect to details
+                            if (is_array($customEffectsArray) && count($customEffectsArray) > 0) {
+                                foreach ($customEffectsArray as $customEffect) {
+                                    if (isset($customEffect['description']) && isset($customEffect['price'])) {
+                                        $price = number_format($customEffect['price'], 2);
+                                        $details[] = "Additional Effects: {$customEffect['description']} (+\${$price})";
+                                    }
+                                }
+                            }
                         }
 
                         // Description HTML

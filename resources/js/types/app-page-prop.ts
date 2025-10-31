@@ -80,6 +80,7 @@ export type DeluxeForm = {
     extra_fields?: {
         effects: string[]; // e.g., ["Ken Burns"]
         captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
+        custom_effects?: string;
     };
     per_property?: boolean;
     per_property_count?: number;
@@ -103,7 +104,8 @@ export type PremiumForm = {
     with_agent?: boolean;
     extra_fields?: {
         effects: EffectItem[];
-        captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
+        captions: string[];
+        custom_effects?: string;
     };
     per_property?: boolean;
     per_property_count?: number;
@@ -127,7 +129,8 @@ export type LuxuryForm = {
     with_agent?: boolean;
     extra_fields?: {
         effects: EffectItem[];
-        captions: string[]; // e.g., ["3D Text behind the Agent Talking"]
+        captions: string[];
+        custom_effects?: string;
     };
     per_property?: boolean;
     per_property_count?: number;
@@ -152,3 +155,9 @@ export type Paginated<T> = {
         active: boolean;
     }[];
 };
+
+export interface CustomEffect {
+    id: string;
+    description: string;
+    price: number;
+}
