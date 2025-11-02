@@ -1,5 +1,5 @@
 import { NavItem } from '@/types';
-import { Brush, ClipboardList, FolderOpenDot, HandCoins, LayoutGrid, SquareGanttChart, UserCog } from 'lucide-vue-next';
+import { Brush, Church, ClipboardList, FolderOpenDot, HandCoins, Hotel, House, LayoutGrid, SquareGanttChart, UserCog } from 'lucide-vue-next';
 
 export const allNavItems: { [key: string]: NavItem[] } = {
     admin: [
@@ -36,7 +36,12 @@ export const allNavItems: { [key: string]: NavItem[] } = {
         {
             title: 'Real Estate Services',
             href: '/admin-realestate-services',
-            icon: ClipboardList,
+            icon: Hotel,
+        },
+        {
+            title: 'Wedding Services',
+            href: '/admin-wedding-services',
+            icon: Church,
         },
     ],
     client: [

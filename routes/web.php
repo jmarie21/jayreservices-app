@@ -41,9 +41,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::patch('/projects/{project}/price', [ProjectManagement::class, 'updatePrice'])->name('projects.update-price');
 
     Route::get('/all-projects', [ProjectManagement::class, 'showAllProjects'])->name('projects.all');
-    Route::get('/admin-realestate-services', [ProjectManagement::class, 'services'])->name('services.all');
-    Route::post('/services', [ProjectManagement:: class, 'adminCreateProject'])->name('admin.project.create');
     Route::put('/project-mgmt/{project}', [ProjectManagement:: class, 'adminUpdateProject'])->name('admin.project.update');
+
+    // Services
+    Route::get('/admin-realestate-services', [ProjectManagement::class, 'realEstateServices'])->name('services.all');
+    Route::get('/admin-wedding-services', [ProjectManagement::class, 'weddingServices'])->name('services.all');
+    Route::post('/services', [ProjectManagement:: class, 'adminCreateProject'])->name('admin.project.create');
 
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');

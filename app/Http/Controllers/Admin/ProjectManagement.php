@@ -223,11 +223,20 @@ class ProjectManagement extends Controller
         return back()->with('success', 'Project deleted successfully.');
     }
 
-    public function services()
+    public function realEstateServices()
     {
         $services = Service::all();
 
         return Inertia::render("admin/Services", [
+            "services" => $services
+        ]);
+    }
+
+    public function weddingServices()
+    {
+        $services = Service::all();
+
+        return Inertia::render("admin/WeddingServices", [
             "services" => $services
         ]);
     }
