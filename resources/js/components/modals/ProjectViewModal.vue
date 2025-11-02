@@ -330,7 +330,7 @@ const confirmDelete = () => {
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-medium text-gray-500">With per property line</span>
                                 <span class="text-base">
-                                    {{ project.per_property === true ? 'Yes' : 'No' }}
+                                    {{ project.per_property === true ? `Yes (${project.per_property_count || 0}x)` : 'No' }}
                                 </span>
                             </div>
 
