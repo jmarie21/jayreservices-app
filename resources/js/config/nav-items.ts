@@ -34,15 +34,15 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             icon: HandCoins,
         },
         {
-            title: 'Services',
-            href: '/admin-services',
+            title: 'Real Estate Services',
+            href: '/admin-realestate-services',
             icon: ClipboardList,
         },
     ],
     client: [
         {
-            title: 'Services',
-            href: '/services',
+            title: 'Real EstateServices',
+            href: '/realestate-services',
             icon: ClipboardList,
         },
         {

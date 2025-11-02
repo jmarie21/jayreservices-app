@@ -19,7 +19,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'client'])->group(function () {
-    Route::get("/services", [ServicesController::class, "index"])->name("services");
+    Route::get("/realestate-services", [ServicesController::class, "index"])->name("services");
 
     Route::get("/projects",  [ProjectsController::class, 'index'])->name("projects");
     Route::post("/projects", [ProjectsController::class, 'createProject'])->name('projects.store');
@@ -41,7 +41,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::patch('/projects/{project}/price', [ProjectManagement::class, 'updatePrice'])->name('projects.update-price');
 
     Route::get('/all-projects', [ProjectManagement::class, 'showAllProjects'])->name('projects.all');
-    Route::get('/admin-services', [ProjectManagement::class, 'services'])->name('services.all');
+    Route::get('/admin-realestate-services', [ProjectManagement::class, 'services'])->name('services.all');
     Route::post('/services', [ProjectManagement:: class, 'adminCreateProject'])->name('admin.project.create');
     Route::put('/project-mgmt/{project}', [ProjectManagement:: class, 'adminUpdateProject'])->name('admin.project.update');
 

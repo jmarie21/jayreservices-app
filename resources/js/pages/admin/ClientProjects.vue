@@ -461,7 +461,7 @@ const goToPage = (pageNumber: number) => {
         />
 
         <BasicStyleForm
-            v-if="editProject && editProject.service?.name === 'Basic Style'"
+            v-if="editProject && editProject.service?.name === 'Real Estate Basic Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"
@@ -470,7 +470,7 @@ const goToPage = (pageNumber: number) => {
         />
 
         <DeluxeStyleForm
-            v-else-if="editProject && editProject.service?.name === 'Deluxe Style'"
+            v-else-if="editProject && editProject.service?.name === 'Real Estate Deluxe Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"
@@ -479,7 +479,7 @@ const goToPage = (pageNumber: number) => {
         />
 
         <PremiumStyleForm
-            v-else-if="editProject && editProject.service?.name === 'Premium Style'"
+            v-else-if="editProject && editProject.service?.name === 'Real Estate Premium Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"
@@ -488,7 +488,7 @@ const goToPage = (pageNumber: number) => {
         />
 
         <LuxuryStyleForm
-            v-else-if="editProject && editProject.service?.name === 'Luxury Style'"
+            v-else-if="editProject && editProject.service?.name === 'Real Estate Luxury Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"
@@ -497,7 +497,7 @@ const goToPage = (pageNumber: number) => {
         />
 
         <TalkingHeadsForm
-            v-else-if="editProject && editProject.service?.name === 'Talking Heads'"
+            v-else-if="editProject && editProject.service?.name === 'Real Estate Talking Heads'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"

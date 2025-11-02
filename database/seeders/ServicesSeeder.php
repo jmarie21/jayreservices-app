@@ -15,7 +15,7 @@ class ServicesSeeder extends Seeder
     {
         $services = [
             [
-                'name' => 'Basic Style',
+                'name' => 'Real Estate Basic Style',
                 'features' => [
                     'Retiming the clip with beat of the music',
                     'With 2-3 smooth speed ramps only',
@@ -26,7 +26,7 @@ class ServicesSeeder extends Seeder
                 'video_link' => 'https://www.youtube.com/embed/vQzUuq14zcM?si=mr85vx65t8FspD4y'
             ],
             [
-                'name' => 'Deluxe Style',
+                'name' => 'Real Estate Deluxe Style',
                 'features' => [
                     'Retiming the clip with beat of the music',
                     'With Ken Burns transition',
@@ -38,7 +38,7 @@ class ServicesSeeder extends Seeder
                 'video_link' => 'https://www.youtube.com/embed/oaqW7kBki1c',
             ],
             [
-                'name' => 'Talking Heads',
+                'name' => 'Real Estate Talking Heads',
                 'features' => [
                     'Retiming the clip with beat of the music',
                     'With 2-3 smooth speed ramps only',
@@ -48,7 +48,7 @@ class ServicesSeeder extends Seeder
                 'video_link' => 'https://www.youtube.com/embed/PCTdP__t9bI'
             ],
             [
-                'name' => 'Premium Style',
+                'name' => 'Real Estate Premium Style',
                 'features' => [
                     'Retiming the clip with beat of the music',
                     'With Ken Burns transition',
@@ -64,7 +64,7 @@ class ServicesSeeder extends Seeder
                 'video_link' => 'https://player.vimeo.com/video/1106034319',
             ],
             [
-                'name' => 'Luxury Style',
+                'name' => 'Real Estate Luxury Style',
                 'features' => [
                     'Retiming the clip with beat of the music',
                     'With Ken Burns transition',

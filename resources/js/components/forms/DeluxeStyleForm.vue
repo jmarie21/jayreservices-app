@@ -331,7 +331,7 @@ function decrementPerProperty() {
         <DialogContent class="max-h-[90vh] !w-full !max-w-6xl overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>
-                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Deluxe Style' }}
+                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Real Estate Deluxe Style' }}
                 </DialogTitle>
             </DialogHeader>
 
