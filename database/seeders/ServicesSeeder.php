@@ -14,6 +14,7 @@ class ServicesSeeder extends Seeder
     public function run(): void
     {
         $services = [
+            // Real Estate
             [
                 'name' => 'Real Estate Basic Style',
                 'features' => [
@@ -78,6 +79,123 @@ class ServicesSeeder extends Seeder
                     'With few 3D Text if requested',
                     'With sound effects',
                     'With Earth zoom transition if requested',
+                ],
+                'price' => 0,
+                'video_link' => 'https://player.vimeo.com/video/1106032025',
+            ],
+            // Wedding Services
+            [
+                'name' => 'Wedding Basic Style',
+                'features' => [
+                    'Maximum 60 seconds',
+                    'Simple cut ',
+                    'No sfx',
+                    'One music only',
+                    'Plain video'
+                ],
+                'price' => 0,
+                // 'video_link' => 'https://www.youtube.com/embed/e5SCQSz5R7Q',
+                'video_link' => 'https://www.youtube.com/embed/vQzUuq14zcM?si=mr85vx65t8FspD4y'
+            ],
+            [
+                'name' => 'Wedding Premium Style',
+                'features' => [
+                    '60-90 Seconds',
+                    'Can do transitions',
+                    'With sfx',
+                    'Can change music ',
+                    'Plain video ',
+                ],
+                'price' => 0,
+                'video_link' => 'https://player.vimeo.com/video/1106034319',
+            ],
+            [
+                'name' => 'Wedding Luxury Style',
+                'features' => [
+                    '1 min - 3 min',
+                    'Can do nice transitions (if requested)',
+                    'With Sfx',
+                    'Can change music ',
+                    'Video with a little vows from Bride and Groom',
+                    'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)',
+                ],
+                'price' => 0,
+                'video_link' => 'https://player.vimeo.com/video/1106032025',
+            ],
+            // Events Services
+            [
+                'name' => 'Event Basic Style',
+                'features' => [
+                    'Maximum 60 seconds',
+                    'Simple cut ',
+                    'No sfx',
+                    'Plain video'
+                ],
+                'price' => 0,
+                // 'video_link' => 'https://www.youtube.com/embed/e5SCQSz5R7Q',
+                'video_link' => 'https://www.youtube.com/embed/vQzUuq14zcM?si=mr85vx65t8FspD4y'
+            ],
+            [
+                'name' => 'Event Premium Style',
+                'features' => [
+                    '60-90 Seconds',
+                    'With speedramps',
+                    'With sfx',
+                    'Can change music ',
+                    'Can do transitions',
+                    'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)'
+                ],
+                'price' => 0,
+                'video_link' => 'https://player.vimeo.com/video/1106034319',
+            ],
+            [
+                'name' => 'Event Luxury Style',
+                'features' => [
+                    '1 min - 3 min',
+                    'Can do nice transitions (if requested)',
+                    'With Sfx',
+                    'With speedramps',
+                    'Video with a little vows from Bride and Groom',
+                    'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)',
+                ],
+                'price' => 0,
+                'video_link' => 'https://player.vimeo.com/video/1106032025',
+            ],
+            // Construction Video Services
+            [
+                'name' => 'Construction Basic Style',
+                'features' => [
+                    'Maximum 60 seconds',
+                    'Simple cut ',
+                    'No sfx',
+                    'Plain video'
+                ],
+                'price' => 0,
+                // 'video_link' => 'https://www.youtube.com/embed/e5SCQSz5R7Q',
+                'video_link' => 'https://www.youtube.com/embed/vQzUuq14zcM?si=mr85vx65t8FspD4y'
+            ],
+            [
+                'name' => 'Construction Premium Style',
+                'features' => [
+                    '60-90 Seconds',
+                    'With speedramps',
+                    'With sfx',
+                    'Can change music ',
+                    'Can do transitions',
+                    'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)'
+                ],
+                'price' => 0,
+                'video_link' => 'https://player.vimeo.com/video/1106034319',
+            ],
+            [
+                'name' => 'Construction Luxury Style',
+                'features' => [
+                    '1 min - 3 min',
+                    'Can do nice transitions (if requested)',
+                    'With Sfx',
+                    'With speedramps',
+                    'Video with a little vows from Bride and Groom',
+                    'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)',
                 ],
                 'price' => 0,
                 'video_link' => 'https://player.vimeo.com/video/1106032025',
