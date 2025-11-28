@@ -45,7 +45,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Services
     Route::get('/admin-realestate-services', [ProjectManagement::class, 'realEstateServices'])->name('services.all');
-    Route::get('/admin-wedding-services', [ProjectManagement::class, 'weddingServices'])->name('services.all');
+    Route::get('/admin-wedding-services', [ProjectManagement::class, 'weddingServices'])->name('services.wedding');
     Route::post('/services', [ProjectManagement:: class, 'adminCreateProject'])->name('admin.project.create');
 
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
