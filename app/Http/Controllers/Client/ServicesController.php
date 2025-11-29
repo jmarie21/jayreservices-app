@@ -11,7 +11,8 @@ class ServicesController extends Controller
 {
     public function index()
     {
-        $services = Service::all();
+        // Only return services that are real estate related (names starting with "Real Estate")
+        $services = Service::where('name', 'like', 'Real Estate%')->get();
 
         return Inertia::render("client/Services", [
             "services" => $services
