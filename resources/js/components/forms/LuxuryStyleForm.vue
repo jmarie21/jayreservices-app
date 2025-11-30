@@ -36,7 +36,7 @@ const emit = defineEmits<{
 
 const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
 const perPropertyOption = ref<'add-per-property' | 'no' | ''>(props.project ? (props.project.per_property ? 'add-per-property' : 'no') : 'no');
-const perPropertyQuantity = ref(1);
+const perPropertyQuantity = ref(props.project?.per_property_count ?? 1);
 const rushOption = ref<'true' | 'false' | ''>('');
 const isEditing = !!props.project;
 
@@ -277,7 +277,7 @@ watch(
                     notes: project.notes || '',
                     with_agent: project.with_agent ?? false,
                     per_property: project.per_property ?? false,
-                    perPropertyQuantity: project.per_property_count ?? 1,
+                    per_property_count: project.per_property_count ?? 0,
                     extra_fields: {
                         effects: project.extra_fields?.effects ? formatEffectsFromBackend(project.extra_fields.effects) : [],
                         captions: project.extra_fields?.captions ? [...project.extra_fields.captions] : [],
@@ -287,6 +287,9 @@ watch(
                 agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
                 perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
                 rushOption.value = project.rush ? 'true' : 'false';
+
+                // Ensure the displayed per-property quantity matches the project value
+                perPropertyQuantity.value = project.per_property_count ?? 1;
 
                 // Load custom effects - parse if string, use directly if array
                 if (project.extra_fields?.custom_effects) {

@@ -4,6 +4,7 @@ import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
 import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
+import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -135,7 +136,7 @@ const markForRevision = (projectId: number) => {
             <!-- Page header -->
             <div class="mb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h1 class="text-3xl font-bold">My Projects</h1>
-                <Button><Link href="/services">Add new project</Link></Button>
+                <!-- <Button><Link href="/services">Add new project</Link></Button> -->
             </div>
 
             <!-- Filters section -->
@@ -238,7 +239,7 @@ const markForRevision = (projectId: number) => {
         </div>
 
         <BasicStyleForm
-            v-if="selectedStyle === 'Basic Style'"
+            v-if="selectedStyle === 'Real Estate Basic Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
@@ -247,7 +248,7 @@ const markForRevision = (projectId: number) => {
         />
 
         <DeluxeStyleForm
-            v-if="selectedStyle === 'Deluxe Style'"
+            v-if="selectedStyle === 'Real Estate Deluxe Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
@@ -256,7 +257,7 @@ const markForRevision = (projectId: number) => {
         />
 
         <PremiumStyleForm
-            v-if="selectedStyle === 'Premium Style'"
+            v-if="selectedStyle === 'Real Estate Premium Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
@@ -275,7 +276,7 @@ const markForRevision = (projectId: number) => {
         />
 
         <LuxuryStyleForm
-            v-if="selectedStyle === 'Luxury Style'"
+            v-if="selectedStyle === 'Real Estate Luxury Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
@@ -290,6 +291,15 @@ const markForRevision = (projectId: number) => {
                       }
                     : null
             "
+            @close="closeModal"
+        />
+
+        <TalkingHeadsForm
+            v-if="selectedStyle === 'Real Estate Talking Heads'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
             @close="closeModal"
         />
 
