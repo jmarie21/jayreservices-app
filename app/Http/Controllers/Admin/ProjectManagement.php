@@ -225,7 +225,7 @@ class ProjectManagement extends Controller
 
     public function realEstateServices()
     {
-        $services = Service::all();
+        $services = Service::where('name', 'like', 'Real Estate%')->get();
 
         return Inertia::render("admin/Services", [
             "services" => $services
@@ -234,7 +234,7 @@ class ProjectManagement extends Controller
 
     public function weddingServices()
     {
-        $services = Service::all();
+        $services = Service::where('name', 'like', 'Wedding%')->get();
 
         return Inertia::render("admin/WeddingServices", [
             "services" => $services

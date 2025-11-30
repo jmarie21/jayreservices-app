@@ -21,8 +21,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const selectedService = ref<Services | null>(null);
 
-const isStyle = (style: string): style is 'Basic Style' | 'Deluxe Style' | 'Premium Style' | 'Luxury Style' | 'Talking Heads' => {
-    return ['Basic Style', 'Deluxe Style', 'Premium Style', 'Luxury Style', 'Talking Heads'].includes(style);
+const isStyle = (style: string): style is 'Real Estate Basic Style' | 'Real Estate Deluxe Style' | 'Real Estate Premium Style' | 'Real Estate Luxury Style' | 'Real Estate Talking Heads' => {
+    return ['Real Estate Basic Style', 'Real Estate Deluxe Style', 'Real Estate Premium Style', 'Real Estate Luxury Style', 'Real Estate Talking Heads'].includes(style);
 };
 
 function openModal(service: Services) {
@@ -74,14 +74,14 @@ function closeModal() {
 
         <!-- Modals -->
         <BasicStyleForm
-            v-if="selectedService?.name === 'Basic Style'"
+            v-if="selectedService?.name === 'Real Estate Basic Style'"
             :open="true"
             :base-price="selectedService.price"
             @close="closeModal"
             :service-id="selectedService.id"
         />
         <DeluxeStyleForm
-            v-if="selectedService?.name === 'Deluxe Style'"
+            v-if="selectedService?.name === 'Real Estate Deluxe Style'"
             :open="true"
             :base-price="selectedService.price"
             :service-id="selectedService.id"
@@ -89,7 +89,7 @@ function closeModal() {
         />
 
         <TalkingHeadsForm
-            v-if="selectedService?.name === 'Talking Heads'"
+            v-if="selectedService?.name === 'Real Estate Talking Heads'"
             :open="true"
             :base-price="selectedService.price"
             :service-id="selectedService.id"
@@ -97,7 +97,7 @@ function closeModal() {
         />
 
         <PremiumStyleForm
-            v-if="selectedService?.name === 'Premium Style'"
+            v-if="selectedService?.name === 'Real Estate Premium Style'"
             :open="true"
             :base-price="selectedService.price"
             :service-id="selectedService.id"
@@ -105,7 +105,7 @@ function closeModal() {
         />
 
         <LuxuryStyleForm
-            v-if="selectedService?.name === 'Luxury Style'"
+            v-if="selectedService?.name === 'Real Estate Luxury Style'"
             :open="true"
             :base-price="selectedService.price"
             :service-id="selectedService.id"
