@@ -16,7 +16,7 @@ const getStartedRoute = computed(() => {
     if (!user) return '/login'; // Not authenticated → login
 
     // Authenticated → route based on role
-    return user.role === 'admin' ? '/admin-dashboard' : user.role === 'client' ? '/services' : user.role === 'editor' ? '/editor-dashboard' : '/';
+    return user.role === 'admin' ? '/admin-dashboard' : user.role === 'client' ? '/projects' : user.role === 'editor' ? '/editor-dashboard' : '/';
 });
 </script>
 
