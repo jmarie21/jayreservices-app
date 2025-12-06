@@ -4,6 +4,9 @@ import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
 import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
 import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
+import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
+import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
+import WeddingLuxuryForm from '@/components/forms/WeddingLuxuryForm.vue';
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Button } from '@/components/ui/button';
@@ -498,6 +501,34 @@ const goToPage = (pageNumber: number) => {
 
         <TalkingHeadsForm
             v-else-if="editProject && editProject.service?.name === 'Real Estate Talking Heads'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <!-- Wedding Services Modal -->
+         <WeddingBasicForm
+            v-if="editProject && editProject.service?.name === 'Wedding Basic Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <WeddingPremiumForm
+            v-else-if="editProject && editProject.service?.name === 'Wedding Premium Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <WeddingLuxuryForm
+            v-else-if="editProject && editProject.service?.name === 'Wedding Luxury Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"
