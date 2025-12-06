@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
-import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
+
+// import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
-import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
+// import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
+import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
 import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
-import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
+import WeddingLuxuryForm from '@/components/forms/WeddingLuxuryForm.vue';
+// import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem, Services } from '@/types';
@@ -97,6 +99,15 @@ function closeModal() {
             @close="closeModal"
         /> -->
 
+        <!-- <LuxuryStyleForm
+            v-if="selectedService?.name === 'Wedding Luxury Style'"
+            :open="true"
+            :base-price="selectedService.price"
+            :service-id="selectedService.id"
+            @close="closeModal"
+        /> -->
+
+        <!-- Wedding Services -->
         <WeddingPremiumForm
             v-if="selectedService?.name === 'Wedding Premium Style'"
             :open="true"
@@ -105,7 +116,7 @@ function closeModal() {
             @close="closeModal"
         />
 
-        <LuxuryStyleForm
+        <WeddingLuxuryForm
             v-if="selectedService?.name === 'Wedding Luxury Style'"
             :open="true"
             :base-price="selectedService.price"

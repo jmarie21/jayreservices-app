@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
-import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
 import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
 import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
-import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
-import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
+
+import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
+import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
+import WeddingLuxuryForm from '@/components/forms/WeddingLuxuryForm.vue';
+
+import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -326,6 +329,25 @@ const markForRevision = (projectId: number) => {
 
         <WeddingPremiumForm
             v-if="selectedStyle === 'Wedding Premium Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
+        />
+
+        <WeddingLuxuryForm
+            v-if="selectedStyle === 'Wedding Luxury Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
