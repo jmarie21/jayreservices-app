@@ -3,6 +3,7 @@ import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
 import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
 import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
+import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
 import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -80,23 +81,23 @@ function closeModal() {
             @close="closeModal"
             :service-id="selectedService.id"
         />
-        <DeluxeStyleForm
+        <!-- <DeluxeStyleForm
             v-if="selectedService?.name === 'Wedding Deluxe Style'"
             :open="true"
             :base-price="selectedService.price"
             :service-id="selectedService.id"
             @close="closeModal"
-        />
+        /> -->
 
-        <TalkingHeadsForm
+        <!-- <TalkingHeadsForm
             v-if="selectedService?.name === 'Wedding Talking Heads'"
             :open="true"
             :base-price="selectedService.price"
             :service-id="selectedService.id"
             @close="closeModal"
-        />
+        /> -->
 
-        <PremiumStyleForm
+        <WeddingPremiumForm
             v-if="selectedService?.name === 'Wedding Premium Style'"
             :open="true"
             :base-price="selectedService.price"

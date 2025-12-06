@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
+import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
 import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
 import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
+import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
@@ -309,6 +311,36 @@ const markForRevision = (projectId: number) => {
             :project="viewProject"
             :role="page.props.auth.user.role"
             @close="closeViewModal"
+        />
+
+
+        <!-- Wedding Services Modals -->
+        <WeddingBasicForm
+            v-if="selectedStyle === 'Wedding Basic Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
+            @close="closeModal"
+        />
+
+        <WeddingPremiumForm
+            v-if="selectedStyle === 'Wedding Premium Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
         />
     </AppLayout>
 </template>
