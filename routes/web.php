@@ -21,6 +21,7 @@ Route::get('/', function () {
 Route::middleware(['auth', 'client'])->group(function () {
     Route::get("/realestate-services", [ServicesController::class, "index"])->name("services");
     Route::get("/wedding-services", [ServicesController::class, "weddingServices"])->name("wedding-services");
+    Route::get("/event-services", [ServicesController::class, "eventServices"])->name("event-services");
 
     Route::get("/projects",  [ProjectsController::class, 'index'])->name("projects");
     Route::post("/projects", [ProjectsController::class, 'createProject'])->name('projects.store');

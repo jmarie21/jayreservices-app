@@ -1,5 +1,5 @@
 import { NavItem } from '@/types';
-import { BookHeart, Brush, Church, ClipboardList, FolderOpenDot, HandCoins, Hotel, House, LayoutGrid, SquareGanttChart, UserCog } from 'lucide-vue-next';
+import { BookHeart, Brush, Church, ClipboardList, FolderOpenDot, HandCoins, Hotel, House, LayoutGrid, PartyPopper, SquareGanttChart, UserCog } from 'lucide-vue-next';
 
 export const allNavItems: { [key: string]: NavItem[] } = {
     admin: [
@@ -54,6 +54,11 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             title: 'Wedding Services',
             href: '/wedding-services',
             icon: BookHeart,
+        },
+        {
+            title: 'Event Services',
+            href: '/event-services',
+            icon: PartyPopper,
         },
         {
             title: 'Projects',

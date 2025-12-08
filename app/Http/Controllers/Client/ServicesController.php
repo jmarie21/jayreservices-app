@@ -27,4 +27,13 @@ class ServicesController extends Controller
             "services" => $services
         ]);
     }
+
+    public function eventServices(){
+        // Only return services that are event related (names starting with "Event")
+        $services = Service::where('name', 'like', 'Event%')->get();
+
+        return Inertia::render("client/EventServices", [
+            "services" => $services
+        ]);
+    }
 }
