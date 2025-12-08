@@ -13,6 +13,10 @@ import EventBasicForm from '@/components/forms/EventBasicForm.vue';
 import EventPremiumForm from '@/components/forms/EventPremiumForm.vue';
 import EventLuxuryForm from '@/components/forms/EventLuxuryForm.vue';
 
+import ConstructionBasicForm from '@/components/forms/ConstructionBasicForm.vue';
+import ConstructionPremiumForm from '@/components/forms/ConstructionPremiumForm.vue';
+import ConstructionLuxuryForm from '@/components/forms/ConstructionLuxuryForm.vue';
+
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Badge } from '@/components/ui/badge';
@@ -400,6 +404,54 @@ const markForRevision = (projectId: number) => {
 
         <EventLuxuryForm
             v-if="selectedStyle === 'Event Luxury Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
+        />
+
+        <!-- Construction Services Modals -->
+        <ConstructionBasicForm
+            v-if="selectedStyle === 'Construction Basic Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
+            @close="closeModal"
+        />
+
+        <ConstructionPremiumForm
+            v-if="selectedStyle === 'Construction Premium Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
+        />
+
+        <ConstructionLuxuryForm
+            v-if="selectedStyle === 'Construction Luxury Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"

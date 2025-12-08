@@ -250,6 +250,15 @@ class ProjectManagement extends Controller
         ]);
     }
 
+    public function constructionServices()
+    {
+        $services = Service::where('name', 'like', 'Construction%')->get();
+
+        return Inertia::render("admin/ConstructionServices", [
+            "services" => $services
+        ]);
+    }
+
 
     public function adminCreateProject(Request $request)
     {

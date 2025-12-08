@@ -59,7 +59,7 @@ const effectsOptions: Option[] = [
         label: 'Pillar Masking',
         link: 'https://www.youtube.com/watch?v=byh1nKAE3Pk&list=TLGG_YXdMMvhwfsxMzEwMjAyNQ&t=2s',
     },
-    // { id: 'Virtual Staging AI', label: 'Virtual Staging AI ($20 per clip)', link: 'https://youtu.be/79vg5WqKgYE?si=TkXflrhPmUfTAQFX' },
+    { id: 'Virtual Staging AI', label: 'Virtual Staging AI ($20 per clip)', link: 'https://youtu.be/79vg5WqKgYE?si=TkXflrhPmUfTAQFX' },
     { id: 'Day to Night AI', label: 'Day to Night AI ($15 per clip)', link: 'https://youtu.be/OPpyyb77ijs?si=q-IjufGmarVw8kMu' },
     { id: 'Painting Transition', label: 'Painting Transition (Add $10)', link: 'https://youtu.be/vCW4H7puU1c?si=GoI72aCscroTvYqk)' },
     { id: 'Earth Zoom Transition', label: 'Earth Zoom Transition (Add $15)', link: 'https://www.youtube.com/watch?v=dyuRMbjDJas&feature=youtu.be' },

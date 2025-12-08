@@ -13,6 +13,10 @@ import EventBasicForm from '@/components/forms/EventBasicForm.vue';
 import EventPremiumForm from '@/components/forms/EventPremiumForm.vue';
 import EventLuxuryForm from '@/components/forms/EventLuxuryForm.vue';
 
+import ConstructionBasicForm from '@/components/forms/ConstructionBasicForm.vue';
+import ConstructionPremiumForm from '@/components/forms/ConstructionPremiumForm.vue';
+import ConstructionLuxuryForm from '@/components/forms/ConstructionLuxuryForm.vue';
+
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Button } from '@/components/ui/button';
@@ -563,6 +567,34 @@ const goToPage = (pageNumber: number) => {
 
         <EventLuxuryForm
             v-else-if="editProject && editProject.service?.name === 'Event Luxury Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <!-- Construction Services Modal -->
+        <ConstructionBasicForm
+            v-if="editProject && editProject.service?.name === 'Construction Basic Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <ConstructionPremiumForm
+            v-else-if="editProject && editProject.service?.name === 'Construction Premium Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <ConstructionLuxuryForm
+            v-else-if="editProject && editProject.service?.name === 'Construction Luxury Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"
