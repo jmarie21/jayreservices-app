@@ -4,9 +4,15 @@ import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
 import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
 import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
+
 import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
 import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
 import WeddingLuxuryForm from '@/components/forms/WeddingLuxuryForm.vue';
+
+import EventBasicForm from '@/components/forms/EventBasicForm.vue';
+import EventPremiumForm from '@/components/forms/EventPremiumForm.vue';
+import EventLuxuryForm from '@/components/forms/EventLuxuryForm.vue';
+
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Button } from '@/components/ui/button';
@@ -509,7 +515,7 @@ const goToPage = (pageNumber: number) => {
         />
 
         <!-- Wedding Services Modal -->
-         <WeddingBasicForm
+        <WeddingBasicForm
             v-if="editProject && editProject.service?.name === 'Wedding Basic Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
@@ -529,6 +535,34 @@ const goToPage = (pageNumber: number) => {
 
         <WeddingLuxuryForm
             v-else-if="editProject && editProject.service?.name === 'Wedding Luxury Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <!-- Event Services Modal -->
+        <EventBasicForm
+            v-if="editProject && editProject.service?.name === 'Event Basic Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <EventPremiumForm
+            v-else-if="editProject && editProject.service?.name === 'Event Premium Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <EventLuxuryForm
+            v-else-if="editProject && editProject.service?.name === 'Event Luxury Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"

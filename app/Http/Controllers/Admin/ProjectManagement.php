@@ -241,6 +241,15 @@ class ProjectManagement extends Controller
         ]);
     }
 
+    public function eventServices()
+    {
+        $services = Service::where('name', 'like', 'Event%')->get();
+
+        return Inertia::render("admin/EventServices", [
+            "services" => $services
+        ]);
+    }
+
 
     public function adminCreateProject(Request $request)
     {

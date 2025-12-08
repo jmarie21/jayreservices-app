@@ -43,6 +43,11 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             href: '/admin-wedding-services',
             icon: Church,
         },
+        {
+            title: 'Event Services',
+            href: '/admin-event-services',
+            icon: PartyPopper,
+        },
     ],
     client: [
         {

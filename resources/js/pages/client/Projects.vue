@@ -9,6 +9,10 @@ import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
 import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
 import WeddingLuxuryForm from '@/components/forms/WeddingLuxuryForm.vue';
 
+import EventBasicForm from '@/components/forms/EventBasicForm.vue';
+import EventPremiumForm from '@/components/forms/EventPremiumForm.vue';
+import EventLuxuryForm from '@/components/forms/EventLuxuryForm.vue';
+
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Badge } from '@/components/ui/badge';
@@ -348,6 +352,54 @@ const markForRevision = (projectId: number) => {
 
         <WeddingLuxuryForm
             v-if="selectedStyle === 'Wedding Luxury Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
+        />
+
+        <!-- Event Services Modals -->
+        <EventBasicForm
+            v-if="selectedStyle === 'Event Basic Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
+            @close="closeModal"
+        />
+
+        <EventPremiumForm
+            v-if="selectedStyle === 'Event Premium Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
+        />
+
+        <EventLuxuryForm
+            v-if="selectedStyle === 'Event Luxury Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
