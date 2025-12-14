@@ -354,11 +354,14 @@ const confirmDelete = () => {
                                 </div>
 
                                 <!-- Effects -->
-                                <div v-if="project.extra_fields.effects?.length" class="flex items-start justify-between">
+                                <div v-if="project.extra_fields.effects?.length || project.extra_fields.custom_effects" class="flex items-start justify-between">
                                     <span class="text-sm font-medium text-gray-500">Effects</span>
                                     <ul class="list-inside list-disc space-y-1 text-right text-sm text-gray-700">
                                         <li v-for="(effect, index) in project.extra_fields.effects" :key="index">
                                             {{ typeof effect === 'string' ? effect : `${effect.id} (x${effect.quantity})` }}
+                                        </li>
+                                        <li v-for="(customEffect, index) in (typeof project.extra_fields.custom_effects === 'string' ? JSON.parse(project.extra_fields.custom_effects) : project.extra_fields.custom_effects)" :key="'custom-' + index">
+                                            {{ customEffect.description }} (Custom)
                                         </li>
                                     </ul>
                                 </div>
