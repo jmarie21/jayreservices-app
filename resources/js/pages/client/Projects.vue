@@ -33,6 +33,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { toast } from 'vue-sonner';
 
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Projects',
@@ -466,6 +467,16 @@ const markForRevision = (projectId: number) => {
                       }
                     : null
             "
+            @close="closeModal"
+        />
+
+        <!-- Talking Heads -->
+         <TalkingHeadsForm
+            v-if="selectedStyle === 'Talking Heads'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
             @close="closeModal"
         />
     </AppLayout>

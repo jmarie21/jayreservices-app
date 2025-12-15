@@ -39,16 +39,6 @@ class ServicesSeeder extends Seeder
                 'video_link' => 'https://www.youtube.com/embed/oaqW7kBki1c',
             ],
             [
-                'name' => 'Real Estate Talking Heads',
-                'features' => [
-                    'Retiming the clip with beat of the music',
-                    'With 2-3 smooth speed ramps only',
-                    'Some simple transitions like zoom after speed ramps',
-                ],
-                'price' => 0,
-                'video_link' => 'https://www.youtube.com/embed/PCTdP__t9bI'
-            ],
-            [
                 'name' => 'Real Estate Premium Style',
                 'features' => [
                     'Retiming the clip with beat of the music',
@@ -82,6 +72,17 @@ class ServicesSeeder extends Seeder
                 ],
                 'price' => 0,
                 'video_link' => 'https://player.vimeo.com/video/1106032025',
+            ],
+            //Talking Heads Services
+            [
+                'name' => 'Talking Heads',
+                'features' => [
+                    'Retiming the clip with beat of the music',
+                    'With 2-3 smooth speed ramps only',
+                    'Some simple transitions like zoom after speed ramps',
+                ],
+                'price' => 0,
+                'video_link' => 'https://www.youtube.com/embed/PCTdP__t9bI'
             ],
             // Wedding Services
             [

@@ -1,5 +1,5 @@
 import { NavItem } from '@/types';
-import { BookHeart, Brush, Church, ClipboardList, Construction, FolderOpenDot, HandCoins, Hotel, House, LayoutGrid, PartyPopper, SquareGanttChart, UserCog } from 'lucide-vue-next';
+import { BookHeart, Brush, Church, ClipboardList, Construction, FolderOpenDot, HandCoins, Hotel, House, Laugh, LayoutGrid, PartyPopper, SquareGanttChart, UserCog } from 'lucide-vue-next';
 
 export const allNavItems: { [key: string]: NavItem[] } = {
     admin: [
@@ -53,6 +53,11 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             href: '/admin-construction-services',
             icon: Construction,
         },
+        {
+            title: 'Talking Heads Services',
+            href: '/admin-talkingheads-services',
+            icon: Laugh,
+        },
     ],
     client: [
         {
@@ -74,6 +79,11 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             title: 'Construction Services',
             href: '/construction-services',
             icon: Construction,
+        },
+        {
+            title: 'Talking Heads Services',
+            href: '/talkingheads-services',
+            icon: Laugh,
         },
         {
             title: 'Projects',

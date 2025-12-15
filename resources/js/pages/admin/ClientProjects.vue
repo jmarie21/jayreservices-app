@@ -510,7 +510,7 @@ const goToPage = (pageNumber: number) => {
         />
 
         <TalkingHeadsForm
-            v-else-if="editProject && editProject.service?.name === 'Real Estate Talking Heads'"
+            v-else-if="editProject && editProject.service?.name === 'Talking Heads'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"

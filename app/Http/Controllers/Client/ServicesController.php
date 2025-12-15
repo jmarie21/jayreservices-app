@@ -36,4 +36,13 @@ class ServicesController extends Controller
             "services" => $services
         ]);
     }
+
+    public function talkingHeadsServices(){
+        // Only return services that are talking head related (names starting with "Talking Head")
+        $services = Service::where('name', 'like', 'Talking Heads%')->get();
+
+        return Inertia::render("client/TalkingHeadsServices", [
+            "services" => $services
+        ]);
+    }
 }

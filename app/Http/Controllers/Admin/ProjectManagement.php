@@ -259,6 +259,15 @@ class ProjectManagement extends Controller
         ]);
     }
 
+    public function talkingHeadsServices()
+    {
+        $services = Service::where('name', 'like', 'Talking Heads%')->get();
+
+        return Inertia::render("admin/TalkingHeadsServices", [
+            "services" => $services
+        ]);
+    }
+
 
     public function adminCreateProject(Request $request)
     {
