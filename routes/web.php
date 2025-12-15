@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\BulkNotificationController;
 use App\Http\Controllers\Admin\EditorManagement;
 use App\Http\Controllers\Admin\InvoiceManagementController;
 use App\Http\Controllers\Admin\ProjectManagement;
@@ -66,6 +67,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/invoice-mgmt/{id}/cancel', [InvoiceManagementController::class, 'cancel'])->name('invoice.cancel');
     Route::delete('/notifications/delete-all', [NotificationController::class, 'destroyAll'])
     ->name('notifications.destroyAll');
+
+    // Bulk Notification Routes
+    Route::post('/bulk-notification/send', [BulkNotificationController::class, 'sendToAllClients'])->name('bulk-notification.send');
+    Route::get('/bulk-notification/stats', [BulkNotificationController::class, 'getClientEmailStats'])->name('bulk-notification.stats');
 
 });
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AddUserForm from '@/components/forms/AddUserForm.vue';
+import BulkNotificationModal from '@/components/modals/BulkNotificationModal.vue';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -31,6 +32,7 @@ const loading = ref(false);
 const selectedUser = ref<User | null>(null);
 const showForm = ref(false);
 const showDeleteModal = ref(false);
+const showBulkNotificationModal = ref(false);
 
 const openAddForm = () => {
     selectedUser.value = null;
@@ -72,7 +74,10 @@ const deleteUser = () => {
                 <h1 class="text-2xl font-bold">Users</h1>
             </div>
 
-            <div>
+            <div class="flex gap-2">
+                <Button variant="outline" class="bg-green-500 text-white" @click="showBulkNotificationModal = true">
+                    📢 Send Announcement to All Clients
+                </Button>
                 <Button @click="openAddForm">Add New User</Button>
             </div>
         </div>
@@ -122,6 +127,9 @@ const deleteUser = () => {
         </div>
 
         <AddUserForm :open="showForm" :user="selectedUser" @close="showForm = false" />
+
+        <!-- Bulk Notification Modal -->
+        <BulkNotificationModal :open="showBulkNotificationModal" @close="showBulkNotificationModal = false" />
 
         <!-- Delete Confirmation Modal -->
         <AlertDialog :open="showDeleteModal" @update:open="showDeleteModal = $event">
