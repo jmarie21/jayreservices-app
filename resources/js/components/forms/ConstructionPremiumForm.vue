@@ -147,8 +147,8 @@ const totalPrice = computed(() => {
     // Style & format extras
     if (form.style === 'Premium video') {
         if (form.format === 'horizontal') total += 80;
-        else if (form.format === 'vertical') total += 50;
-        else if (form.format === 'horizontal and vertical package') total += 130;
+        else if (form.format === 'vertical') total += 80;
+        else if (form.format === 'horizontal and vertical package') total += 160;
     } else if (form.style === 'Premium drone only') {
         if (form.format === 'horizontal') total += 45;
         else if (form.format === 'vertical') total += 40;
@@ -208,8 +208,8 @@ const formatOptions = computed(() => {
     if (form.style === 'Premium video') {
         return [
             { value: 'horizontal', label: 'Horizontal ($80)' },
-            { value: 'vertical', label: 'Vertical ($50)' },
-            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical Package ($130)' },
+            { value: 'vertical', label: 'Vertical ($80)' },
+            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical Package ($160)' },
         ];
     } else if (form.style === 'Premium drone only') {
         return [
@@ -416,7 +416,7 @@ function decrementPerProperty() {
         <DialogContent class="max-h-[90vh] !w-full !max-w-6xl overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>
-                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Real Estate Premium Style' }}
+                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Construction Premium Style' }}
                 </DialogTitle>
             </DialogHeader>
 
@@ -447,7 +447,7 @@ function decrementPerProperty() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Premium video">Premium Video</SelectItem>
-                                <SelectItem value="Premium drone only">Premium Drone Only</SelectItem>
+                                <!-- <SelectItem value="Premium drone only">Premium Drone Only</SelectItem> -->
                             </SelectContent>
                         </Select>
                         <span v-if="form.errors.style" class="text-sm text-red-500">{{ form.errors.style }}</span>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\BulkNotificationController;
 use App\Http\Controllers\Admin\EditorManagement;
 use App\Http\Controllers\Admin\InvoiceManagementController;
 use App\Http\Controllers\Admin\ProjectManagement;
@@ -19,7 +20,11 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'client'])->group(function () {
-    Route::get("/services", [ServicesController::class, "index"])->name("services");
+    Route::get("/realestate-services", [ServicesController::class, "index"])->name("services");
+    Route::get("/wedding-services", [ServicesController::class, "weddingServices"])->name("wedding-services");
+    Route::get("/event-services", [ServicesController::class, "eventServices"])->name("event-services");
+    Route::get("/construction-services", [ServicesController::class, "constructionServices"])->name("construction-services");
+    Route::get("/talkingheads-services", [ServicesController::class, "talkingHeadsServices"])->name("talkingheads-services");
 
     Route::get("/projects",  [ProjectsController::class, 'index'])->name("projects");
     Route::post("/projects", [ProjectsController::class, 'createProject'])->name('projects.store');
@@ -41,9 +46,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::patch('/projects/{project}/price', [ProjectManagement::class, 'updatePrice'])->name('projects.update-price');
 
     Route::get('/all-projects', [ProjectManagement::class, 'showAllProjects'])->name('projects.all');
-    Route::get('/admin-services', [ProjectManagement::class, 'services'])->name('services.all');
-    Route::post('/services', [ProjectManagement:: class, 'adminCreateProject'])->name('admin.project.create');
     Route::put('/project-mgmt/{project}', [ProjectManagement:: class, 'adminUpdateProject'])->name('admin.project.update');
+
+    // Services
+    Route::get('/admin-realestate-services', [ProjectManagement::class, 'realEstateServices'])->name('services.all');
+    Route::get('/admin-wedding-services', [ProjectManagement::class, 'weddingServices'])->name('services.wedding');
+    Route::get('/admin-event-services', [ProjectManagement::class, 'eventServices'])->name('services.event');
+    Route::get('/admin-construction-services', [ProjectManagement::class, 'constructionServices'])->name('services.construction');
+    Route::get('/admin-talkingheads-services', [ProjectManagement::class, 'talkingHeadsServices'])->name('services.talkingheads');
+    Route::post('/services', [ProjectManagement:: class, 'adminCreateProject'])->name('admin.project.create');
 
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
@@ -59,6 +70,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/invoice-mgmt/{id}/cancel', [InvoiceManagementController::class, 'cancel'])->name('invoice.cancel');
     Route::delete('/notifications/delete-all', [NotificationController::class, 'destroyAll'])
     ->name('notifications.destroyAll');
+
+    // Bulk Notification Routes
+    Route::post('/bulk-notification/send', [BulkNotificationController::class, 'sendToAllClients'])->name('bulk-notification.send');
+    Route::get('/bulk-notification/stats', [BulkNotificationController::class, 'getClientEmailStats'])->name('bulk-notification.stats');
 
 });
 

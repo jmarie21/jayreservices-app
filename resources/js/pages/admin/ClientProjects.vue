@@ -4,6 +4,19 @@ import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
 import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
 import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
+
+import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
+import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
+import WeddingLuxuryForm from '@/components/forms/WeddingLuxuryForm.vue';
+
+import EventBasicForm from '@/components/forms/EventBasicForm.vue';
+import EventPremiumForm from '@/components/forms/EventPremiumForm.vue';
+import EventLuxuryForm from '@/components/forms/EventLuxuryForm.vue';
+
+import ConstructionBasicForm from '@/components/forms/ConstructionBasicForm.vue';
+import ConstructionPremiumForm from '@/components/forms/ConstructionPremiumForm.vue';
+import ConstructionLuxuryForm from '@/components/forms/ConstructionLuxuryForm.vue';
+
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Button } from '@/components/ui/button';
@@ -461,7 +474,7 @@ const goToPage = (pageNumber: number) => {
         />
 
         <BasicStyleForm
-            v-if="editProject && editProject.service?.name === 'Basic Style'"
+            v-if="editProject && editProject.service?.name === 'Real Estate Basic Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"
@@ -470,7 +483,7 @@ const goToPage = (pageNumber: number) => {
         />
 
         <DeluxeStyleForm
-            v-else-if="editProject && editProject.service?.name === 'Deluxe Style'"
+            v-else-if="editProject && editProject.service?.name === 'Real Estate Deluxe Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"
@@ -479,7 +492,7 @@ const goToPage = (pageNumber: number) => {
         />
 
         <PremiumStyleForm
-            v-else-if="editProject && editProject.service?.name === 'Premium Style'"
+            v-else-if="editProject && editProject.service?.name === 'Real Estate Premium Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"
@@ -488,7 +501,7 @@ const goToPage = (pageNumber: number) => {
         />
 
         <LuxuryStyleForm
-            v-else-if="editProject && editProject.service?.name === 'Luxury Style'"
+            v-else-if="editProject && editProject.service?.name === 'Real Estate Luxury Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"
@@ -498,6 +511,90 @@ const goToPage = (pageNumber: number) => {
 
         <TalkingHeadsForm
             v-else-if="editProject && editProject.service?.name === 'Talking Heads'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <!-- Wedding Services Modal -->
+        <WeddingBasicForm
+            v-if="editProject && editProject.service?.name === 'Wedding Basic Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <WeddingPremiumForm
+            v-else-if="editProject && editProject.service?.name === 'Wedding Premium Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <WeddingLuxuryForm
+            v-else-if="editProject && editProject.service?.name === 'Wedding Luxury Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <!-- Event Services Modal -->
+        <EventBasicForm
+            v-if="editProject && editProject.service?.name === 'Event Basic Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <EventPremiumForm
+            v-else-if="editProject && editProject.service?.name === 'Event Premium Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <EventLuxuryForm
+            v-else-if="editProject && editProject.service?.name === 'Event Luxury Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <!-- Construction Services Modal -->
+        <ConstructionBasicForm
+            v-if="editProject && editProject.service?.name === 'Construction Basic Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <ConstructionPremiumForm
+            v-else-if="editProject && editProject.service?.name === 'Construction Premium Style'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <ConstructionLuxuryForm
+            v-else-if="editProject && editProject.service?.name === 'Construction Luxury Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"

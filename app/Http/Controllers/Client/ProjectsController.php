@@ -90,6 +90,7 @@ class ProjectsController extends Controller
             "extra_fields" => ['nullable', 'array'],
             "with_agent" => ['nullable', 'boolean'],
             "per_property" => ['nullable', 'boolean'],
+            "per_property_count" => ['nullable', 'integer'],
             "rush" => ['nullable', 'boolean'],
         ]);
 
@@ -322,6 +323,7 @@ class ProjectsController extends Controller
             "extra_fields" => ['nullable', 'array'],
             "with_agent" => ['nullable', 'boolean'],
             "per_property" => ['nullable', 'boolean'],
+            "per_property_count" => ['nullable', 'integer'],
             "rush" => ['nullable', 'boolean'],
         ]);
         

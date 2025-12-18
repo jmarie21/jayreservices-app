@@ -14,8 +14,9 @@ class ServicesSeeder extends Seeder
     public function run(): void
     {
         $services = [
+            // Real Estate
             [
-                'name' => 'Basic Style',
+                'name' => 'Real Estate Basic Style',
                 'features' => [
                     'Retiming the clip with beat of the music',
                     'With 2-3 smooth speed ramps only',
@@ -26,7 +27,7 @@ class ServicesSeeder extends Seeder
                 'video_link' => 'https://www.youtube.com/embed/vQzUuq14zcM?si=mr85vx65t8FspD4y'
             ],
             [
-                'name' => 'Deluxe Style',
+                'name' => 'Real Estate Deluxe Style',
                 'features' => [
                     'Retiming the clip with beat of the music',
                     'With Ken Burns transition',
@@ -38,17 +39,7 @@ class ServicesSeeder extends Seeder
                 'video_link' => 'https://www.youtube.com/embed/oaqW7kBki1c',
             ],
             [
-                'name' => 'Talking Heads',
-                'features' => [
-                    'Retiming the clip with beat of the music',
-                    'With 2-3 smooth speed ramps only',
-                    'Some simple transitions like zoom after speed ramps',
-                ],
-                'price' => 0,
-                'video_link' => 'https://www.youtube.com/embed/PCTdP__t9bI'
-            ],
-            [
-                'name' => 'Premium Style',
+                'name' => 'Real Estate Premium Style',
                 'features' => [
                     'Retiming the clip with beat of the music',
                     'With Ken Burns transition',
@@ -64,7 +55,7 @@ class ServicesSeeder extends Seeder
                 'video_link' => 'https://player.vimeo.com/video/1106034319',
             ],
             [
-                'name' => 'Luxury Style',
+                'name' => 'Real Estate Luxury Style',
                 'features' => [
                     'Retiming the clip with beat of the music',
                     'With Ken Burns transition',
@@ -81,6 +72,131 @@ class ServicesSeeder extends Seeder
                 ],
                 'price' => 0,
                 'video_link' => 'https://player.vimeo.com/video/1106032025',
+            ],
+            //Talking Heads Services
+            [
+                'name' => 'Talking Heads',
+                'features' => [
+                    'Retiming the clip with beat of the music',
+                    'With 2-3 smooth speed ramps only',
+                    'Some simple transitions like zoom after speed ramps',
+                ],
+                'price' => 0,
+                'video_link' => 'https://www.youtube.com/embed/PCTdP__t9bI'
+            ],
+            // Wedding Services
+            [
+                'name' => 'Wedding Basic Style',
+                'features' => [
+                    'Maximum 60 seconds',
+                    'Simple cut ',
+                    'No sfx',
+                    'One music only',
+                    'Plain video'
+                ],
+                'price' => 0,
+                'video_link' => '/images/wedding/wedding.jpg'
+            ],
+            [
+                'name' => 'Wedding Premium Style',
+                'features' => [
+                    '60-90 Seconds',
+                    'Can do transitions',
+                    'With sfx',
+                    'Can change music ',
+                    'Plain video ',
+                ],
+                'price' => 0,
+                'video_link' => '/images/wedding/wedding2.jpg',
+            ],
+            [
+                'name' => 'Wedding Luxury Style',
+                'features' => [
+                    '1 min - 3 min',
+                    'Can do nice transitions (if requested)',
+                    'With Sfx',
+                    'Can change music ',
+                    'Video with a little vows from Bride and Groom',
+                    'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)',
+                ],
+                'price' => 0,
+                'video_link' => '/images/wedding/wedding3.jpg',
+            ],
+            // Events Services
+            [
+                'name' => 'Event Basic Style',
+                'features' => [
+                    'Maximum 60 seconds',
+                    'Simple cut ',
+                    'No sfx',
+                    'Plain video'
+                ],
+                'price' => 0,
+                'video_link' => '/images/events/event.jpg'
+            ],
+            [
+                'name' => 'Event Premium Style',
+                'features' => [
+                    '60-90 Seconds',
+                    'With speedramps',
+                    'With sfx',
+                    'Can change music ',
+                    'Can do transitions',
+                    'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)'
+                ],
+                'price' => 0,
+                'video_link' => '/images/events/event2.jpg',
+            ],
+            [
+                'name' => 'Event Luxury Style',
+                'features' => [
+                    '1 min - 3 min',
+                    'Can do nice transitions (if requested)',
+                    'With Sfx',
+                    'With speedramps',
+                    'Video with a little vows from Bride and Groom',
+                    'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)',
+                ],
+                'price' => 0,
+                'video_link' => '/images/events/event3.jpg',
+            ],
+            // Construction Video Services
+            [
+                'name' => 'Construction Basic Style',
+                'features' => [
+                    'Maximum 60 seconds',
+                    'Simple cut ',
+                    'No sfx',
+                    'Plain video'
+                ],
+                'price' => 0,
+                'video_link' => '/images/construction/construction.jpg'
+            ],
+            [
+                'name' => 'Construction Premium Style',
+                'features' => [
+                    '60-90 Seconds',
+                    'With speedramps',
+                    'With sfx',
+                    'Can change music ',
+                    'Can do transitions',
+                    'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)'
+                ],
+                'price' => 0,
+                'video_link' => '/images/construction/construction2.jpg',
+            ],
+            [
+                'name' => 'Construction Luxury Style',
+                'features' => [
+                    '1 min - 3 min',
+                    'Can do nice transitions (if requested)',
+                    'With Sfx',
+                    'With speedramps',
+                    'Video with a little vows from Bride and Groom',
+                    'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)',
+                ],
+                'price' => 0,
+                'video_link' => '/images/construction/construction3.jpg',
             ],
         ];
 

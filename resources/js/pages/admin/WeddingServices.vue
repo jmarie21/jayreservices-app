@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
-import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
+
+// import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
-import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
-import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
+// import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
+import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
+import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
+import WeddingLuxuryForm from '@/components/forms/WeddingLuxuryForm.vue';
+// import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem, Services } from '@/types';
@@ -14,8 +17,8 @@ const { services } = usePage<AppPageProps<{ services: Services[] }>>().props;
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Services',
-        href: '/services',
+        title: 'Wedding Services',
+        href: '/wedding-services',
     },
 ];
 
@@ -28,8 +31,8 @@ const isImageLink = (link?: string | null) => {
 
 const normalizeVideoSrc = (link: string) => link.replace('watch?v=', 'embed/');
 
-const isStyle = (style: string): style is 'Real Estate Basic Style' | 'Real Estate Deluxe Style' | 'Real Estate Premium Style' | 'Real Estate Luxury Style' | 'Real Estate Talking Heads' => {
-    return ['Real Estate Basic Style', 'Real Estate Deluxe Style', 'Real Estate Premium Style', 'Real Estate Luxury Style', 'Real Estate Talking Heads'].includes(style);
+const isStyle = (style: string): style is 'Wedding Basic Style' | 'Wedding Deluxe Style' | 'Wedding Premium Style' | 'Wedding Luxury Style' | 'Wedding Talking Heads' => {
+    return ['Wedding Basic Style', 'Wedding Deluxe Style', 'Wedding Premium Style', 'Wedding Luxury Style', 'Wedding Talking Heads'].includes(style);
 };
 
 function openModal(service: Services) {
@@ -46,11 +49,11 @@ function closeModal() {
 <template>
     <Toaster />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="Services" />
-        <div class="grid gap-4 p-4 md:grid-cols-4">
+        <Head title="Wedding Services" />
+        <div class="grid gap-4 p-4 md:grid-cols-3">
             <div v-for="service in services" :key="service.id" class="flex h-full min-h-[450px] flex-col rounded-xl border bg-white shadow">
-                <!-- Video at top (no padding) -->
-                <div v-if="service.video_link" class="aspect-video w-full">
+                <!-- Image/Video at top (no padding) -->
+                <div v-if="service.video_link" class="h-[320px] w-full flex-shrink-0">
                     <img
                         v-if="isImageLink(service.video_link)"
                         class="h-full w-full rounded-t-xl object-cover"
@@ -88,39 +91,48 @@ function closeModal() {
         </div>
 
         <!-- Modals -->
-        <BasicStyleForm
-            v-if="selectedService?.name === 'Real Estate Basic Style'"
+        <WeddingBasicForm
+            v-if="selectedService?.name === 'Wedding Basic Style'"
             :open="true"
             :base-price="selectedService.price"
             @close="closeModal"
             :service-id="selectedService.id"
         />
-        <DeluxeStyleForm
-            v-if="selectedService?.name === 'Real Estate Deluxe Style'"
+        <!-- <DeluxeStyleForm
+            v-if="selectedService?.name === 'Wedding Deluxe Style'"
+            :open="true"
+            :base-price="selectedService.price"
+            :service-id="selectedService.id"
+            @close="closeModal"
+        /> -->
+
+        <!-- <TalkingHeadsForm
+            v-if="selectedService?.name === 'Wedding Talking Heads'"
+            :open="true"
+            :base-price="selectedService.price"
+            :service-id="selectedService.id"
+            @close="closeModal"
+        /> -->
+
+        <!-- <LuxuryStyleForm
+            v-if="selectedService?.name === 'Wedding Luxury Style'"
+            :open="true"
+            :base-price="selectedService.price"
+            :service-id="selectedService.id"
+            @close="closeModal"
+        /> -->
+
+        <!-- Wedding Services -->
+        <WeddingPremiumForm
+            v-if="selectedService?.name === 'Wedding Premium Style'"
             :open="true"
             :base-price="selectedService.price"
             :service-id="selectedService.id"
             @close="closeModal"
         />
 
-        <TalkingHeadsForm
-            v-if="selectedService?.name === 'Real Estate Talking Heads'"
-            :open="true"
-            :base-price="selectedService.price"
-            :service-id="selectedService.id"
-            @close="closeModal"
-        />
-
-        <PremiumStyleForm
-            v-if="selectedService?.name === 'Real Estate Premium Style'"
-            :open="true"
-            :base-price="selectedService.price"
-            :service-id="selectedService.id"
-            @close="closeModal"
-        />
-
-        <LuxuryStyleForm
-            v-if="selectedService?.name === 'Real Estate Luxury Style'"
+        <WeddingLuxuryForm
+            v-if="selectedService?.name === 'Wedding Luxury Style'"
             :open="true"
             :base-price="selectedService.price"
             :service-id="selectedService.id"

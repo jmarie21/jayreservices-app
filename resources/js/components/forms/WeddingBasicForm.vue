@@ -5,58 +5,35 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AppPageProps, User } from '@/types';
-import { DeluxeForm } from '@/types/app-page-prop';
+import { BasicForm } from '@/types/app-page-prop';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
-import { Checkbox } from '../ui/checkbox';
 import { Textarea } from '../ui/textarea';
-
-interface Option {
-    id: string;
-    label: string;
-    link?: string | null;
-}
-
-export interface CustomEffect {
-    id: string;
-    description: string;
-    price: number;
-}
 
 const props = defineProps<{
     open: boolean;
+    basePrice: number;
     serviceId: number;
-    project?: DeluxeForm | null;
+    project?: BasicForm | null;
 }>();
 const { props: page } = usePage<AppPageProps>();
 const userRole = page.auth.user.role;
 const isAdmin = computed(() => userRole === 'admin');
 const { clients } = usePage<AppPageProps<{ clients: User[] }>>().props;
+
 const emit = defineEmits<{
     (e: 'close'): void;
 }>();
 
-// Agent & per-property options
+// Agent selection
 const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
-const perPropertyOption = ref<'add-per-property' | 'no' | ''>('');
+const perPropertyOption = ref<'add-per-property' | 'no' | ''>(props.project?.per_property ? 'add-per-property' : '');
 const perPropertyQuantity = ref(1);
 const rushOption = ref<'true' | 'false' | ''>('');
-const isEditing = !!props.project;
 
-// Custom effects state
-const customEffects = ref<CustomEffect[]>([]);
-const newEffectDescription = ref('');
-const newEffectPrice = ref<number>(0);
-
-// Effects & captions options
-const effectsOptions: Option[] = [
-    { id: 'Ken Burns', label: 'Ken Burns', link: 'https://www.youtube.com/watch?v=lIK2S0eIvwY&list=TLGG7aKmePKcyR8xMzEwMjAyNQ' },
-    { id: 'No Effects', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
-];
-
-// Initialize form
-const form = useForm<DeluxeForm>({
+// Form initialization
+const form = useForm<BasicForm>({
     style: props.project?.style ?? '',
     project_name: props.project?.project_name ?? '',
     format: props.project?.format ?? '',
@@ -66,96 +43,81 @@ const form = useForm<DeluxeForm>({
     music_link: props.project?.music_link ?? '',
     file_link: props.project?.file_link ?? '',
     notes: props.project?.notes ?? '',
-    total_price: 0,
+    total_price: Number(props.project?.total_price ?? props.basePrice),
     with_agent: props.project?.with_agent ?? false,
-    extra_fields: {
-        effects: props.project?.extra_fields?.effects ? [...props.project.extra_fields.effects] : [],
-        captions: props.project?.extra_fields?.captions ? [...props.project.extra_fields.captions] : [],
-        custom_effects: '[]', // Store as JSON string
-    },
     service_id: props.serviceId,
     rush: props.project?.rush ?? false,
-    per_property: props.project?.per_property ?? false,
+    per_property: props.project?.per_property,
     per_property_count: props.project?.per_property_count ?? 0,
     ...(isAdmin.value ? { client_id: props.project?.client_id ?? null } : {}),
 });
 
-// Computed total price based on extras
+// const calculateExtraPrice = () => {
+//     let extra = 0;
+
+//     // Price based on style and format
+//     if (form.style === 'basic video') {
+//         if (form.format === 'horizontal') extra += 40;
+//         else if (form.format === 'vertical') extra += 25;
+//         else if (form.format === 'horizontal and vertical package') extra += 40 + 25;
+//     } else if (form.style === 'basic drone only') {
+//         if (form.format === 'horizontal') extra += 25;
+//         else if (form.format === 'vertical') extra += 20;
+//         else if (form.format === 'horizontal and vertical package') extra += 25 + 20;
+//     }
+
+//     // Price based on agent
+//     const agentExtra = agentOption.value === 'with-agent' ? 10 : 0;
+
+//     // Price based on per property
+//     const perPropertyExtra = perPropertyOption.value === 'add-per-property' ? 5 : 0;
+
+//     return Number(props.basePrice) + extra + agentExtra + perPropertyExtra;
+// };
+
+// Computed total price based on selected options
 const totalPrice = computed(() => {
     let extra = 0;
 
-    // Price based on style & format
-    if (form.style === 'deluxe video') {
-        if (form.format === 'horizontal') extra += 60;
-        else if (form.format === 'vertical') extra += 35;
-        else if (form.format === 'horizontal and vertical package') extra += 95;
-    } else if (form.style === 'deluxe drone only') {
-        if (form.format === 'horizontal') extra += 35;
-        else if (form.format === 'vertical') extra += 30;
-        else if (form.format === 'horizontal and vertical package') extra += 65;
-    }
+    // Price based on style and format
+    if (form.style === 'basic video') {
+        if (form.format === 'horizontal') extra += 50;
+        else if (form.format === 'vertical') extra += 50;
+        else if (form.format === 'horizontal and vertical package') extra += 100;
+    } 
+    // else if (form.style === 'basic drone only') {
+    //     if (form.format === 'horizontal') extra += 25;
+    //     else if (form.format === 'vertical') extra += 20;
+    //     else if (form.format === 'horizontal and vertical package') extra += 45;
+    // }
 
-    // Agent extra
+    // Price based on agent
     if (agentOption.value === 'with-agent') extra += 10;
 
-    // Per property extra
+    // Price based on per property
     if (perPropertyOption.value === 'add-per-property') extra += 5 * perPropertyQuantity.value;
 
     // Rush extra
     if (rushOption.value === 'true') extra += 10;
 
-    // Custom effects extra
-    const customEffectsTotal = customEffects.value.reduce((sum, effect) => sum + effect.price, 0);
-    extra += customEffectsTotal;
-
-    return extra;
+    return extra; // basePrice is 0, so we just return extras
 });
 
-// Update form.total_price whenever totalPrice changes
-watch(
-    totalPrice,
-    (val) => {
-        form.total_price = val;
-    },
-    { immediate: true },
-);
-
-watch(perPropertyOption, (val) => {
-    form.per_property = val === 'add-per-property';
-    if (val === 'add-per-property' && perPropertyQuantity.value < 1) {
-        perPropertyQuantity.value = 1;
-    }
-    if (val !== 'add-per-property') {
-        perPropertyQuantity.value = 0;
-    }
-});
-
-// Update form flags when options change
-watch(agentOption, () => {
-    form.with_agent = agentOption.value === 'with-agent';
-});
-watch(perPropertyOption, () => {
-    form.per_property = perPropertyOption.value === 'add-per-property';
-});
-watch(perPropertyQuantity, (val) => {
-    form.per_property_count = val;
-});
-
-// Format options based on style
 const formatOptions = computed(() => {
-    if (form.style === 'deluxe video') {
+    if (form.style === 'basic video') {
         return [
-            { value: 'horizontal', label: 'Horizontal ($60)' },
-            { value: 'vertical', label: 'Vertical ($35)' },
-            { value: 'horizontal and vertical package', label: 'Horizontal and Vertical Package ($95)' },
+            { value: 'horizontal', label: 'Horizontal ($50)' },
+            { value: 'vertical', label: 'Vertical ($50)' },
+            { value: 'horizontal and vertical package', label: 'Horizontal and Vertical Package ($100)' },
         ];
-    } else if (form.style === 'deluxe drone only') {
+    } else if (form.style === 'basic drone only') {
         return [
-            { value: 'horizontal', label: 'Horizontal ($35)' },
-            { value: 'vertical', label: 'Vertical ($30)' },
-            { value: 'horizontal and vertical package', label: 'Horizontal and Vertical Package ($65)' },
+            { value: 'horizontal', label: 'Horizontal ($25)' },
+            { value: 'vertical', label: 'Vertical ($20)' },
+            { value: 'horizontal and vertical package', label: 'Horizontal and Vertical Package ($45)' },
         ];
     } else {
+        // Default if no style selected
         return [
             { value: 'horizontal', label: 'Horizontal' },
             { value: 'vertical', label: 'Vertical' },
@@ -170,7 +132,37 @@ const selectedFormatLabel = computed(() => {
     return option ? option.label : '';
 });
 
-// Watch project prop to initialize form
+// Watch totalPrice and update form.total_price
+watch(
+    totalPrice,
+    (val) => {
+        form.total_price = val;
+    },
+    { immediate: true },
+);
+
+watch(perPropertyOption, (val) => {
+    form.per_property = val === 'add-per-property';
+    if (val === 'add-per-property' && perPropertyQuantity.value < 1) {
+        perPropertyQuantity.value = 1;
+    }
+    if (val !== 'add-per-property') {
+        perPropertyQuantity.value = 0; // set to 0 when disabled
+    }
+});
+
+// Update form options when selections change
+watch(agentOption, () => {
+    form.with_agent = agentOption.value === 'with-agent';
+});
+watch(perPropertyOption, () => {
+    form.per_property = perPropertyOption.value === 'add-per-property';
+});
+watch(perPropertyQuantity, (val) => {
+    form.per_property_count = val;
+});
+
+// Watch project prop and initialize/reset form
 watch(
     () => props.project,
     (project) => {
@@ -185,27 +177,16 @@ watch(
             form.file_link = project.file_link ?? '';
             form.notes = project.notes ?? '';
 
+            // Set agent and per-property options
             agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
             perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
             perPropertyQuantity.value = project.per_property_count ?? 1;
             rushOption.value = project.rush ? 'true' : 'false';
 
-            // Load custom effects - parse if string, use directly if array
-            if (project.extra_fields?.custom_effects) {
-                try {
-                    customEffects.value =
-                        typeof project.extra_fields.custom_effects === 'string'
-                            ? JSON.parse(project.extra_fields.custom_effects)
-                            : [...project.extra_fields.custom_effects];
-                } catch (e) {
-                    console.error('Failed to parse custom_effects:', e);
-                    customEffects.value = [];
-                }
-            } else {
-                customEffects.value = [];
-            }
+            form.with_agent = project.with_agent ?? false;
+            form.per_property = project.per_property ?? false;
         } else {
-            // Reset for new project
+            // Reset form
             form.style = '';
             form.format = '';
             form.project_name = '';
@@ -218,73 +199,28 @@ watch(
             agentOption.value = '';
             perPropertyOption.value = '';
             perPropertyQuantity.value = 0;
+
             rushOption.value = '';
-            customEffects.value = [];
+            form.with_agent = false;
+            form.per_property = false;
         }
     },
     { immediate: true },
 );
 
-// Handle checkbox changes
-function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
-    form.extra_fields ??= { effects: [], captions: [], custom_effects: '[]' };
-    const isChecked = checked === true;
-    const arr = [...form.extra_fields.effects];
-    if (isChecked && !arr.includes(id)) arr.push(id);
-    if (!isChecked && arr.includes(id)) arr.splice(arr.indexOf(id), 1);
-    form.extra_fields.effects = arr;
-    form.extra_fields = { ...form.extra_fields };
-}
-
-// Custom effects functions
-function addCustomEffect() {
-    if (!newEffectDescription.value.trim()) {
-        toast.error('Please enter an effect description');
-        return;
-    }
-    if (newEffectPrice.value < 0) {
-        toast.error('Price cannot be negative');
-        return;
-    }
-
-    const newEffect: CustomEffect = {
-        id: `custom-${Date.now()}`,
-        description: newEffectDescription.value.trim(),
-        price: newEffectPrice.value,
-    };
-
-    customEffects.value.push(newEffect);
-
-    // Reset inputs
-    newEffectDescription.value = '';
-    newEffectPrice.value = 0;
-
-    toast.success('Custom effect added!');
-}
-
-function removeCustomEffect(id: string) {
-    customEffects.value = customEffects.value.filter((effect) => effect.id !== id);
-    toast.success('Custom effect removed');
-}
-
 // Submit handler
 const handleSubmit = () => {
     const isEditing = !!props.project;
-    const isAdminUser = isAdmin.value;
+
+    // Determine if the current user is an admin
+    const isAdminUser = isAdmin.value; // assuming you already have `isAdmin` ref/computed
+
+    // Choose the correct route names based on role
     const createRoute = isAdminUser ? 'admin.project.create' : 'projects.store';
     const updateRoute = isAdminUser ? 'admin.project.update' : 'projects.client_update';
 
-    // Serialize custom_effects to JSON string for FormData compatibility
-    const submissionData = {
-        ...form.data(),
-        extra_fields: {
-            ...form.extra_fields,
-            custom_effects: JSON.stringify(customEffects.value),
-        },
-    };
-
     if (isEditing) {
-        form.transform(() => submissionData).put(route(updateRoute, props.project!.id), {
+        form.put(route(updateRoute, props.project!.id), {
             onSuccess: () => {
                 toast.success('Updated successfully!', {
                     description: isAdminUser ? 'Project updated successfully (admin side).' : 'Your order was updated successfully!',
@@ -297,7 +233,7 @@ const handleSubmit = () => {
             },
         });
     } else {
-        form.transform(() => submissionData).post(route(createRoute), {
+        form.post(route(createRoute), {
             onSuccess: () => {
                 toast.success('Project created!', {
                     description: isAdminUser ? 'Project has been created successfully (admin side).' : 'Your order has been placed.',
@@ -331,7 +267,7 @@ function decrementPerProperty() {
         <DialogContent class="max-h-[90vh] !w-full !max-w-6xl overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>
-                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Real Estate Deluxe Style' }}
+                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Wedding Basic Style' }}
                 </DialogTitle>
             </DialogHeader>
 
@@ -361,8 +297,8 @@ function decrementPerProperty() {
                                 <SelectValue placeholder="Style" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="deluxe video">Deluxe Video</SelectItem>
-                                <SelectItem value="deluxe drone only">Deluxe Drone Only</SelectItem>
+                                <SelectItem value="basic video">Basic Video</SelectItem>
+                                <!-- <SelectItem value="basic drone only">Basic Drone Only</SelectItem> -->
                             </SelectContent>
                         </Select>
                         <span v-if="form.errors.style" class="text-sm text-red-500">{{ form.errors.style }}</span>
@@ -380,6 +316,7 @@ function decrementPerProperty() {
                         <Label>Video Format</Label>
                         <Select v-model="form.format">
                             <SelectTrigger class="w-full">
+                                <!-- Display selected label -->
                                 <SelectValue :value="form.format" placeholder="Format">
                                     {{ selectedFormatLabel }}
                                 </SelectValue>
@@ -415,7 +352,7 @@ function decrementPerProperty() {
                     </div>
 
                     <!-- Per Property Option -->
-                    <div class="space-y-2">
+                    <!-- <div class="space-y-2">
                         <Label>With per property line?</Label>
                         <div class="flex items-center gap-2">
                             <div :class="['flex-1 transition-all duration-200', perPropertyOption === 'add-per-property' ? 'w-[80%]' : 'w-full']">
@@ -429,6 +366,7 @@ function decrementPerProperty() {
                                     </SelectContent>
                                 </Select>
                             </div>
+
                             <div v-if="perPropertyOption === 'add-per-property'" class="flex items-center gap-1">
                                 <Button type="button" size="icon" variant="outline" class="h-8 w-8" @click="decrementPerProperty">
                                     <span class="text-lg leading-none">−</span>
@@ -439,7 +377,7 @@ function decrementPerProperty() {
                                 </Button>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <!-- Quality -->
                     <div class="space-y-2">
@@ -500,7 +438,10 @@ function decrementPerProperty() {
                                 <SelectItem value="false">No</SelectItem>
                             </SelectContent>
                         </Select>
-                        <span v-if="form.errors.rush" class="text-sm text-red-500">{{ form.errors.rush }}</span>
+
+                        <span v-if="form.errors.rush" class="text-sm text-red-500">
+                            {{ form.errors.rush }}
+                        </span>
                     </div>
 
                     <!-- Notes -->
@@ -508,78 +449,13 @@ function decrementPerProperty() {
                         <Label>More Instructions (Optional)</Label>
                         <Textarea v-model="form.notes" placeholder="Enter more instructions" class="min-h-[120px]" />
                     </div>
-
-                    <!-- Customize the Effects -->
-                    <div class="space-y-2">
-                        <Label>Do you want to customize the effects?</Label>
-                        <div class="flex flex-col gap-2">
-                            <div v-for="effect in effectsOptions" :key="effect.id" class="mb-1 flex items-center gap-2">
-                                <Checkbox
-                                    :id="effect.id"
-                                    :model-value="form.extra_fields?.effects.includes(effect.id)"
-                                    @update:model-value="(value: any) => handleEffectChange(effect.id, value)"
-                                />
-                                <label :for="effect.id" class="cursor-pointer">{{ effect.label }}</label>
-                                <a
-                                    v-if="effect.link"
-                                    :href="effect.link"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="text-sm text-blue-400 hover:underline"
-                                >
-                                    (see sample)
-                                </a>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-
-                <!-- Custom Effects Section -->
-                <div v-if="isEditing && isAdmin" class="mt-6 space-y-4 rounded-lg border border-gray-200 p-4">
-                    <div class="space-y-2">
-                        <Label class="text-base font-semibold">Additional Effects</Label>
-                        <p class="text-sm text-gray-600">Add any additional custom effects with their associated costs</p>
-                    </div>
-
-                    <!-- Add Custom Effect Form -->
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
-                        <div class="md:col-span-7">
-                            <Input v-model="newEffectDescription" placeholder="Describe the custom effect..." />
-                        </div>
-                        <div class="md:col-span-3">
-                            <Input v-model.number="newEffectPrice" type="number" step="0.01" min="0" placeholder="Price ($)" />
-                        </div>
-                        <div class="md:col-span-2">
-                            <Button type="button" variant="outline" class="w-full" @click="addCustomEffect"> Add Effect </Button>
-                        </div>
-                    </div>
-
-                    <!-- List of Custom Effects -->
-                    <div v-if="customEffects.length > 0" class="space-y-2">
-                        <div class="text-sm font-medium">Added Custom Effects:</div>
-                        <div class="space-y-2">
-                            <div
-                                v-for="effect in customEffects"
-                                :key="effect.id"
-                                class="flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 p-3"
-                            >
-                                <div class="flex-1">
-                                    <span class="text-sm">{{ effect.description }}</span>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <span class="text-sm font-semibold">${{ effect.price.toFixed(2) }}</span>
-                                    <Button type="button" variant="destructive" size="sm" @click="removeCustomEffect(effect.id)"> Remove </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Total & Submit -->
-                <div class="mt-8 text-xl font-semibold">Total: ${{ Number(form.total_price).toFixed(2) }}</div>
+                <div class="mt-8 text-xl font-semibold">Total: ${{ form.total_price.toFixed(2) }}</div>
+
                 <div class="mt-8 flex justify-end">
                     <Button type="submit" :disabled="form.processing">
-                        <span v-if="form.processing" class="mr-2 animate-spin">Ⳡ</span>
+                        <span v-if="form.processing" class="mr-2 animate-spin">⏳</span>
                         {{ props.project ? 'Save Changes' : 'Place Order' }}
                     </Button>
                 </div>

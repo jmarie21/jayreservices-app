@@ -67,7 +67,6 @@ export interface Projects {
     service: Record<string>;
     editor: Record<string>;
     client: Record<string>;
-    extra_fields: Record<string>;
 
     style: string;
     company_name: string;
@@ -85,6 +84,7 @@ export interface Projects {
     output_link?: string;
     with_agent?: boolean;
     per_property?: boolean;
+    per_property_count?: number;
     rush?: boolean;
 
     status: 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';

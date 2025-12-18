@@ -58,11 +58,11 @@ const effectsOptions: Option[] = [
     { id: 'No Effects', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
 ];
 
-const captionsOptions: Option[] = [
-    { id: '3D Text behind the Agent Talking', label: '3D Text behind the Agent Talking (Add $10)' },
-    { id: 'Captions while the agent is talking', label: 'Captions while the agent is talking (Add $10)' },
-    { id: 'No Captions', label: 'No text or captions needed' },
-];
+// const captionsOptions: Option[] = [
+//     { id: '3D Text behind the Agent Talking', label: '3D Text behind the Agent Talking (Add $10)' },
+//     { id: 'Captions while the agent is talking', label: 'Captions while the agent is talking (Add $10)' },
+//     { id: 'No Captions', label: 'No text or captions needed' },
+// ];
 
 // Initialize form
 const form = useForm<PremiumForm>({
@@ -146,9 +146,9 @@ const totalPrice = computed(() => {
 
     // Style & format extras
     if (form.style === 'Premium video') {
-        if (form.format === 'horizontal') total += 80;
-        else if (form.format === 'vertical') total += 50;
-        else if (form.format === 'horizontal and vertical package') total += 130;
+        if (form.format === 'horizontal') total += 100;
+        else if (form.format === 'vertical') total += 100;
+        else if (form.format === 'horizontal and vertical package') total += 200;
     } else if (form.style === 'Premium drone only') {
         if (form.format === 'horizontal') total += 45;
         else if (form.format === 'vertical') total += 40;
@@ -207,9 +207,9 @@ watch(perPropertyQuantity, (val) => {
 const formatOptions = computed(() => {
     if (form.style === 'Premium video') {
         return [
-            { value: 'horizontal', label: 'Horizontal ($80)' },
-            { value: 'vertical', label: 'Vertical ($50)' },
-            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical Package ($130)' },
+            { value: 'horizontal', label: 'Horizontal ($100)' },
+            { value: 'vertical', label: 'Vertical ($100)' },
+            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical Package ($200)' },
         ];
     } else if (form.style === 'Premium drone only') {
         return [
@@ -416,7 +416,7 @@ function decrementPerProperty() {
         <DialogContent class="max-h-[90vh] !w-full !max-w-6xl overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>
-                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Real Estate Premium Style' }}
+                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Wedding Premium Style' }}
                 </DialogTitle>
             </DialogHeader>
 
@@ -447,7 +447,7 @@ function decrementPerProperty() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Premium video">Premium Video</SelectItem>
-                                <SelectItem value="Premium drone only">Premium Drone Only</SelectItem>
+                                <!-- <SelectItem value="Premium drone only">Premium Drone Only</SelectItem> -->
                             </SelectContent>
                         </Select>
                         <span v-if="form.errors.style" class="text-sm text-red-500">{{ form.errors.style }}</span>
@@ -486,7 +486,7 @@ function decrementPerProperty() {
                     </div>
 
                     <!-- Agent Option -->
-                    <div class="space-y-2">
+                    <!-- <div class="space-y-2">
                         <Label>With agent or voiceover?</Label>
                         <Select v-model="agentOption">
                             <SelectTrigger class="w-full">
@@ -497,7 +497,7 @@ function decrementPerProperty() {
                                 <SelectItem value="no-agent">No Agent</SelectItem>
                             </SelectContent>
                         </Select>
-                    </div>
+                    </div> -->
 
                     <!-- Quality -->
                     <div class="space-y-2">
@@ -540,7 +540,7 @@ function decrementPerProperty() {
                     </div>
 
                     <!-- Per Property Option -->
-                    <div class="space-y-2">
+                    <!-- <div class="space-y-2">
                         <Label>With per property line?</Label>
                         <div class="flex items-center gap-2">
                             <div :class="['flex-1 transition-all duration-200', perPropertyOption === 'add-per-property' ? 'w-[80%]' : 'w-full']">
@@ -564,7 +564,7 @@ function decrementPerProperty() {
                                 </Button>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <!-- File Link -->
                     <div class="space-y-2">
@@ -656,7 +656,7 @@ function decrementPerProperty() {
                     </div>
 
                     <!-- 3D Text and Captions -->
-                    <div class="space-y-2">
+                    <!-- <div class="space-y-2">
                         <Label>Do you need 3D text and captions?</Label>
                         <div class="flex flex-col gap-2">
                             <div v-for="caption in captionsOptions" :key="caption.id" class="mb-1 flex items-center gap-2">
@@ -670,7 +670,7 @@ function decrementPerProperty() {
                                 </label>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Custom Effects Section -->

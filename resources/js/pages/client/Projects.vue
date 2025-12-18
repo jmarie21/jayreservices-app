@@ -3,6 +3,20 @@ import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
 import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
 import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
+import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
+
+import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
+import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
+import WeddingLuxuryForm from '@/components/forms/WeddingLuxuryForm.vue';
+
+import EventBasicForm from '@/components/forms/EventBasicForm.vue';
+import EventPremiumForm from '@/components/forms/EventPremiumForm.vue';
+import EventLuxuryForm from '@/components/forms/EventLuxuryForm.vue';
+
+import ConstructionBasicForm from '@/components/forms/ConstructionBasicForm.vue';
+import ConstructionPremiumForm from '@/components/forms/ConstructionPremiumForm.vue';
+import ConstructionLuxuryForm from '@/components/forms/ConstructionLuxuryForm.vue';
+
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +32,7 @@ import { mapStatusForClient } from '@/utils/statusMapper';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { toast } from 'vue-sonner';
+
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -135,7 +150,7 @@ const markForRevision = (projectId: number) => {
             <!-- Page header -->
             <div class="mb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h1 class="text-3xl font-bold">My Projects</h1>
-                <Button><Link href="/services">Add new project</Link></Button>
+                <!-- <Button><Link href="/services">Add new project</Link></Button> -->
             </div>
 
             <!-- Filters section -->
@@ -238,7 +253,7 @@ const markForRevision = (projectId: number) => {
         </div>
 
         <BasicStyleForm
-            v-if="selectedStyle === 'Basic Style'"
+            v-if="selectedStyle === 'Real Estate Basic Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
@@ -247,7 +262,7 @@ const markForRevision = (projectId: number) => {
         />
 
         <DeluxeStyleForm
-            v-if="selectedStyle === 'Deluxe Style'"
+            v-if="selectedStyle === 'Real Estate Deluxe Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
@@ -256,7 +271,7 @@ const markForRevision = (projectId: number) => {
         />
 
         <PremiumStyleForm
-            v-if="selectedStyle === 'Premium Style'"
+            v-if="selectedStyle === 'Real Estate Premium Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
@@ -275,7 +290,7 @@ const markForRevision = (projectId: number) => {
         />
 
         <LuxuryStyleForm
-            v-if="selectedStyle === 'Luxury Style'"
+            v-if="selectedStyle === 'Real Estate Luxury Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
@@ -293,12 +308,176 @@ const markForRevision = (projectId: number) => {
             @close="closeModal"
         />
 
+        <TalkingHeadsForm
+            v-if="selectedStyle === 'Real Estate Talking Heads'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
+            @close="closeModal"
+        />
+
         <ProjectViewModal
             v-if="viewProject"
             :isOpen="showViewModal"
             :project="viewProject"
             :role="page.props.auth.user.role"
             @close="closeViewModal"
+        />
+
+
+        <!-- Wedding Services Modals -->
+        <WeddingBasicForm
+            v-if="selectedStyle === 'Wedding Basic Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
+            @close="closeModal"
+        />
+
+        <WeddingPremiumForm
+            v-if="selectedStyle === 'Wedding Premium Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
+        />
+
+        <WeddingLuxuryForm
+            v-if="selectedStyle === 'Wedding Luxury Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
+        />
+
+        <!-- Event Services Modals -->
+        <EventBasicForm
+            v-if="selectedStyle === 'Event Basic Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
+            @close="closeModal"
+        />
+
+        <EventPremiumForm
+            v-if="selectedStyle === 'Event Premium Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
+        />
+
+        <EventLuxuryForm
+            v-if="selectedStyle === 'Event Luxury Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
+        />
+
+        <!-- Construction Services Modals -->
+        <ConstructionBasicForm
+            v-if="selectedStyle === 'Construction Basic Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
+            @close="closeModal"
+        />
+
+        <ConstructionPremiumForm
+            v-if="selectedStyle === 'Construction Premium Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
+        />
+
+        <ConstructionLuxuryForm
+            v-if="selectedStyle === 'Construction Luxury Style'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
+            @close="closeModal"
+        />
+
+        <!-- Talking Heads -->
+         <TalkingHeadsForm
+            v-if="selectedStyle === 'Talking Heads'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
+            @close="closeModal"
         />
     </AppLayout>
 </template>

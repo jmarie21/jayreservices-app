@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AppPageProps, User } from '@/types';
-import { PremiumForm } from '@/types/app-page-prop';
+import { LuxuryForm } from '@/types/app-page-prop';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
+import { Checkbox } from '../ui/checkbox';
 import { Textarea } from '../ui/textarea';
 
 export interface CustomEffect {
@@ -20,9 +20,11 @@ export interface CustomEffect {
 
 const props = defineProps<{
     open: boolean;
+    basePrice: number;
     serviceId: number;
-    project?: PremiumForm | null;
+    project?: LuxuryForm | null;
 }>();
+
 const { props: page } = usePage<AppPageProps>();
 const userRole = page.auth.user.role;
 const isAdmin = computed(() => userRole === 'admin');
@@ -33,8 +35,8 @@ const emit = defineEmits<{
 }>();
 
 const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
-const perPropertyOption = ref<'add-per-property' | 'no' | ''>('');
-const perPropertyQuantity = ref(1);
+const perPropertyOption = ref<'add-per-property' | 'no' | ''>(props.project ? (props.project.per_property ? 'add-per-property' : 'no') : 'no');
+const perPropertyQuantity = ref(props.project?.per_property_count ?? 1);
 const rushOption = ref<'true' | 'false' | ''>('');
 const isEditing = !!props.project;
 
@@ -49,23 +51,29 @@ interface Option {
     link?: string | null;
 }
 
-// Effects & captions options
 const effectsOptions: Option[] = [
     { id: 'Ken Burns', label: 'Ken Burns', link: 'https://www.youtube.com/watch?v=lIK2S0eIvwY&list=TLGG7aKmePKcyR8xMzEwMjAyNQ' },
-    { id: 'Building A House Transition', label: 'Building A House Transition', link: 'https://www.youtube.com/watch?v=ERrkbiFAOow' },
+    { id: 'House Drop', label: 'House Drop', link: 'https://youtu.be/3vVfB8AZkMw ' },
+    {
+        id: 'Pillar Masking',
+        label: 'Pillar Masking',
+        link: 'https://www.youtube.com/watch?v=byh1nKAE3Pk&list=TLGG_YXdMMvhwfsxMzEwMjAyNQ&t=2s',
+    },
+    // { id: 'Virtual Staging AI', label: 'Virtual Staging AI ($20 per clip)', link: 'https://youtu.be/79vg5WqKgYE?si=TkXflrhPmUfTAQFX' },
+    { id: 'Day to Night AI', label: 'Day to Night AI ($15 per clip)', link: 'https://youtu.be/OPpyyb77ijs?si=q-IjufGmarVw8kMu' },
     { id: 'Painting Transition', label: 'Painting Transition (Add $10)', link: 'https://youtu.be/vCW4H7puU1c?si=GoI72aCscroTvYqk)' },
     { id: 'Earth Zoom Transition', label: 'Earth Zoom Transition (Add $15)', link: 'https://www.youtube.com/watch?v=dyuRMbjDJas&feature=youtu.be' },
     { id: 'No Effects', label: 'I DONT WANT ANY TRANSITIONS FOR THIS PROJECT' },
 ];
 
 const captionsOptions: Option[] = [
-    { id: '3D Text behind the Agent Talking', label: '3D Text behind the Agent Talking (Add $10)' },
-    { id: 'Captions while the agent is talking', label: 'Captions while the agent is talking (Add $10)' },
-    { id: 'No Captions', label: 'No text or captions needed' },
+    { id: '3D Text behind the Agent Talking', label: '3D Text behind the Agent Talking (ADD $10)' },
+    { id: '3D Text tracked on the ground etc.', label: '3D Text tracked on the ground etc. (ADD $15)' },
+    { id: 'Captions while the agent is talking', label: 'Captions while the agent is talking (ADD $10)' },
+    { id: 'No Captions', label: 'NO NEED TO ADD TEXT OR CAPTIONS' },
 ];
 
-// Initialize form
-const form = useForm<PremiumForm>({
+const form = useForm<LuxuryForm>({
     style: props.project?.style ?? '',
     project_name: props.project?.project_name ?? '',
     format: props.project?.format ?? '',
@@ -75,7 +83,7 @@ const form = useForm<PremiumForm>({
     music_link: props.project?.music_link ?? '',
     file_link: props.project?.file_link ?? '',
     notes: props.project?.notes ?? '',
-    total_price: 0,
+    total_price: Number(props.project?.total_price ?? props.basePrice ?? 0),
     with_agent: props.project?.with_agent ?? false,
     service_id: props.serviceId,
     rush: props.project?.rush ?? false,
@@ -84,7 +92,7 @@ const form = useForm<PremiumForm>({
         captions: props.project?.extra_fields?.captions ? [...props.project.extra_fields.captions] : [],
         custom_effects: '[]', // Store as JSON string
     },
-    per_property: props.project?.per_property ?? false,
+    per_property: props.project?.per_property,
     per_property_count: props.project?.per_property_count ?? 0,
     ...(isAdmin.value ? { client_id: props.project?.client_id ?? null } : {}),
 });
@@ -140,28 +148,32 @@ function decrementEffect(id: string) {
     }
 }
 
-// Update the totalPrice computed to account for quantities
-const totalPrice = computed(() => {
-    let total = 0;
+function calculateTotalPrice() {
+    let total = Number(props.basePrice);
 
-    // Style & format extras
-    if (form.style === 'Premium video') {
-        if (form.format === 'horizontal') total += 80;
+    // Style & Format cost
+    if (form.style === 'Luxury video') {
+        if (form.format === 'horizontal') total += 150;
+        else if (form.format === 'vertical') total += 150;
+        else if (form.format === 'horizontal and vertical package') total += 300;
+    } else if (form.style === 'Luxury drone only') {
+        if (form.format === 'horizontal') total += 60;
         else if (form.format === 'vertical') total += 50;
-        else if (form.format === 'horizontal and vertical package') total += 130;
-    } else if (form.style === 'Premium drone only') {
-        if (form.format === 'horizontal') total += 45;
-        else if (form.format === 'vertical') total += 40;
-        else if (form.format === 'horizontal and vertical package') total += 85;
+        else if (form.format === 'horizontal and vertical package') total += 60 + 50;
     }
 
-    // Agent, per-property & rush
+    // Agent cost
     if (agentOption.value === 'with-agent') total += 10;
+
+    // Per property line
     if (perPropertyOption.value === 'add-per-property') total += 5 * perPropertyQuantity.value;
+
+    // Rush extra
     if (rushOption.value === 'true') total += 20;
 
-    // Captions
+    // Captions cost
     if (form.extra_fields?.captions.includes('3D Text behind the Agent Talking')) total += 10;
+    if (form.extra_fields?.captions.includes('3D Text tracked on the ground etc.')) total += 15;
     if (form.extra_fields?.captions.includes('Captions while the agent is talking')) total += 10;
 
     // Effects with quantities
@@ -169,59 +181,35 @@ const totalPrice = computed(() => {
         const quantity = effect.quantity || 1;
         if (effect.id === 'Painting Transition') total += 10 * quantity;
         if (effect.id === 'Earth Zoom Transition') total += 15 * quantity;
+        if (effect.id === 'Day to Night AI') total += 15 * quantity;
+        if (effect.id === 'Virtual Staging AI') total += 20 * quantity;
     });
 
     // Custom effects extra
     const customEffectsTotal = customEffects.value.reduce((sum, effect) => sum + effect.price, 0);
     total += customEffectsTotal;
 
-    return total;
-});
+    form.total_price = total;
+}
 
-// Watch totalPrice to update form
-watch(
-    totalPrice,
-    (val) => {
-        form.total_price = val;
-    },
-    { immediate: true },
-);
-
-// Update flags when options change
-watch(agentOption, () => (form.with_agent = agentOption.value === 'with-agent'));
-watch(perPropertyOption, () => (form.per_property = perPropertyOption.value === 'add-per-property'));
-watch(perPropertyOption, (val) => {
-    form.per_property = val === 'add-per-property';
-    if (val === 'add-per-property' && perPropertyQuantity.value < 1) {
-        perPropertyQuantity.value = 1;
-    }
-    if (val !== 'add-per-property') {
-        perPropertyQuantity.value = 0;
-    }
-});
-watch(perPropertyQuantity, (val) => {
-    form.per_property_count = val;
-});
-
-// Format options
 const formatOptions = computed(() => {
-    if (form.style === 'Premium video') {
+    if (form.style === 'Luxury video') {
         return [
-            { value: 'horizontal', label: 'Horizontal ($80)' },
-            { value: 'vertical', label: 'Vertical ($50)' },
-            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical Package ($130)' },
+            { value: 'horizontal', label: 'Horizontal ($150)' },
+            { value: 'vertical', label: 'Vertical ($150)' },
+            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical ($300)' },
         ];
-    } else if (form.style === 'Premium drone only') {
+    } else if (form.style === 'Luxury drone only') {
         return [
-            { value: 'horizontal', label: 'Horizontal ($45)' },
-            { value: 'vertical', label: 'Vertical ($40)' },
-            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical Package ($85)' },
+            { value: 'horizontal', label: 'Horizontal ($60)' },
+            { value: 'vertical', label: 'Vertical ($50)' },
+            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical ($110)' },
         ];
     } else {
         return [
             { value: 'horizontal', label: 'Horizontal' },
             { value: 'vertical', label: 'Vertical' },
-            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical Package' },
+            { value: 'horizontal and vertical package', label: 'Horizontal & Vertical' },
         ];
     }
 });
@@ -231,6 +219,124 @@ const selectedFormatLabel = computed(() => {
     const option = formatOptions.value.find((o) => o.value === form.format);
     return option ? option.label : '';
 });
+
+watch(agentOption, () => {
+    form.with_agent = agentOption.value === 'with-agent';
+    calculateTotalPrice();
+});
+watch(perPropertyOption, () => {
+    form.per_property = perPropertyOption.value === 'add-per-property';
+    calculateTotalPrice();
+});
+watch(perPropertyOption, (val) => {
+    form.per_property = val === 'add-per-property';
+    if (val === 'add-per-property' && perPropertyQuantity.value < 1) {
+        perPropertyQuantity.value = 1;
+    }
+    if (val !== 'add-per-property') {
+        perPropertyQuantity.value = 0;
+    }
+
+    calculateTotalPrice();
+});
+watch(perPropertyQuantity, () => {
+    calculateTotalPrice();
+});
+
+watch(perPropertyQuantity, (val) => {
+    form.per_property_count = val;
+});
+
+watch(rushOption, () => {
+    form.rush = rushOption.value === 'true';
+    calculateTotalPrice();
+});
+
+watch(() => form.extra_fields?.captions, calculateTotalPrice, { deep: true });
+watch(() => form.style, calculateTotalPrice);
+watch(() => form.format, calculateTotalPrice);
+
+// Watch custom effects for price recalculation
+watch(customEffects, calculateTotalPrice, { deep: true });
+
+// Reset / load project data on modal open
+watch(
+    [() => props.project, () => props.open],
+    ([project, isOpen]) => {
+        if (isOpen) {
+            if (project) {
+                Object.assign(form, {
+                    style: project.style || '',
+                    project_name: project.project_name || '',
+                    format: project.format || '',
+                    camera: project.camera || '',
+                    quality: project.quality || '',
+                    music: project.music || '',
+                    music_link: project.music_link || '',
+                    file_link: project.file_link || '',
+                    notes: project.notes || '',
+                    with_agent: project.with_agent ?? false,
+                    per_property: project.per_property ?? false,
+                    per_property_count: project.per_property_count ?? 0,
+                    extra_fields: {
+                        effects: project.extra_fields?.effects ? formatEffectsFromBackend(project.extra_fields.effects) : [],
+                        captions: project.extra_fields?.captions ? [...project.extra_fields.captions] : [],
+                        custom_effects: '[]',
+                    },
+                });
+                agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
+                perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
+                rushOption.value = project.rush ? 'true' : 'false';
+
+                // Ensure the displayed per-property quantity matches the project value
+                perPropertyQuantity.value = project.per_property_count ?? 1;
+
+                // Load custom effects - parse if string, use directly if array
+                if (project.extra_fields?.custom_effects) {
+                    try {
+                        customEffects.value =
+                            typeof project.extra_fields.custom_effects === 'string'
+                                ? JSON.parse(project.extra_fields.custom_effects)
+                                : [...project.extra_fields.custom_effects];
+                    } catch (e) {
+                        console.error('Failed to parse custom_effects:', e);
+                        customEffects.value = [];
+                    }
+                } else {
+                    customEffects.value = [];
+                }
+
+                calculateTotalPrice();
+            } else {
+                // Reset for new project
+                Object.assign(form, {
+                    style: '',
+                    company_name: '',
+                    contact: '',
+                    project_name: '',
+                    format: '',
+                    camera: '',
+                    quality: '',
+                    music: '',
+                    music_link: '',
+                    file_link: '',
+                    notes: '',
+                    total_price: props.basePrice,
+                    with_agent: false,
+                    per_property: false,
+                    per_property_count: 0,
+                    rushOption: false,
+                    extra_fields: { effects: [], captions: [], custom_effects: '[]' },
+                });
+                agentOption.value = '';
+                perPropertyOption.value = '';
+                rushOption.value = '';
+                customEffects.value = [];
+            }
+        }
+    },
+    { immediate: true },
+);
 
 // Handle checkbox changes
 function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
@@ -251,13 +357,16 @@ function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
     form.extra_fields = { ...form.extra_fields };
 }
 
-function handleCaptionChange(id: string, checked: boolean | 'indeterminate') {
+function handleCaptionChange(captionId: string, value: boolean | 'indeterminate') {
     form.extra_fields ??= { effects: [], captions: [], custom_effects: '[]' };
-    const isChecked = checked === true;
-    const arr = [...form.extra_fields.captions];
-    if (isChecked && !arr.includes(id)) arr.push(id);
-    if (!isChecked && arr.includes(id)) arr.splice(arr.indexOf(id), 1);
-    form.extra_fields.captions = arr;
+    const checked = value === true;
+    const current = [...form.extra_fields.captions];
+    if (checked && !current.includes(captionId)) {
+        current.push(captionId);
+    } else {
+        current.splice(current.indexOf(captionId), 1);
+    }
+    form.extra_fields.captions = current;
     form.extra_fields = { ...form.extra_fields };
 }
 
@@ -291,66 +400,6 @@ function removeCustomEffect(id: string) {
     customEffects.value = customEffects.value.filter((effect) => effect.id !== id);
     toast.success('Custom effect removed');
 }
-
-// Watch project changes and modal open
-watch(
-    [() => props.project, () => props.open],
-    ([project, open]) => {
-        if (!open) return;
-        if (project) {
-            form.style = project.style || '';
-            form.format = project.format || '';
-            form.project_name = project.project_name || '';
-            form.camera = project.camera || '';
-            form.quality = project.quality || '';
-            form.music = project.music || '';
-            form.music_link = project.music_link || '';
-            form.file_link = project.file_link || '';
-            form.notes = project.notes || '';
-            agentOption.value = project.with_agent ? 'with-agent' : 'no-agent';
-            perPropertyOption.value = project.per_property ? 'add-per-property' : 'no';
-            perPropertyQuantity.value = project.per_property_count ?? 1;
-            rushOption.value = project.rush ? 'true' : 'false';
-            form.extra_fields = {
-                effects: project.extra_fields?.effects ? formatEffectsFromBackend(project.extra_fields.effects) : [],
-                captions: project.extra_fields?.captions ? [...project.extra_fields.captions] : [],
-                custom_effects: '[]',
-            };
-
-            // Load custom effects - parse if string, use directly if array
-            if (project.extra_fields?.custom_effects) {
-                try {
-                    customEffects.value =
-                        typeof project.extra_fields.custom_effects === 'string'
-                            ? JSON.parse(project.extra_fields.custom_effects)
-                            : [...project.extra_fields.custom_effects];
-                } catch (e) {
-                    console.error('Failed to parse custom_effects:', e);
-                    customEffects.value = [];
-                }
-            } else {
-                customEffects.value = [];
-            }
-        } else {
-            form.style = '';
-            form.format = '';
-            form.project_name = '';
-            form.camera = '';
-            form.quality = '';
-            form.music = '';
-            form.music_link = '';
-            form.file_link = '';
-            form.notes = '';
-            agentOption.value = '';
-            perPropertyOption.value = '';
-            perPropertyQuantity.value = 0;
-            rushOption.value = '';
-            form.extra_fields = { effects: [], captions: [], custom_effects: '[]' };
-            customEffects.value = [];
-        }
-    },
-    { immediate: true },
-);
 
 // Submit handler
 const handleSubmit = () => {
@@ -416,7 +465,7 @@ function decrementPerProperty() {
         <DialogContent class="max-h-[90vh] !w-full !max-w-6xl overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>
-                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Real Estate Premium Style' }}
+                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Wedding Luxury Style' }}
                 </DialogTitle>
             </DialogHeader>
 
@@ -446,8 +495,8 @@ function decrementPerProperty() {
                                 <SelectValue placeholder="Style" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Premium video">Premium Video</SelectItem>
-                                <SelectItem value="Premium drone only">Premium Drone Only</SelectItem>
+                                <SelectItem value="Luxury video">Luxury Video</SelectItem>
+                                <!-- <SelectItem value="Luxury drone only">Luxury Drone Only</SelectItem> -->
                             </SelectContent>
                         </Select>
                         <span v-if="form.errors.style" class="text-sm text-red-500">{{ form.errors.style }}</span>
@@ -486,7 +535,7 @@ function decrementPerProperty() {
                     </div>
 
                     <!-- Agent Option -->
-                    <div class="space-y-2">
+                    <!-- <div class="space-y-2">
                         <Label>With agent or voiceover?</Label>
                         <Select v-model="agentOption">
                             <SelectTrigger class="w-full">
@@ -497,7 +546,7 @@ function decrementPerProperty() {
                                 <SelectItem value="no-agent">No Agent</SelectItem>
                             </SelectContent>
                         </Select>
-                    </div>
+                    </div> -->
 
                     <!-- Quality -->
                     <div class="space-y-2">
@@ -540,7 +589,7 @@ function decrementPerProperty() {
                     </div>
 
                     <!-- Per Property Option -->
-                    <div class="space-y-2">
+                    <!-- <div class="space-y-2">
                         <Label>With per property line?</Label>
                         <div class="flex items-center gap-2">
                             <div :class="['flex-1 transition-all duration-200', perPropertyOption === 'add-per-property' ? 'w-[80%]' : 'w-full']">
@@ -564,7 +613,7 @@ function decrementPerProperty() {
                                 </Button>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <!-- File Link -->
                     <div class="space-y-2">
@@ -618,23 +667,6 @@ function decrementPerProperty() {
                                 <div v-if="isEffectSelected(effect.id)" class="ml-1 flex items-center gap-1">
                                     <button
                                         type="button"
-                                        @click="decrementEffect(effect.id)"
-                                        class="flex h-6 w-6 items-center justify-center rounded border border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            class="h-4 w-4"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                        >
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                    </button>
-                                    <span class="min-w-[2rem] text-center font-medium">{{ getEffectQuantity(effect.id) }}</span>
-                                    <button
-                                        type="button"
                                         @click="incrementEffect(effect.id)"
                                         class="flex h-6 w-6 items-center justify-center rounded border border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700"
                                     >
@@ -656,7 +688,7 @@ function decrementPerProperty() {
                     </div>
 
                     <!-- 3D Text and Captions -->
-                    <div class="space-y-2">
+                    <!-- <div class="space-y-2">
                         <Label>Do you need 3D text and captions?</Label>
                         <div class="flex flex-col gap-2">
                             <div v-for="caption in captionsOptions" :key="caption.id" class="mb-1 flex items-center gap-2">
@@ -670,7 +702,7 @@ function decrementPerProperty() {
                                 </label>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Custom Effects Section -->
