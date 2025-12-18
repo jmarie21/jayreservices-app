@@ -11,7 +11,8 @@ class Service extends Model
         "name",
         "description",
         "features",
-        "price"
+        "price",
+        "video_link"
     ];
 
     protected $casts = [

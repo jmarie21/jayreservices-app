@@ -24,6 +24,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const selectedService = ref<Services | null>(null);
 
+const isImageLink = (link?: string | null) => {
+    if (!link) return false;
+    return link.startsWith('/images/') || /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(link);
+};
+
+const normalizeVideoSrc = (link: string) => link.replace('watch?v=', 'embed/');
+
 const isStyle = (style: string): style is 'Wedding Basic Style' | 'Wedding Deluxe Style' | 'Wedding Premium Style' | 'Wedding Luxury Style' | 'Wedding Talking Heads' => {
     return ['Wedding Basic Style', 'Wedding Deluxe Style', 'Wedding Premium Style', 'Wedding Luxury Style', 'Wedding Talking Heads'].includes(style);
 };
@@ -45,11 +52,19 @@ function closeModal() {
         <Head title="Wedding Services" />
         <div class="grid gap-4 p-4 md:grid-cols-3">
             <div v-for="service in services" :key="service.id" class="flex h-full min-h-[450px] flex-col rounded-xl border bg-white shadow">
-                <!-- Video at top (no padding) -->
-                <div v-if="service.video_link" class="aspect-video w-full">
+                <!-- Image/Video at top (no padding) -->
+                <div v-if="service.video_link" class="h-[320px] w-full flex-shrink-0">
+                    <img
+                        v-if="isImageLink(service.video_link)"
+                        class="h-full w-full rounded-t-xl object-cover"
+                        :src="service.video_link"
+                        :alt="service.name"
+                        loading="lazy"
+                    />
                     <iframe
+                        v-else
                         class="h-full w-full rounded-t-xl"
-                        :src="service.video_link.replace('watch?v=', 'embed/')"
+                        :src="normalizeVideoSrc(service.video_link)"
                         :title="service.name"
                         frameborder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

@@ -23,6 +23,7 @@ Route::middleware(['auth', 'client'])->group(function () {
     Route::get("/realestate-services", [ServicesController::class, "index"])->name("services");
     Route::get("/wedding-services", [ServicesController::class, "weddingServices"])->name("wedding-services");
     Route::get("/event-services", [ServicesController::class, "eventServices"])->name("event-services");
+    Route::get("/construction-services", [ServicesController::class, "constructionServices"])->name("construction-services");
     Route::get("/talkingheads-services", [ServicesController::class, "talkingHeadsServices"])->name("talkingheads-services");
 
     Route::get("/projects",  [ProjectsController::class, 'index'])->name("projects");

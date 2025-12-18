@@ -95,8 +95,7 @@ class ServicesSeeder extends Seeder
                     'Plain video'
                 ],
                 'price' => 0,
-                // 'video_link' => 'https://www.youtube.com/embed/e5SCQSz5R7Q',
-                'video_link' => 'https://www.youtube.com/embed/vQzUuq14zcM?si=mr85vx65t8FspD4y'
+                'video_link' => '/images/wedding/wedding.jpg'
             ],
             [
                 'name' => 'Wedding Premium Style',
@@ -108,7 +107,7 @@ class ServicesSeeder extends Seeder
                     'Plain video ',
                 ],
                 'price' => 0,
-                'video_link' => 'https://player.vimeo.com/video/1106034319',
+                'video_link' => '/images/wedding/wedding2.jpg',
             ],
             [
                 'name' => 'Wedding Luxury Style',
@@ -121,7 +120,7 @@ class ServicesSeeder extends Seeder
                     'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)',
                 ],
                 'price' => 0,
-                'video_link' => 'https://player.vimeo.com/video/1106032025',
+                'video_link' => '/images/wedding/wedding3.jpg',
             ],
             // Events Services
             [
@@ -133,8 +132,7 @@ class ServicesSeeder extends Seeder
                     'Plain video'
                 ],
                 'price' => 0,
-                // 'video_link' => 'https://www.youtube.com/embed/e5SCQSz5R7Q',
-                'video_link' => 'https://www.youtube.com/embed/vQzUuq14zcM?si=mr85vx65t8FspD4y'
+                'video_link' => '/images/events/event.jpg'
             ],
             [
                 'name' => 'Event Premium Style',
@@ -147,7 +145,7 @@ class ServicesSeeder extends Seeder
                     'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)'
                 ],
                 'price' => 0,
-                'video_link' => 'https://player.vimeo.com/video/1106034319',
+                'video_link' => '/images/events/event2.jpg',
             ],
             [
                 'name' => 'Event Luxury Style',
@@ -160,7 +158,7 @@ class ServicesSeeder extends Seeder
                     'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)',
                 ],
                 'price' => 0,
-                'video_link' => 'https://player.vimeo.com/video/1106032025',
+                'video_link' => '/images/events/event3.jpg',
             ],
             // Construction Video Services
             [
@@ -172,8 +170,7 @@ class ServicesSeeder extends Seeder
                     'Plain video'
                 ],
                 'price' => 0,
-                // 'video_link' => 'https://www.youtube.com/embed/e5SCQSz5R7Q',
-                'video_link' => 'https://www.youtube.com/embed/vQzUuq14zcM?si=mr85vx65t8FspD4y'
+                'video_link' => '/images/construction/construction.jpg'
             ],
             [
                 'name' => 'Construction Premium Style',
@@ -186,7 +183,7 @@ class ServicesSeeder extends Seeder
                     'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)'
                 ],
                 'price' => 0,
-                'video_link' => 'https://player.vimeo.com/video/1106034319',
+                'video_link' => '/images/construction/construction2.jpg',
             ],
             [
                 'name' => 'Construction Luxury Style',
@@ -199,7 +196,7 @@ class ServicesSeeder extends Seeder
                     'Can put AI transitions but charge each clip that needs to put AI transition ($15 each clip)',
                 ],
                 'price' => 0,
-                'video_link' => 'https://player.vimeo.com/video/1106032025',
+                'video_link' => '/images/construction/construction3.jpg',
             ],
         ];
 

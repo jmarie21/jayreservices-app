@@ -21,6 +21,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const selectedService = ref<Services | null>(null);
 
+const isImageLink = (link?: string | null) => {
+    if (!link) return false;
+    return link.startsWith('/images/') || /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(link);
+};
+
+const normalizeVideoSrc = (link: string) => link.replace('watch?v=', 'embed/');
+
 const isStyle = (style: string): style is 'Real Estate Basic Style' | 'Real Estate Deluxe Style' | 'Real Estate Premium Style' | 'Real Estate Luxury Style' | 'Real Estate Talking Heads' => {
     return ['Real Estate Basic Style', 'Real Estate Deluxe Style', 'Real Estate Premium Style', 'Real Estate Luxury Style', 'Real Estate Talking Heads'].includes(style);
 };
@@ -40,13 +47,21 @@ function closeModal() {
     <Toaster />
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head title="Services" />
-        <div class="grid gap-4 p-4 md:grid-cols-5">
+        <div class="grid gap-4 p-4 md:grid-cols-4">
             <div v-for="service in services" :key="service.id" class="flex h-full min-h-[450px] flex-col rounded-xl border bg-white shadow">
                 <!-- Video at top (no padding) -->
                 <div v-if="service.video_link" class="aspect-video w-full">
+                    <img
+                        v-if="isImageLink(service.video_link)"
+                        class="h-full w-full rounded-t-xl object-cover"
+                        :src="service.video_link"
+                        :alt="service.name"
+                        loading="lazy"
+                    />
                     <iframe
+                        v-else
                         class="h-full w-full rounded-t-xl"
-                        :src="service.video_link.replace('watch?v=', 'embed/')"
+                        :src="normalizeVideoSrc(service.video_link)"
                         :title="service.name"
                         frameborder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

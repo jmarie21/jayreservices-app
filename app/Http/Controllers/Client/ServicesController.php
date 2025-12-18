@@ -37,6 +37,15 @@ class ServicesController extends Controller
         ]);
     }
 
+    public function constructionServices(){
+        // Only return services that are construction related (names starting with "Construction")
+        $services = Service::where('name', 'like', 'Construction%')->get();
+
+        return Inertia::render("client/ConstructionServices", [
+            "services" => $services
+        ]);
+    }
+
     public function talkingHeadsServices(){
         // Only return services that are talking head related (names starting with "Talking Head")
         $services = Service::where('name', 'like', 'Talking Heads%')->get();
