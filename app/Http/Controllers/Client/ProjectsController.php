@@ -19,61 +19,78 @@ class ProjectsController extends Controller
 
     public function index(Request $request)
     {
-        $query = Auth::user()
-        ->projects()
-        ->with(['service', 'comments.user'])
-        ->latest();
+        try {
+            $query = Auth::user()
+            ->projects()
+            ->with(['service', 'comments.user'])
+            ->latest();
 
-        // Status mapping for client
-        $clientStatusGroups = [
-            'pending' => ['todo', 'backlog'],
-            'in_progress' => ['in_progress', 'for_qa', 'done_qa', 'revision'],
-            'completed' => ['revision_completed', 'sent_to_client'],
-        ];
+            // Status mapping for client
+            $clientStatusGroups = [
+                'pending' => ['todo', 'backlog'],
+                'in_progress' => ['in_progress', 'for_qa', 'done_qa', 'revision'],
+                'completed' => ['revision_completed', 'sent_to_client'],
+            ];
 
-        if ($request->filled('status')) {
-            $status = $request->status;
+            if ($request->filled('status')) {
+                $status = $request->status;
 
-            if (in_array($status, array_keys($clientStatusGroups))) {
-                // Client filter
-                $query->whereIn('status', $clientStatusGroups[$status]);
-            } else {
-                // Admin filter (raw status)
-                $query->where('status', $status);
+                if (in_array($status, array_keys($clientStatusGroups))) {
+                    // Client filter
+                    $query->whereIn('status', $clientStatusGroups[$status]);
+                } else {
+                    // Admin filter (raw status)
+                    $query->where('status', $status);
+                }
             }
-        }
 
-        // Filter by date range
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
+            // Filter by date range
+            if ($request->filled('date_from')) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+            if ($request->filled('date_to')) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
 
-        // 🔍 Search filter
-        if ($request->filled('search')) {
-            $searchTerm = $request->search;
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('project_name', 'like', "%{$searchTerm}%")
-                ->orWhere('style', 'like', "%{$searchTerm}%")
-                ->orWhereHas('service', function ($sq) use ($searchTerm) {
-                    $sq->where('name', 'like', "%{$searchTerm}%");
+            // 🔍 Search filter
+            if ($request->filled('search')) {
+                $searchTerm = $request->search;
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('project_name', 'like', "%{$searchTerm}%")
+                    ->orWhere('style', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('service', function ($sq) use ($searchTerm) {
+                        $sq->where('name', 'like', "%{$searchTerm}%");
+                    });
                 });
-            });
+            }
+
+            $projects = $query->paginate(10)->withQueryString();
+
+            Log::info('Client viewed projects', [
+                'user_id' => Auth::id(),
+                'filters' => $request->only(['status', 'date_from', 'date_to', 'search']),
+                'total_results' => $projects->total(),
+            ]);
+
+            return Inertia::render("client/Projects", [
+                "projects" => $projects,
+                "filters"  => $request->only(['status', 'date_from', 'date_to', 'search']),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error loading client projects', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'filters' => $request->only(['status', 'date_from', 'date_to', 'search']),
+            ]);
+            throw $e;
         }
-
-        $projects = $query->paginate(10)->withQueryString();
-
-        return Inertia::render("client/Projects", [
-            "projects" => $projects,
-            "filters"  => $request->only(['status', 'date_from', 'date_to', 'search']),
-        ]);
     }
 
     public function createProject(Request $request)
     {
-        $validated = $request->validate([
+        try {
+            $validated = $request->validate([
             "service_id" => ['required', 'exists:services,id'],
             "style" => ['required', 'string'],
             "project_name" => ['required', 'string'],
@@ -285,6 +302,16 @@ class ProjectsController extends Controller
 
         $project = Project::create($validated);
 
+        Log::info('Project created', [
+            'project_id' => $project->id,
+            'project_name' => $project->project_name,
+            'client_id' => Auth::id(),
+            'service_id' => $project->service_id,
+            'style' => $style,
+            'total_price' => $project->total_price,
+            'editor_price' => $editorPrice,
+        ]);
+
         // 📧 Send email notification to admin
         // Mail::to('storageestate21@gmail.com')->send(new NewProjectNotification($project));
 
@@ -296,17 +323,34 @@ class ProjectsController extends Controller
 
         // broadcast(new NewProjectCreatedEvent($project))->toOthers();
 
-        return redirect(route("projects"))->with('message', 'Order placed successfully!');
+            return redirect(route("projects"))->with('message', 'Order placed successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Project creation validation failed', [
+                'user_id' => Auth::id(),
+                'errors' => $e->errors(),
+                'input' => $request->except(['file_link']),
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Error creating project', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'input' => $request->except(['file_link']),
+            ]);
+            throw $e;
+        }
     }
 
     public function updateProject(Request $request, Project $project)
     {
-        // Authorize if needed (to make sure the client owns this project)
-        if ($project->client_id !== Auth::id()) {
-            abort(403, 'Unauthorized');
-        }
+        try {
+            // Authorize if needed (to make sure the client owns this project)
+            if ($project->client_id !== Auth::id()) {
+                abort(403, 'Unauthorized');
+            }
 
-        $validated = $request->validate([
+            $validated = $request->validate([
             "service_id" => ['required', 'exists:services,id'],
             "style" => ['required', 'string'],
             "project_name" => ['required', 'string'],
@@ -331,22 +375,55 @@ class ProjectsController extends Controller
 
         $project->update($validated);
 
-        return redirect()->back()->with('message', 'Project updated successfully!');
+        Log::info('Project updated', [
+            'project_id' => $project->id,
+            'project_name' => $project->project_name,
+            'client_id' => Auth::id(),
+            'updated_fields' => array_keys($validated),
+        ]);
+
+            return redirect()->back()->with('message', 'Project updated successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Project update validation failed', [
+                'project_id' => $project->id,
+                'user_id' => Auth::id(),
+                'errors' => $e->errors(),
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Error updating project', [
+                'project_id' => $project->id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
     }
 
     public function updateStatus(Request $request, Project $project)
     {
-        // Only the project client can trigger this
-        if ($project->client_id !== Auth::id()) {
-            abort(403, 'Unauthorized');
-        }
+        try {
+            // Only the project client can trigger this
+            if ($project->client_id !== Auth::id()) {
+                abort(403, 'Unauthorized');
+            }
 
-        $validated = $request->validate([
+            $validated = $request->validate([
             "status" => ['required', 'in:todo,in_progress,for_qa,done_qa,sent_to_client,revision,revision_completed,backlog'],
         ]);
 
         $newStatus = strtolower($validated['status']);
+        $oldStatus = $project->status;
         $project->update(['status' => $newStatus]);
+
+        Log::info('Project status updated', [
+            'project_id' => $project->id,
+            'project_name' => $project->project_name,
+            'client_id' => Auth::id(),
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+        ]);
 
         // Define statuses that trigger notifications
         $notifiableStatuses = ['revision', 'for_qa', 'done_qa', 'revision_completed', 'sent_to_client'];
@@ -387,6 +464,22 @@ class ProjectsController extends Controller
             }
         }
 
-        return back()->with('message', 'Project status updated successfully!');
+            return back()->with('message', 'Project status updated successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Project status update validation failed', [
+                'project_id' => $project->id,
+                'user_id' => Auth::id(),
+                'errors' => $e->errors(),
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Error updating project status', [
+                'project_id' => $project->id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
     }
 }
