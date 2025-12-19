@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\BulkAnnouncementMail;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class BulkNotificationController extends Controller
@@ -46,7 +47,7 @@ class BulkNotificationController extends Controller
                     $totalEmailsSent++;
                 } catch (\Exception $e) {
                     $failedEmails[] = $email;
-                    \Log::error("Failed to send bulk email to {$email}: " . $e->getMessage());
+                    Log::error("Failed to send bulk email to {$email}: " . $e->getMessage());
                 }
             }
         }
