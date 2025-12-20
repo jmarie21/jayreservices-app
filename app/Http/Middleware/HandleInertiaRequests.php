@@ -40,29 +40,44 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $user = $request->user();
+        $isAdmin = $user && $user->role === 'admin';
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => fn () => $request->user()
-                ? $request->user()->only('id', 'name', 'email', 'role')
-                : null,
+                'user' => fn () => $user
+                    ? $user->only('id', 'name', 'email', 'role')
+                    : null,
             ],
-            'clients' => fn () => User::where('role', 'client')
-                ->select('id', 'name')
-                ->get(),
-            'editors' => fn () => User::where('role', 'editor')
-                ->select('id', 'name')
-                ->get(),
+            // Only load clients and editors for admin users (lazy loaded)
+            'clients' => fn () => $isAdmin
+                ? User::where('role', 'client')
+                    ->select('id', 'name')
+                    ->orderBy('name')
+                    ->get()
+                : [],
+            'editors' => fn () => $isAdmin
+                ? User::where('role', 'editor')
+                    ->select('id', 'name')
+                    ->orderBy('name')
+                    ->get()
+                : [],
             'ziggy' => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'notifications' => $request->user() ? [
-                'unread_count' => $request->user()->unreadNotifications()->count(),
-                'recent' => $request->user()->notifications()->latest()->take(10)->get(),
+            // Optimize notification queries - limit and select only needed fields
+            'notifications' => $user ? fn () => [
+                'unread_count' => $user->unreadNotifications()->count(),
+                'recent' => $user->notifications()
+                    ->select('id', 'type', 'notifiable_type', 'notifiable_id', 'data', 'read_at', 'created_at')
+                    ->latest()
+                    ->take(10)
+                    ->get(),
             ] : null,
         ];
     }
