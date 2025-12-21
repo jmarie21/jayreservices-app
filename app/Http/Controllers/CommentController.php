@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\ProjectComment;
 use App\Models\User;
 use App\Notifications\ClientCommentNotification;
+use App\Notifications\ClientProjectCommentNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -79,6 +80,43 @@ class CommentController extends Controller
                 $editor = User::find($project->editor_id);
                 if ($editor) {
                     $editor->notify(new ClientCommentNotification($comment, $project));
+                }
+            }
+
+            // ✅ Notify the client about admin's comment
+            if ($project->client_id) {
+                $client = User::find($project->client_id);
+                if ($client) {
+                    $client->notify(new ClientProjectCommentNotification($comment, $project));
+
+                    Log::info('Client notified about admin comment', [
+                        'project_id' => $project->id,
+                        'project_name' => $project->project_name,
+                        'comment_id' => $comment->id,
+                        'client_id' => $client->id,
+                        'client_name' => $client->name,
+                        'commenter' => 'admin',
+                    ]);
+                }
+            }
+        }
+
+        // ✅ Notify client if comment is from editor
+        if ($user->role === 'editor') {
+            // Notify the client about editor's comment
+            if ($project->client_id) {
+                $client = User::find($project->client_id);
+                if ($client) {
+                    $client->notify(new ClientProjectCommentNotification($comment, $project));
+
+                    Log::info('Client notified about editor comment', [
+                        'project_id' => $project->id,
+                        'project_name' => $project->project_name,
+                        'comment_id' => $comment->id,
+                        'client_id' => $client->id,
+                        'client_name' => $client->name,
+                        'commenter' => 'editor',
+                    ]);
                 }
             }
         }
