@@ -16,7 +16,7 @@
     <p>
         👉 
         <a 
-            href="https://app.jayreservices.com/projects" 
+            href="{{ config('app.url') }}/projects?view={{ $project->id }}" 
             target="_blank" 
             style="color: #1a73e8; text-decoration: none; font-weight: bold;"
         >
