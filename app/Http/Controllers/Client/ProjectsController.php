@@ -75,6 +75,7 @@ class ProjectsController extends Controller
             return Inertia::render("client/Projects", [
                 "projects" => $projects,
                 "filters"  => $request->only(['status', 'date_from', 'date_to', 'search']),
+                "viewProjectId" => $request->query('view') ? (int) $request->query('view') : null,
             ]);
         } catch (\Exception $e) {
             Log::error('Error loading client projects', [

@@ -17,6 +17,7 @@ import ConstructionBasicForm from '@/components/forms/ConstructionBasicForm.vue'
 import ConstructionPremiumForm from '@/components/forms/ConstructionPremiumForm.vue';
 import ConstructionLuxuryForm from '@/components/forms/ConstructionLuxuryForm.vue';
 
+import NotificationBell from '@/components/NotificationBell.vue';
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +31,7 @@ import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { mapStatusForClient } from '@/utils/statusMapper';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
 
@@ -55,8 +56,9 @@ const clientStatusClasses: Record<string, string> = {
     completed: 'bg-green-600 text-white',
 };
 
-const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any }>>();
+const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any; viewProjectId?: number | null }>>();
 const projects = computed(() => page.props.projects);
+const viewProjectId = computed(() => page.props.viewProjectId);
 
 const showModal = ref(false);
 const showViewModal = ref(false);
@@ -85,6 +87,26 @@ const closeViewModal = () => {
     showViewModal.value = false;
     viewProject.value = null;
 };
+
+// Auto-open project view modal when viewProjectId is present (from notification click)
+const openProjectFromId = (projectId: number) => {
+    const project = projects.value.data.find((p) => p.id === projectId);
+    if (project) {
+        openViewModal(project);
+    }
+};
+
+onMounted(() => {
+    if (viewProjectId.value) {
+        openProjectFromId(viewProjectId.value);
+    }
+});
+
+watch(viewProjectId, (newId) => {
+    if (newId) {
+        openProjectFromId(newId);
+    }
+});
 
 // const goToPage = (page: number) => {
 //     router.get(route('projects'), { page }, { preserveScroll: true });
@@ -150,7 +172,7 @@ const markForRevision = (projectId: number) => {
             <!-- Page header -->
             <div class="mb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h1 class="text-3xl font-bold">My Projects</h1>
-                <!-- <Button><Link href="/services">Add new project</Link></Button> -->
+                <NotificationBell />
             </div>
 
             <!-- Filters section -->

@@ -7,6 +7,7 @@ use App\Mail\ProjectSentToClientMail;
 use App\Models\Project;
 use App\Models\Service;
 use App\Models\User;
+use App\Notifications\ClientProjectStatusNotification;
 use App\Notifications\ProjectAssignedNotification;
 use App\Notifications\ProjectRevisionNotification;
 use App\Notifications\ProjectStatusNotification;
@@ -195,6 +196,29 @@ class ProjectManagement extends Controller
 
                 if (!empty($recipients)) {
                     Mail::to($recipients)->queue(new ProjectSentToClientMail($project));
+                }
+
+                // ✅ Send notification to client when project is sent to them
+                $client = $project->client;
+
+                // Check for duplicate notification (within last 5 mins)
+                $recentClientNotification = $client->notifications()
+                    ->where('type', ClientProjectStatusNotification::class)
+                    ->where('data->project_id', $project->id)
+                    ->where('data->status', 'sent_to_client')
+                    ->where('created_at', '>', now()->subMinutes(5))
+                    ->exists();
+
+                if (!$recentClientNotification) {
+                    $client->notify(new ClientProjectStatusNotification($project, 'sent_to_client'));
+
+                    Log::info('Client notified about project sent to client', [
+                        'project_id' => $project->id,
+                        'project_name' => $project->project_name,
+                        'client_id' => $client->id,
+                        'client_name' => $client->name,
+                        'triggered_by' => 'admin',
+                    ]);
                 }
             }
         }

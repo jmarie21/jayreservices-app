@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Editor;
 use App\Http\Controllers\Controller;
 use App\Mail\ProjectSentToClientMail;
 use App\Models\Project;
+use App\Notifications\ClientProjectStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
@@ -105,6 +107,31 @@ class EditorProjectsController extends Controller
         ) {
             if ($project->client && $project->client->email) {
                 Mail::to($project->client->email)->send(new ProjectSentToClientMail($project));
+            }
+
+            // ✅ Send notification to client when project is sent to them
+            if ($project->client) {
+                $client = $project->client;
+
+                // Check for duplicate notification (within last 5 mins)
+                $recentClientNotification = $client->notifications()
+                    ->where('type', ClientProjectStatusNotification::class)
+                    ->where('data->project_id', $project->id)
+                    ->where('data->status', 'sent_to_client')
+                    ->where('created_at', '>', now()->subMinutes(5))
+                    ->exists();
+
+                if (!$recentClientNotification) {
+                    $client->notify(new ClientProjectStatusNotification($project, 'sent_to_client'));
+
+                    Log::info('Client notified about project sent to client', [
+                        'project_id' => $project->id,
+                        'project_name' => $project->project_name,
+                        'client_id' => $client->id,
+                        'client_name' => $client->name,
+                        'triggered_by' => 'editor',
+                    ]);
+                }
             }
         }
 
