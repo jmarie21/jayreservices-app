@@ -10,17 +10,34 @@
     <p>Hi {{ $project->client->name ?? 'Client' }},</p>
 
     <p>We're excited to inform you that your project is now complete!
-        You can access the project link in the comment section within your project page on our website.
+        You can access the finished output links below:
+    </p>
+
+    @if($project->output_link && count($project->output_link) > 0)
+        <div style="margin: 20px 0;">
+            @foreach($project->output_link as $index => $link)
+                <p>
+                    🎬 <strong>Output {{ count($project->output_link) > 1 ? $index + 1 : '' }}:</strong> 
+                    <a href="{{ $link }}" target="_blank" style="color: #1a73e8; text-decoration: underline;">
+                        {{ $link }}
+                    </a>
+                </p>
+            @endforeach
+        </div>
+    @endif
+
+    <p>
+        You can also view your project details and comments on our website:
     </p>
 
     <p>
         👉 
         <a 
-            href="{{ config('app.url') }}/projects?view={{ $project->id }}" 
+            href="{{ config('app.url') }}" 
             target="_blank" 
             style="color: #1a73e8; text-decoration: none; font-weight: bold;"
         >
-            View Your Project
+            View Project on Website
         </a>
     </p>
 

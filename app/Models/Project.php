@@ -38,6 +38,7 @@ class Project extends Model
 
     protected $casts = [
         'extra_fields' => 'array',
+        'output_link' => 'array',
         'total_price' => 'decimal:2',
         'with_agent' => 'boolean',
         'per_property' => 'boolean',

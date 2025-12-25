@@ -81,7 +81,7 @@ export interface Projects {
     notes?: string;
     total_price: number;
     editor_price: number;
-    output_link?: string;
+    output_link?: string[];
     with_agent?: boolean;
     per_property?: boolean;
     per_property_count?: number;

@@ -149,9 +149,19 @@ class ProjectManagement extends Controller
             'editor_id' => 'nullable|exists:users,id',
             'status' => 'nullable|string',
             'editor_price' => 'nullable|numeric|min:0',
-            'output_link' => 'nullable|string',
+            'output_link' => 'nullable|array',
+            'output_link.*' => 'nullable|string',
             'priority' => 'nullable|in:urgent,high,normal,low',
         ]);
+
+        if (!empty($validated['output_link'])) {
+            $validated['output_link'] = array_map(function ($link) {
+                if (!empty($link) && !preg_match('/^https?:\/\//', $link)) {
+                    return 'https://' . $link;
+                }
+                return $link;
+            }, $validated['output_link']);
+        }
 
         $oldStatus = $project->status;
         $oldEditorId = $project->editor_id;
@@ -308,7 +318,8 @@ class ProjectManagement extends Controller
             "file_link" => ['required', 'string'],
             "notes" => ['nullable', 'string'],
             "total_price" => ['required', 'numeric'],
-            "output_link" => ['nullable', 'string'],
+            "output_link" => ['nullable', 'array'],
+            "output_link.*" => ['nullable', 'string'],
             "status" => ['nullable', 'in:pending,in_progress,completed'],
             "extra_fields" => ['nullable', 'array'],
             "with_agent" => ['nullable', 'boolean'],
@@ -316,6 +327,15 @@ class ProjectManagement extends Controller
             "per_property_count" => ['nullable', 'integer'],
             "rush" => ['required', 'boolean'],
         ]);
+
+        if (!empty($validated['output_link'])) {
+            $validated['output_link'] = array_map(function ($link) {
+                if (!empty($link) && !preg_match('/^https?:\/\//', $link)) {
+                    return 'https://' . $link;
+                }
+                return $link;
+            }, $validated['output_link']);
+        }
 
         $validated['status'] = $validated['status'] ?? 'pending';
         $validated['priority'] = $validated['rush'] ? 'urgent' : null;
@@ -527,7 +547,8 @@ class ProjectManagement extends Controller
             "file_link" => ['required', 'string'],
             "notes" => ['nullable', 'string'],
             "total_price" => ['required', 'numeric'],
-            "output_link" => ['nullable', 'string'],
+            "output_link" => ['nullable', 'array'],
+            "output_link.*" => ['nullable', 'string'],
             "status" => ['nullable', 'in:pending,in_progress,completed'],
             "extra_fields" => ['nullable', 'array'],
             "with_agent" => ['nullable', 'boolean'],
@@ -535,6 +556,15 @@ class ProjectManagement extends Controller
             "per_property_count" => ['nullable', 'integer'],
             "rush" => ['required', 'boolean'],
         ]);
+
+        if (!empty($validated['output_link'])) {
+            $validated['output_link'] = array_map(function ($link) {
+                if (!empty($link) && !preg_match('/^https?:\/\//', $link)) {
+                    return 'https://' . $link;
+                }
+                return $link;
+            }, $validated['output_link']);
+        }
 
         $validated['priority'] = $validated['rush'] ? 'urgent' : null;
 
