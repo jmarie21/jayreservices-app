@@ -15,9 +15,14 @@
 
     @if($project->output_link && count($project->output_link) > 0)
         <div style="margin: 20px 0;">
-            @foreach($project->output_link as $index => $link)
+            @foreach($project->output_link as $index => $item)
+                @php
+                    $name = is_array($item) ? ($item['name'] ?? '') : '';
+                    $link = is_array($item) ? ($item['link'] ?? '') : $item;
+                    $displayName = !empty($name) ? $name : 'Output ' . (count($project->output_link) > 1 ? $index + 1 : '');
+                @endphp
                 <p>
-                    🎬 <strong>Output {{ count($project->output_link) > 1 ? $index + 1 : '' }}:</strong> 
+                    🎬 <strong>{{ $displayName }}:</strong> 
                     <a href="{{ $link }}" target="_blank" style="color: #1a73e8; text-decoration: underline;">
                         {{ $link }}
                     </a>

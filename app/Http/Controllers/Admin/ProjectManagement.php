@@ -150,16 +150,17 @@ class ProjectManagement extends Controller
             'status' => 'nullable|string',
             'editor_price' => 'nullable|numeric|min:0',
             'output_link' => 'nullable|array',
-            'output_link.*' => 'nullable|string',
+            'output_link.*.name' => 'nullable|string',
+            'output_link.*.link' => 'nullable|string',
             'priority' => 'nullable|in:urgent,high,normal,low',
         ]);
 
         if (!empty($validated['output_link'])) {
-            $validated['output_link'] = array_map(function ($link) {
-                if (!empty($link) && !preg_match('/^https?:\/\//', $link)) {
-                    return 'https://' . $link;
+            $validated['output_link'] = array_map(function ($item) {
+                if (is_array($item) && !empty($item['link']) && !preg_match('/^https?:\/\//', $item['link'])) {
+                    $item['link'] = 'https://' . $item['link'];
                 }
-                return $link;
+                return $item;
             }, $validated['output_link']);
         }
 
@@ -319,7 +320,8 @@ class ProjectManagement extends Controller
             "notes" => ['nullable', 'string'],
             "total_price" => ['required', 'numeric'],
             "output_link" => ['nullable', 'array'],
-            "output_link.*" => ['nullable', 'string'],
+            "output_link.*.name" => ['nullable', 'string'],
+            "output_link.*.link" => ['nullable', 'string'],
             "status" => ['nullable', 'in:pending,in_progress,completed'],
             "extra_fields" => ['nullable', 'array'],
             "with_agent" => ['nullable', 'boolean'],
@@ -329,11 +331,11 @@ class ProjectManagement extends Controller
         ]);
 
         if (!empty($validated['output_link'])) {
-            $validated['output_link'] = array_map(function ($link) {
-                if (!empty($link) && !preg_match('/^https?:\/\//', $link)) {
-                    return 'https://' . $link;
+            $validated['output_link'] = array_map(function ($item) {
+                if (is_array($item) && !empty($item['link']) && !preg_match('/^https?:\/\//', $item['link'])) {
+                    $item['link'] = 'https://' . $item['link'];
                 }
-                return $link;
+                return $item;
             }, $validated['output_link']);
         }
 
@@ -548,7 +550,8 @@ class ProjectManagement extends Controller
             "notes" => ['nullable', 'string'],
             "total_price" => ['required', 'numeric'],
             "output_link" => ['nullable', 'array'],
-            "output_link.*" => ['nullable', 'string'],
+            "output_link.*.name" => ['nullable', 'string'],
+            "output_link.*.link" => ['nullable', 'string'],
             "status" => ['nullable', 'in:pending,in_progress,completed'],
             "extra_fields" => ['nullable', 'array'],
             "with_agent" => ['nullable', 'boolean'],
@@ -558,11 +561,11 @@ class ProjectManagement extends Controller
         ]);
 
         if (!empty($validated['output_link'])) {
-            $validated['output_link'] = array_map(function ($link) {
-                if (!empty($link) && !preg_match('/^https?:\/\//', $link)) {
-                    return 'https://' . $link;
+            $validated['output_link'] = array_map(function ($item) {
+                if (is_array($item) && !empty($item['link']) && !preg_match('/^https?:\/\//', $item['link'])) {
+                    $item['link'] = 'https://' . $item['link'];
                 }
-                return $link;
+                return $item;
             }, $validated['output_link']);
         }
 

@@ -226,14 +226,14 @@ const markForRevision = (projectId: number) => {
                             <template v-if="project.output_link && project.output_link.length > 0">
                                 <div class="flex flex-col space-y-1">
                                     <a
-                                        v-for="(link, index) in project.output_link"
+                                        v-for="(item, index) in project.output_link"
                                         :key="index"
-                                        :href="link.startsWith('http') ? link : `https://${link}`"
+                                        :href="item.link.startsWith('http') ? item.link : `https://${item.link}`"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         class="text-blue-500 hover:underline text-xs"
                                     >
-                                        Output {{ project.output_link.length > 1 ? index + 1 : '' }}
+                                        {{ item.name || `Output ${project.output_link.length > 1 ? index + 1 : ''}` }}
                                     </a>
                                 </div>
                             </template>

@@ -57,30 +57,31 @@ const renderMusicLink = (music: string) => {
 
 const mappedStatus = computed(() => mapStatusForClient(props.project.status));
 
-const outputLinks = ref<string[]>(
-    Array.isArray(props.project.output_link) ? [...props.project.output_link] : props.project.output_link ? [props.project.output_link] : [''],
+const outputLinks = ref<{ name: string; link: string }[]>(
+    Array.isArray(props.project.output_link) && props.project.output_link.length > 0
+        ? props.project.output_link.map((item: any) => (typeof item === 'string' ? { name: '', link: item } : { ...item }))
+        : [{ name: '', link: '' }],
 );
 
 watch(
     () => props.project,
     (newProject) => {
-        outputLinks.value = Array.isArray(newProject.output_link)
-            ? [...newProject.output_link]
-            : newProject.output_link
-              ? [newProject.output_link]
-              : [''];
+        outputLinks.value =
+            Array.isArray(newProject.output_link) && newProject.output_link.length > 0
+                ? newProject.output_link.map((item: any) => (typeof item === 'string' ? { name: '', link: item } : { ...item }))
+                : [{ name: '', link: '' }];
     },
     { deep: true },
 );
 
 const addOutputLink = () => {
-    outputLinks.value.push('');
+    outputLinks.value.push({ name: '', link: '' });
 };
 
 const removeOutputLink = (index: number) => {
     outputLinks.value.splice(index, 1);
     if (outputLinks.value.length === 0) {
-        outputLinks.value.push('');
+        outputLinks.value.push({ name: '', link: '' });
     }
 };
 
@@ -99,7 +100,7 @@ function openNativeFullscreen(event: MouseEvent) {
 }
 
 const saveOutputLinks = () => {
-    const filteredLinks = outputLinks.value.filter((link) => link.trim() !== '');
+    const filteredLinks = outputLinks.value.filter((item) => item.link.trim() !== '');
     if (filteredLinks.length === 0) return;
 
     const routeName = props.role === 'admin' ? 'projects.admin_update' : 'editor.projects.update';
@@ -415,24 +416,28 @@ const confirmDelete = () => {
 
                             <template v-if="project.output_link && project.output_link.length > 0">
                                 <a
-                                    v-for="(link, index) in project.output_link"
+                                    v-for="(item, index) in project.output_link"
                                     :key="index"
-                                    :href="link"
+                                    :href="item.link"
                                     target="_blank"
                                     class="block w-full rounded-lg bg-green-500 py-2 text-center text-white transition hover:bg-green-600"
                                 >
-                                    🎬 Finished Output {{ project.output_link.length > 1 ? index + 1 : '' }}
+                                    🎬 {{ item.name || `Finished Output ${project.output_link.length > 1 ? index + 1 : ''}` }}
                                 </a>
                             </template>
 
                             <!-- Editor Upload Output Link -->
                             <div v-if="role === 'editor' || role === 'admin'" class="space-y-4 border-t pt-4">
                                 <h1 class="text-lg font-bold">Manage Output Links</h1>
-                                <div v-for="(link, index) in outputLinks" :key="index" class="flex items-center space-x-2">
-                                    <Input v-model="outputLinks[index]" placeholder="Paste output link..." />
-                                    <Button variant="destructive" size="icon" @click="removeOutputLink(index)" v-if="outputLinks.length > 1">
-                                        <Trash2 class="h-4 w-4" />
-                                    </Button>
+                                <div v-for="(item, index) in outputLinks" :key="index" class="space-y-2 rounded-lg border p-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium">Link #{{ index + 1 }}</span>
+                                        <Button variant="destructive" size="icon" @click="removeOutputLink(index)" v-if="outputLinks.length > 1">
+                                            <Trash2 class="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <Input v-model="outputLinks[index].name" placeholder="Link Name (e.g. Version 1, Final Edit)" />
+                                    <Input v-model="outputLinks[index].link" placeholder="Paste output link..." />
                                 </div>
                                 <Button variant="outline" class="w-full" @click="addOutputLink">
                                     <Plus class="mr-2 h-4 w-4" /> Add More Link
