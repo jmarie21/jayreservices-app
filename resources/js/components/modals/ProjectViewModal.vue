@@ -7,8 +7,8 @@ import { Paginated } from '@/types/app-page-prop';
 import { linkify } from '@/utils/linkify';
 import { mapStatusForClient } from '@/utils/statusMapper';
 import { router, useForm, usePage } from '@inertiajs/vue3';
-import { MoreVertical } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { MoreVertical, Plus, Trash2 } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import {
     AlertDialog,
@@ -21,6 +21,7 @@ import {
     AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Input } from '../ui/input';
 
 const props = defineProps<{
     isOpen: boolean;
@@ -56,7 +57,33 @@ const renderMusicLink = (music: string) => {
 
 const mappedStatus = computed(() => mapStatusForClient(props.project.status));
 
-const outputLink = ref(props.project.output_link || '');
+const outputLinks = ref<{ name: string; link: string }[]>(
+    Array.isArray(props.project.output_link) && props.project.output_link.length > 0
+        ? props.project.output_link.map((item: any) => (typeof item === 'string' ? { name: '', link: item } : { ...item }))
+        : [{ name: '', link: '' }],
+);
+
+watch(
+    () => props.project,
+    (newProject) => {
+        outputLinks.value =
+            Array.isArray(newProject.output_link) && newProject.output_link.length > 0
+                ? newProject.output_link.map((item: any) => (typeof item === 'string' ? { name: '', link: item } : { ...item }))
+                : [{ name: '', link: '' }];
+    },
+    { deep: true },
+);
+
+const addOutputLink = () => {
+    outputLinks.value.push({ name: '', link: '' });
+};
+
+const removeOutputLink = (index: number) => {
+    outputLinks.value.splice(index, 1);
+    if (outputLinks.value.length === 0) {
+        outputLinks.value.push({ name: '', link: '' });
+    }
+};
 
 function openNativeFullscreen(event: MouseEvent) {
     const img = event.target as HTMLElement;
@@ -72,19 +99,21 @@ function openNativeFullscreen(event: MouseEvent) {
     }
 }
 
-const saveOutputLink = () => {
-    if (!outputLink.value) return;
+const saveOutputLinks = () => {
+    const filteredLinks = outputLinks.value.filter((item) => item.link.trim() !== '');
+    if (filteredLinks.length === 0) return;
 
     const routeName = props.role === 'admin' ? 'projects.admin_update' : 'editor.projects.update';
 
     router.patch(
         route(routeName, props.project.id),
-        { output_link: outputLink.value },
+        { output_link: filteredLinks },
         {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
-                props.project.output_link = outputLink.value;
+                props.project.output_link = filteredLinks;
+                toast.success('Output links updated successfully!');
             },
         },
     );
@@ -375,7 +404,7 @@ const confirmDelete = () => {
                         </div>
 
                         <!-- Links Section -->
-                        <div class="mb-4 space-y-4 rounded-xl bg-white p-5 shadow">
+                        <div class="mb-4 space-y-6 rounded-xl bg-white p-5 shadow">
                             <h1 class="text-lg font-bold">Links</h1>
                             <a
                                 :href="project.file_link"
@@ -384,20 +413,37 @@ const confirmDelete = () => {
                             >
                                 📁 Raw Files
                             </a>
-                            <a
-                                v-if="project.output_link"
-                                :href="project.output_link"
-                                target="_blank"
-                                class="block w-full rounded-lg bg-green-500 py-2 text-center text-white transition hover:bg-green-600"
-                            >
-                                🎬 Finished Output
-                            </a>
+
+                            <template v-if="project.output_link && project.output_link.length > 0">
+                                <a
+                                    v-for="(item, index) in project.output_link"
+                                    :key="index"
+                                    :href="item.link"
+                                    target="_blank"
+                                    class="block w-full rounded-lg bg-green-500 py-2 text-center text-white transition hover:bg-green-600"
+                                >
+                                    🎬 {{ item.name || `Finished Output ${project.output_link.length > 1 ? index + 1 : ''}` }}
+                                </a>
+                            </template>
 
                             <!-- Editor Upload Output Link -->
-                            <!-- <div v-if="role === 'editor' || role === 'admin'" class="space-y-2">
-                                <Input v-model="outputLink" placeholder="Paste output link..." />
-                                <Button class="w-full" @click="saveOutputLink">Upload Output Link</Button>
-                            </div> -->
+                            <div v-if="role === 'editor' || role === 'admin'" class="space-y-4 border-t pt-4">
+                                <h1 class="text-lg font-bold">Manage Output Links</h1>
+                                <div v-for="(item, index) in outputLinks" :key="index" class="space-y-2 rounded-lg border p-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium">Link #{{ index + 1 }}</span>
+                                        <Button variant="destructive" size="icon" @click="removeOutputLink(index)" v-if="outputLinks.length > 1">
+                                            <Trash2 class="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <Input v-model="outputLinks[index].name" placeholder="Link Name (e.g. Version 1, Final Edit)" />
+                                    <Input v-model="outputLinks[index].link" placeholder="Paste output link..." />
+                                </div>
+                                <Button variant="outline" class="w-full" @click="addOutputLink">
+                                    <Plus class="mr-2 h-4 w-4" /> Add More Link
+                                </Button>
+                                <Button class="w-full" @click="saveOutputLinks">Save Output Links</Button>
+                            </div>
                         </div>
                     </ScrollArea>
                 </div>

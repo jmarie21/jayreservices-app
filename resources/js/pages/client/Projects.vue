@@ -223,15 +223,19 @@ const markForRevision = (projectId: number) => {
                         </TableCell>
                         <TableCell>${{ project.total_price }}</TableCell>
                         <TableCell>
-                            <template v-if="project.output_link">
-                                <a
-                                    :href="project.output_link.startsWith('http') ? project.output_link : `https://${project.output_link}`"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="text-blue-500 hover:underline"
-                                >
-                                    Finished Output
-                                </a>
+                            <template v-if="project.output_link && project.output_link.length > 0">
+                                <div class="flex flex-col space-y-1">
+                                    <a
+                                        v-for="(item, index) in project.output_link"
+                                        :key="index"
+                                        :href="item.link.startsWith('http') ? item.link : `https://${item.link}`"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="text-blue-500 hover:underline text-xs"
+                                    >
+                                        {{ item.name || `Output ${project.output_link.length > 1 ? index + 1 : ''}` }}
+                                    </a>
+                                </div>
                             </template>
                             <template v-else> No Output Yet </template>
                         </TableCell>

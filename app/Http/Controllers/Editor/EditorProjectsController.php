@@ -59,12 +59,19 @@ class EditorProjectsController extends Controller
         $validated = $request->validate([
             'editor_id' => 'nullable|exists:users,id',
             'status' => 'nullable|string',
-            'output_link' => 'nullable|string',
+            'output_link' => 'nullable|array',
+            'output_link.*.name' => 'nullable|string',
+            'output_link.*.link' => 'nullable|string',
             'priority' => 'nullable|in:urgent,high,normal,low',
         ]);
 
-        if (!empty($validated['output_link']) && !preg_match('/^https?:\/\//', $validated['output_link'])) {
-            $validated['output_link'] = 'https://' . $validated['output_link'];
+        if (!empty($validated['output_link'])) {
+            $validated['output_link'] = array_map(function ($item) {
+                if (is_array($item) && !empty($item['link']) && !preg_match('/^https?:\/\//', $item['link'])) {
+                    $item['link'] = 'https://' . $item['link'];
+                }
+                return $item;
+            }, $validated['output_link']);
         }
 
         $oldStatus = $project->status;
