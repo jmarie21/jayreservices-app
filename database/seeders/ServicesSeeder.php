@@ -71,7 +71,7 @@ class ServicesSeeder extends Seeder
                     'With Earth zoom transition if requested',
                 ],
                 'price' => 0,
-                'video_link' => 'https://player.vimeo.com/video/1106032025',
+                'video_link' => 'https://www.youtube.com/embed/fYBEUla1HOY', 
             ],
             //Talking Heads Services
             [
