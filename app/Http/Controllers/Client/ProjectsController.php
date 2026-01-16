@@ -76,7 +76,7 @@ class ProjectsController extends Controller
                 "projects" => $projects,
                 "filters"  => $request->only(['status', 'date_from', 'date_to', 'search']),
                 "viewProjectId" => $request->query('view') ? (int) $request->query('view') : null,
-            ]);
+            ])->withViewData(['ssr' => false]);
         } catch (\Exception $e) {
             Log::error('Error loading client projects', [
                 'user_id' => Auth::id(),
@@ -114,7 +114,7 @@ class ProjectsController extends Controller
             "rush" => ['nullable', 'boolean'],
         ]);
 
-        $validated['client_id'] = Auth::id(); 
+        $validated['client_id'] = Auth::id();
         $validated['status'] = $validated['status'] ?? 'pending';
 
         $validated['priority'] = $validated['rush'] ? 'urgent' : null;
@@ -375,7 +375,7 @@ class ProjectsController extends Controller
             "per_property_count" => ['nullable', 'integer'],
             "rush" => ['nullable', 'boolean'],
         ]);
-        
+
         $validated['priority'] = $validated['rush'] ? 'urgent' : null;
 
         $project->update($validated);
