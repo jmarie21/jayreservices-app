@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
 import { onMounted, onUnmounted, ref } from 'vue';
 
@@ -9,8 +9,11 @@ const unreadCount = ref(page.props.notifications?.unread_count || 0);
 
 const user = page.props.auth.user; // assuming you share auth user globally
 
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined';
+
 onMounted(() => {
-    if (!user?.id) return;
+    if (!isBrowser || !user?.id) return;
 
     const audio = new Audio(`${window.location.origin}/sounds/notification.mp3`);
     audio.preload = 'auto';
@@ -30,34 +33,37 @@ onMounted(() => {
         { once: true },
     );
 
-    const channel = window.Echo.private(`App.Models.User.${user.id}`);
+    // Check if Echo exists before using it
+    if (window.Echo) {
+        const channel = window.Echo.private(`App.Models.User.${user.id}`);
 
-    channel.notification((notification) => {
-        console.log('🔔 New notification received:', notification);
+        channel.notification((notification) => {
+            console.log('🔔 New notification received:', notification);
 
-        // 🔊 Play sound
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
+            // 🔊 Play sound
+            audio.currentTime = 0;
+            audio.play().catch(() => {});
 
-        // 📨 Add notification
-        notifications.value.unshift({
-            id: notification.id ?? Date.now(),
-            data: notification,
-            created_at: new Date().toISOString(),
-            read_at: null,
+            // 📨 Add notification
+            notifications.value.unshift({
+                id: notification.id ?? Date.now(),
+                data: notification,
+                created_at: new Date().toISOString(),
+                read_at: null,
+            });
+
+            unreadCount.value++;
         });
-
-        unreadCount.value++;
-    });
+    }
 });
 
 onUnmounted(() => {
-    if (user?.id) {
+    if (isBrowser && user?.id && window.Echo) {
         window.Echo.leave(`private-App.Models.User.${user.id}`);
     }
 });
 
-let reloadInterval = null;
+// const reloadInterval = null;
 
 const toggleDropdown = () => {
     isOpen.value = !isOpen.value;
