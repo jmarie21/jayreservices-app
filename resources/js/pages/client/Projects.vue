@@ -30,9 +30,10 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { mapStatusForClient } from '@/utils/statusMapper';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
+import { Toaster } from '@/components/ui/sonner';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
