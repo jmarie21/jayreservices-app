@@ -312,7 +312,7 @@ function decrementPerProperty() {
 
                     <!-- Format -->
                     <div class="space-y-2">
-                        <Label>Video Format</Label>
+                        <Label>Video Format <span class="text-red-500">*</span></Label>
                         <Select v-model="form.format">
                             <SelectTrigger class="w-full">
                                 <!-- Display selected label -->
@@ -405,8 +405,8 @@ function decrementPerProperty() {
                                 <SelectValue placeholder="Select type of music" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="copyright music with vocals">Copyright music with vocals</SelectItem>
-                                <SelectItem value="copyright music without vocals">Copyright music without vocals</SelectItem>
+                                <SelectItem value="royalty free music with vocals">Royalty free music with vocals</SelectItem>
+                                <SelectItem value="royalty free music without vocals">Royalty free music without vocals</SelectItem>
                                 <SelectItem value="IG trendy music with vocals">IG trendy music with vocals</SelectItem>
                                 <SelectItem value="IG trendy music without vocals">IG trendy music without vocals</SelectItem>
                                 <SelectItem value="I will provide my own music">I will provide my own music</SelectItem>

@@ -9,7 +9,6 @@ use App\Models\Service;
 use App\Models\User;
 use App\Notifications\ClientProjectStatusNotification;
 use App\Notifications\ProjectAssignedNotification;
-use App\Notifications\ProjectRevisionNotification;
 use App\Notifications\ProjectStatusNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -44,7 +43,7 @@ class ProjectManagement extends Controller
             // Parse dates and set proper time boundaries
             $dateFrom = Carbon::parse($request->date_from)->startOfDay();
             $dateTo = Carbon::parse($request->date_to)->endOfDay();
-            
+
             $query->whereBetween('created_at', [$dateFrom, $dateTo]);
         } elseif ($request->filled('date_from')) {
             // Only date_from is provided
@@ -61,8 +60,8 @@ class ProjectManagement extends Controller
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('project_name', 'like', "%{$searchTerm}%")
-                ->orWhere('style', 'like', "%{$searchTerm}%")
-                ->orWhereHas('service', fn($sq) => $sq->where('name', 'like', "%{$searchTerm}%"));
+                    ->orWhere('style', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('service', fn ($sq) => $sq->where('name', 'like', "%{$searchTerm}%"));
             });
         }
 
@@ -71,7 +70,7 @@ class ProjectManagement extends Controller
 
         $editors = User::where('role', 'editor')->get(['id', 'name']);
 
-        return Inertia::render("admin/ClientProjects", [
+        return Inertia::render('admin/ClientProjects', [
             'client' => $client->only(['id', 'name', 'email']),
             'projects' => $projects,
             'filters' => $request->only(['status', 'date_from', 'date_to', 'search', 'editor_id']),
@@ -103,7 +102,7 @@ class ProjectManagement extends Controller
             // Parse dates and set proper time boundaries
             $dateFrom = Carbon::parse($request->date_from)->startOfDay();
             $dateTo = Carbon::parse($request->date_to)->endOfDay();
-            
+
             $query->whereBetween('created_at', [$dateFrom, $dateTo]);
         } elseif ($request->filled('date_from')) {
             // Only date_from is provided
@@ -120,9 +119,9 @@ class ProjectManagement extends Controller
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('project_name', 'like', "%{$searchTerm}%")
-                ->orWhere('style', 'like', "%{$searchTerm}%")
-                ->orWhereHas('service', fn($sq) => $sq->where('name', 'like', "%{$searchTerm}%"))
-                ->orWhereHas('client', fn($sq) => $sq->where('name', 'like', "%{$searchTerm}%"));
+                    ->orWhere('style', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('service', fn ($sq) => $sq->where('name', 'like', "%{$searchTerm}%"))
+                    ->orWhereHas('client', fn ($sq) => $sq->where('name', 'like', "%{$searchTerm}%"));
             });
         }
 
@@ -132,7 +131,7 @@ class ProjectManagement extends Controller
         $editors = User::where('role', 'editor')->get(['id', 'name']);
         $clients = User::where('role', 'client')->get(['id', 'name']);
 
-        return Inertia::render("admin/AllProjects", [
+        return Inertia::render('admin/AllProjects', [
             'projects' => $projects,
             'filters' => $request->only(['status', 'date_from', 'date_to', 'search', 'editor_id']),
             'editors' => $editors,
@@ -140,8 +139,6 @@ class ProjectManagement extends Controller
             'viewProjectId' => $request->query('view') ? (int) $request->query('view') : null, // 👈 Add this
         ]);
     }
-
-
 
     public function update(Request $request, Project $project)
     {
@@ -155,11 +152,12 @@ class ProjectManagement extends Controller
             'priority' => 'nullable|in:urgent,high,normal,low',
         ]);
 
-        if (!empty($validated['output_link'])) {
+        if (! empty($validated['output_link'])) {
             $validated['output_link'] = array_map(function ($item) {
-                if (is_array($item) && !empty($item['link']) && !preg_match('/^https?:\/\//', $item['link'])) {
-                    $item['link'] = 'https://' . $item['link'];
+                if (is_array($item) && ! empty($item['link']) && ! preg_match('/^https?:\/\//', $item['link'])) {
+                    $item['link'] = 'https://'.$item['link'];
                 }
+
                 return $item;
             }, $validated['output_link']);
         }
@@ -171,8 +169,8 @@ class ProjectManagement extends Controller
 
         // 🔔 Notify editor if newly assigned
         if (
-            isset($validated['editor_id']) && 
-            $validated['editor_id'] !== null && 
+            isset($validated['editor_id']) &&
+            $validated['editor_id'] !== null &&
             $validated['editor_id'] !== $oldEditorId
         ) {
             $editor = User::find($validated['editor_id']);
@@ -194,8 +192,6 @@ class ProjectManagement extends Controller
             }
         }
 
-
-
         // ✅ Send email if status changed to "sent_to_client"
         if (
             isset($validated['status']) &&
@@ -205,7 +201,7 @@ class ProjectManagement extends Controller
             if ($project->client) {
                 $recipients = $project->client->getAllEmails();
 
-                if (!empty($recipients)) {
+                if (! empty($recipients)) {
                     Mail::to($recipients)->queue(new ProjectSentToClientMail($project));
                 }
 
@@ -220,7 +216,7 @@ class ProjectManagement extends Controller
                     ->where('created_at', '>', now()->subMinutes(5))
                     ->exists();
 
-                if (!$recentClientNotification) {
+                if (! $recentClientNotification) {
                     $client->notify(new ClientProjectStatusNotification($project, 'sent_to_client'));
 
                     Log::info('Client notified about project sent to client', [
@@ -233,7 +229,6 @@ class ProjectManagement extends Controller
                 }
             }
         }
-
 
         return back()->with('success', 'Project updated successfully.');
     }
@@ -262,8 +257,8 @@ class ProjectManagement extends Controller
     {
         $services = Service::where('name', 'like', 'Real Estate%')->get();
 
-        return Inertia::render("admin/Services", [
-            "services" => $services
+        return Inertia::render('admin/Services', [
+            'services' => $services,
         ]);
     }
 
@@ -271,8 +266,8 @@ class ProjectManagement extends Controller
     {
         $services = Service::where('name', 'like', 'Wedding%')->get();
 
-        return Inertia::render("admin/WeddingServices", [
-            "services" => $services
+        return Inertia::render('admin/WeddingServices', [
+            'services' => $services,
         ]);
     }
 
@@ -280,8 +275,8 @@ class ProjectManagement extends Controller
     {
         $services = Service::where('name', 'like', 'Event%')->get();
 
-        return Inertia::render("admin/EventServices", [
-            "services" => $services
+        return Inertia::render('admin/EventServices', [
+            'services' => $services,
         ]);
     }
 
@@ -289,8 +284,8 @@ class ProjectManagement extends Controller
     {
         $services = Service::where('name', 'like', 'Construction%')->get();
 
-        return Inertia::render("admin/ConstructionServices", [
-            "services" => $services
+        return Inertia::render('admin/ConstructionServices', [
+            'services' => $services,
         ]);
     }
 
@@ -298,43 +293,43 @@ class ProjectManagement extends Controller
     {
         $services = Service::where('name', 'like', 'Talking Heads%')->get();
 
-        return Inertia::render("admin/TalkingHeadsServices", [
-            "services" => $services
+        return Inertia::render('admin/TalkingHeadsServices', [
+            'services' => $services,
         ]);
     }
-
 
     public function adminCreateProject(Request $request)
     {
         $validated = $request->validate([
-            "client_id" => ['required', 'exists:users,id'],
-            "service_id" => ['required', 'exists:services,id'],
-            "style" => ['required', 'string'],
-            "project_name" => ['required', 'string'],
-            "format" => ['nullable', 'string'],
-            "camera" => ['nullable', 'string'],
-            "quality" => ['nullable', 'string'],
-            "music" => ['nullable', 'string'],
-            "music_link" => ['nullable', 'string'],
-            "file_link" => ['required', 'string'],
-            "notes" => ['nullable', 'string'],
-            "total_price" => ['required', 'numeric'],
-            "output_link" => ['nullable', 'array'],
-            "output_link.*.name" => ['nullable', 'string'],
-            "output_link.*.link" => ['nullable', 'string'],
-            "status" => ['nullable', 'in:pending,in_progress,completed'],
-            "extra_fields" => ['nullable', 'array'],
-            "with_agent" => ['nullable', 'boolean'],
-            "per_property" => ['nullable', 'boolean'],
-            "per_property_count" => ['nullable', 'integer'],
-            "rush" => ['required', 'boolean'],
+            'client_id' => ['required', 'exists:users,id'],
+            'service_id' => ['required', 'exists:services,id'],
+            'style' => ['required', 'string'],
+            'project_name' => ['required', 'string'],
+            'format' => ['required', 'string'],
+            'camera' => ['nullable', 'string'],
+            'quality' => ['nullable', 'string'],
+            'music' => ['nullable', 'string'],
+            'music_link' => ['nullable', 'string'],
+            'file_link' => ['required', 'string'],
+            'notes' => ['nullable', 'string'],
+            'total_price' => ['required', 'numeric'],
+            'output_link' => ['nullable', 'array'],
+            'output_link.*.name' => ['nullable', 'string'],
+            'output_link.*.link' => ['nullable', 'string'],
+            'status' => ['nullable', 'in:pending,in_progress,completed'],
+            'extra_fields' => ['nullable', 'array'],
+            'with_agent' => ['nullable', 'boolean'],
+            'per_property' => ['nullable', 'boolean'],
+            'per_property_count' => ['nullable', 'integer'],
+            'rush' => ['required', 'boolean'],
         ]);
 
-        if (!empty($validated['output_link'])) {
+        if (! empty($validated['output_link'])) {
             $validated['output_link'] = array_map(function ($item) {
-                if (is_array($item) && !empty($item['link']) && !preg_match('/^https?:\/\//', $item['link'])) {
-                    $item['link'] = 'https://' . $item['link'];
+                if (is_array($item) && ! empty($item['link']) && ! preg_match('/^https?:\/\//', $item['link'])) {
+                    $item['link'] = 'https://'.$item['link'];
                 }
+
                 return $item;
             }, $validated['output_link']);
         }
@@ -351,7 +346,7 @@ class ProjectManagement extends Controller
         $captions = $extra['captions'] ?? [];
 
         // Normalize effects to array
-        $effects = collect($effectsRaw)->map(fn($e) => is_array($e) ? $e['id'] : $e)->toArray();
+        $effects = collect($effectsRaw)->map(fn ($e) => is_array($e) ? $e['id'] : $e)->toArray();
 
         // =====================
         // BASE PRICES
@@ -376,7 +371,7 @@ class ProjectManagement extends Controller
                 };
                 break;
 
-            // DELUXE
+                // DELUXE
             case 'deluxe video':
                 $editorPrice = match ($format) {
                     'horizontal' => 1000,
@@ -395,7 +390,7 @@ class ProjectManagement extends Controller
                 };
                 break;
 
-            // PREMIUM
+                // PREMIUM
             case 'premium video':
                 $editorPrice = match ($format) {
                     'horizontal' => 1500,
@@ -414,7 +409,7 @@ class ProjectManagement extends Controller
                 };
                 break;
 
-            // LUXURY
+                // LUXURY
             case 'luxury video':
                 $editorPrice = match ($format) {
                     'horizontal' => 1800,
@@ -438,12 +433,12 @@ class ProjectManagement extends Controller
         // COMMON ADD-ONS
         // =====================
 
-        if (!empty($validated['with_agent']) && $validated['with_agent']) {
+        if (! empty($validated['with_agent']) && $validated['with_agent']) {
             $editorPrice += 100;
         }
 
         // Rush fee
-        if (!empty($validated['rush']) && $validated['rush']) {
+        if (! empty($validated['rush']) && $validated['rush']) {
             if (str_contains($style, 'premium') || str_contains($style, 'luxury')) {
                 $editorPrice += 500;
             } else {
@@ -483,8 +478,9 @@ class ProjectManagement extends Controller
         if (str_contains($style, 'premium') || str_contains($style, 'luxury')) {
             $effectQuantities = collect($effectsRaw)->mapWithKeys(function ($e) {
                 if (is_array($e)) {
-                    return [trim($e['id']) => (int)($e['quantity'] ?? 1)];
+                    return [trim($e['id']) => (int) ($e['quantity'] ?? 1)];
                 }
+
                 return [trim($e) => 1];
             });
 
@@ -506,11 +502,10 @@ class ProjectManagement extends Controller
         // =====================
         // PER PROPERTY LINE ADD-ON
         // =====================
-        if (!empty($validated['per_property']) && !empty($validated['per_property_count'])) {
+        if (! empty($validated['per_property']) && ! empty($validated['per_property_count'])) {
             $qty = max(1, (int) $validated['per_property_count']);
             $editorPrice += 100 * $qty;
         }
-
 
         // =====================
         // SAVE RESULT
@@ -537,34 +532,35 @@ class ProjectManagement extends Controller
     public function adminUpdateProject(Request $request, Project $project)
     {
         $validated = $request->validate([
-            "client_id" => ['required', 'exists:users,id'],
-            "service_id" => ['required', 'exists:services,id'],
-            "style" => ['required', 'string'],
-            "project_name" => ['required', 'string'],
-            "format" => ['nullable', 'string'],
-            "camera" => ['nullable', 'string'],
-            "quality" => ['nullable', 'string'],
-            "music" => ['nullable', 'string'],
-            "music_link" => ['nullable', 'string'],
-            "file_link" => ['required', 'string'],
-            "notes" => ['nullable', 'string'],
-            "total_price" => ['required', 'numeric'],
-            "output_link" => ['nullable', 'array'],
-            "output_link.*.name" => ['nullable', 'string'],
-            "output_link.*.link" => ['nullable', 'string'],
-            "status" => ['nullable', 'in:pending,in_progress,completed'],
-            "extra_fields" => ['nullable', 'array'],
-            "with_agent" => ['nullable', 'boolean'],
-            "per_property" => ['nullable', 'boolean'],
-            "per_property_count" => ['nullable', 'integer'],
-            "rush" => ['required', 'boolean'],
+            'client_id' => ['required', 'exists:users,id'],
+            'service_id' => ['required', 'exists:services,id'],
+            'style' => ['required', 'string'],
+            'project_name' => ['required', 'string'],
+            'format' => ['required', 'string'],
+            'camera' => ['nullable', 'string'],
+            'quality' => ['nullable', 'string'],
+            'music' => ['nullable', 'string'],
+            'music_link' => ['nullable', 'string'],
+            'file_link' => ['required', 'string'],
+            'notes' => ['nullable', 'string'],
+            'total_price' => ['required', 'numeric'],
+            'output_link' => ['nullable', 'array'],
+            'output_link.*.name' => ['nullable', 'string'],
+            'output_link.*.link' => ['nullable', 'string'],
+            'status' => ['nullable', 'in:pending,in_progress,completed'],
+            'extra_fields' => ['nullable', 'array'],
+            'with_agent' => ['nullable', 'boolean'],
+            'per_property' => ['nullable', 'boolean'],
+            'per_property_count' => ['nullable', 'integer'],
+            'rush' => ['required', 'boolean'],
         ]);
 
-        if (!empty($validated['output_link'])) {
+        if (! empty($validated['output_link'])) {
             $validated['output_link'] = array_map(function ($item) {
-                if (is_array($item) && !empty($item['link']) && !preg_match('/^https?:\/\//', $item['link'])) {
-                    $item['link'] = 'https://' . $item['link'];
+                if (is_array($item) && ! empty($item['link']) && ! preg_match('/^https?:\/\//', $item['link'])) {
+                    $item['link'] = 'https://'.$item['link'];
                 }
+
                 return $item;
             }, $validated['output_link']);
         }
@@ -580,7 +576,7 @@ class ProjectManagement extends Controller
         $captions = $extra['captions'] ?? [];
 
         // Normalize effects to array
-        $effects = collect($effectsRaw)->map(fn($e) => is_array($e) ? $e['id'] : $e)->toArray();
+        $effects = collect($effectsRaw)->map(fn ($e) => is_array($e) ? $e['id'] : $e)->toArray();
 
         // =====================
         // BASE PRICES
@@ -605,7 +601,7 @@ class ProjectManagement extends Controller
                 };
                 break;
 
-            // DELUXE
+                // DELUXE
             case 'deluxe video':
                 $editorPrice = match ($format) {
                     'horizontal' => 1000,
@@ -624,7 +620,7 @@ class ProjectManagement extends Controller
                 };
                 break;
 
-            // PREMIUM
+                // PREMIUM
             case 'premium video':
                 $editorPrice = match ($format) {
                     'horizontal' => 1500,
@@ -643,7 +639,7 @@ class ProjectManagement extends Controller
                 };
                 break;
 
-            // LUXURY
+                // LUXURY
             case 'luxury video':
                 $editorPrice = match ($format) {
                     'horizontal' => 1800,
@@ -667,12 +663,12 @@ class ProjectManagement extends Controller
         // COMMON ADD-ONS
         // =====================
 
-        if (!empty($validated['with_agent']) && $validated['with_agent']) {
+        if (! empty($validated['with_agent']) && $validated['with_agent']) {
             $editorPrice += 100;
         }
 
         // Rush fee
-        if (!empty($validated['rush']) && $validated['rush']) {
+        if (! empty($validated['rush']) && $validated['rush']) {
             if (str_contains($style, 'premium') || str_contains($style, 'luxury')) {
                 $editorPrice += 500;
             } else {
@@ -712,8 +708,9 @@ class ProjectManagement extends Controller
         if (str_contains($style, 'premium') || str_contains($style, 'luxury')) {
             $effectQuantities = collect($effectsRaw)->mapWithKeys(function ($e) {
                 if (is_array($e)) {
-                    return [trim($e['id']) => (int)($e['quantity'] ?? 1)];
+                    return [trim($e['id']) => (int) ($e['quantity'] ?? 1)];
                 }
+
                 return [trim($e) => 1];
             });
 
@@ -735,11 +732,10 @@ class ProjectManagement extends Controller
         // =====================
         // PER PROPERTY LINE ADD-ON
         // =====================
-        if (!empty($validated['per_property']) && !empty($validated['per_property_count'])) {
+        if (! empty($validated['per_property']) && ! empty($validated['per_property_count'])) {
             $qty = max(1, (int) $validated['per_property_count']);
             $editorPrice += 100 * $qty;
         }
-
 
         // =====================
         // SAVE RESULT

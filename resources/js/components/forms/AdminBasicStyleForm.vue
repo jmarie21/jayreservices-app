@@ -146,7 +146,7 @@ const handleSubmit = () => {
 
                     <!-- Format -->
                     <div class="space-y-2">
-                        <Label>Video Format</Label>
+                        <Label>Video Format <span class="text-red-500">*</span></Label>
                         <Input v-model="form.format" placeholder="e.g. Horizontal, Vertical" />
                     </div>
 
