@@ -14,7 +14,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { Clock } from 'lucide-vue-next';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
 type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled';
@@ -91,6 +92,46 @@ const statusLabels: Record<Status, string> = {
     backlog: 'Backlog',
     sent_to_client: 'Sent to Client',
     cancelled: 'Cancelled',
+};
+
+// Countdown timer
+const now = ref(Date.now());
+let countdownTimer: ReturnType<typeof setInterval>;
+
+onMounted(() => {
+    countdownTimer = setInterval(() => {
+        now.value = Date.now();
+    }, 60_000);
+});
+onUnmounted(() => clearInterval(countdownTimer));
+
+const getDeadlineHours = (project: Projects): number => {
+    const name = project.service?.name ?? '';
+    if (name.includes('Premium') || name.includes('Luxury')) return 24;
+    return 12;
+};
+
+const getCountdown = (project: Projects): string | null => {
+    if (project.status !== 'in_progress' || !project.in_progress_since) return null;
+    const deadlineMs = getDeadlineHours(project) * 60 * 60 * 1000;
+    const deadline = new Date(project.in_progress_since).getTime() + deadlineMs;
+    const remaining = deadline - now.value;
+    if (remaining <= 0) return 'overdue';
+    const hours = Math.floor(remaining / 3_600_000);
+    const minutes = Math.floor((remaining % 3_600_000) / 60_000);
+    return `${hours}h ${minutes}m`;
+};
+
+const getCountdownColor = (project: Projects): string => {
+    const countdown = getCountdown(project);
+    if (!countdown || countdown === 'overdue') return 'text-red-500';
+    const deadlineMs = getDeadlineHours(project) * 60 * 60 * 1000;
+    const deadline = new Date(project.in_progress_since!).getTime() + deadlineMs;
+    const remaining = deadline - now.value;
+    const hours = remaining / 3_600_000;
+    if (hours < 4) return 'text-red-500';
+    if (hours < 12) return 'text-yellow-500';
+    return 'text-green-600';
 };
 
 const openViewModal = (project: Projects) => {
@@ -411,6 +452,15 @@ onMounted(() => {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
+
+                            <div
+                                v-if="getCountdown(project)"
+                                class="mt-1 flex items-center gap-1 text-xs font-medium"
+                                :class="getCountdownColor(project)"
+                            >
+                                <Clock class="size-3" />
+                                {{ getCountdown(project) === 'overdue' ? 'Overdue' : `${getCountdown(project)} left` }}
+                            </div>
                         </TableCell>
 
                         <!-- Priority Select -->

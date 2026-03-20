@@ -13,6 +13,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { Clock } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -304,9 +305,10 @@ onMounted(() => {
 
                             <div
                                 v-if="getCountdown(project)"
-                                class="mt-1 text-xs font-medium"
+                                class="mt-1 flex items-center gap-1 text-xs font-medium"
                                 :class="getCountdownColor(project)"
                             >
+                                <Clock class="size-3" />
                                 {{ getCountdown(project) === 'overdue' ? 'Overdue' : `${getCountdown(project)} left` }}
                             </div>
                         </TableCell>
