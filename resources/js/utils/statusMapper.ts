@@ -1,5 +1,5 @@
 // utils/statusMapper.ts
-export const mapStatusForClient = (status: string): 'pending' | 'in_progress' | 'completed' => {
+export const mapStatusForClient = (status: string): 'pending' | 'in_progress' | 'completed' | 'cancelled' => {
     switch (status) {
         case 'todo':
         case 'backlog':
@@ -12,6 +12,8 @@ export const mapStatusForClient = (status: string): 'pending' | 'in_progress' | 
         case 'revision_completed':
         case 'sent_to_client':
             return 'completed';
+        case 'cancelled':
+            return 'cancelled';
         default:
             return 'pending'; // fallback safe default
     }

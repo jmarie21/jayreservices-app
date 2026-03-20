@@ -3,6 +3,7 @@ import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Button } from '@/components/ui/button';
+import { Toaster } from '@/components/ui/sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
@@ -12,10 +13,10 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
-type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
+type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled';
 type Priority = 'urgent' | 'high' | 'normal' | 'low';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'My Projects', href: '/editor-projects' }];
@@ -72,6 +73,59 @@ const statusLabels: Record<Status, string> = {
     revision_completed: 'Revision Completed',
     backlog: 'Backlog',
     sent_to_client: 'Sent to Client',
+    cancelled: 'Cancelled',
+};
+
+const allowedTransitions: Record<string, string[]> = {
+    backlog: ['todo', 'in_progress', 'for_qa', 'done_qa', 'sent_to_client'],
+    todo: ['in_progress', 'for_qa', 'done_qa', 'sent_to_client'],
+    in_progress: ['for_qa', 'done_qa', 'sent_to_client'],
+    for_qa: ['done_qa', 'sent_to_client'],
+    done_qa: ['sent_to_client'],
+    sent_to_client: [],
+    revision: ['revision_completed', 'sent_to_client'],
+    revision_completed: ['sent_to_client'],
+    cancelled: [],
+};
+
+// Countdown timer
+const now = ref(Date.now());
+let countdownTimer: ReturnType<typeof setInterval>;
+
+onMounted(() => {
+    countdownTimer = setInterval(() => {
+        now.value = Date.now();
+    }, 60_000);
+});
+onUnmounted(() => clearInterval(countdownTimer));
+
+const getDeadlineHours = (project: Projects): number => {
+    const name = project.service?.name ?? '';
+    if (name.includes('Premium') || name.includes('Luxury')) return 24;
+    return 12;
+};
+
+const getCountdown = (project: Projects): string | null => {
+    if (project.status !== 'in_progress' || !project.in_progress_since) return null;
+    const deadlineMs = getDeadlineHours(project) * 60 * 60 * 1000;
+    const deadline = new Date(project.in_progress_since).getTime() + deadlineMs;
+    const remaining = deadline - now.value;
+    if (remaining <= 0) return 'overdue';
+    const hours = Math.floor(remaining / 3_600_000);
+    const minutes = Math.floor((remaining % 3_600_000) / 60_000);
+    return `${hours}h ${minutes}m`;
+};
+
+const getCountdownColor = (project: Projects): string => {
+    const countdown = getCountdown(project);
+    if (!countdown || countdown === 'overdue') return 'text-red-500';
+    const deadlineMs = getDeadlineHours(project) * 60 * 60 * 1000;
+    const deadline = new Date(project.in_progress_since!).getTime() + deadlineMs;
+    const remaining = deadline - now.value;
+    const hours = remaining / 3_600_000;
+    if (hours < 4) return 'text-red-500';
+    if (hours < 12) return 'text-yellow-500';
+    return 'text-green-600';
 };
 
 const openViewModal = (project: Projects, fromNotification = false) => {
@@ -99,15 +153,26 @@ const closeViewModal = () => {
 };
 
 const updateProject = <K extends keyof typeof form>(projectId: number, field: K, value: any) => {
+    // Check forward-only status transition
+    if (field === 'status') {
+        const project = projects.value.data.find((p) => p.id === projectId);
+        if (project) {
+            const allowed = allowedTransitions[project.status] || [];
+            if (!allowed.includes(value as string)) {
+                toast.error('You can only move the status forward.', { position: 'top-right' });
+                return;
+            }
+        }
+    }
+
     router.patch(
         route('editor.projects.update', projectId),
         { [field]: value },
         {
             preserveScroll: true,
-            preserveState: true,
+            preserveState: false,
             onSuccess: () => {
-                const project = projects.value.data.find((p) => p.id === projectId);
-                if (project) (project as any)[field] = value;
+                now.value = Date.now();
             },
         },
     );
@@ -198,7 +263,10 @@ onMounted(() => {
 
                         <!-- Status Select -->
                         <TableCell>
-                            <Select :modelValue="project.status" @update:modelValue="(value) => updateProject(project.id, 'status', value)">
+                            <Select
+                                :modelValue="project.status"
+                                @update:modelValue="(value) => updateProject(project.id, 'status', value)"
+                            >
                                 <SelectTrigger
                                     class="w-[180px]"
                                     :class="{
@@ -233,6 +301,14 @@ onMounted(() => {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
+
+                            <div
+                                v-if="getCountdown(project)"
+                                class="mt-1 text-xs font-medium"
+                                :class="getCountdownColor(project)"
+                            >
+                                {{ getCountdown(project) === 'overdue' ? 'Overdue' : `${getCountdown(project)} left` }}
+                            </div>
                         </TableCell>
 
                         <!-- Priority Select -->
@@ -300,4 +376,5 @@ onMounted(() => {
             @close="closeViewModal"
         />
     </AppLayout>
+    <Toaster />
 </template>

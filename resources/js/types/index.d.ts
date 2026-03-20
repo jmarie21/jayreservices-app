@@ -46,7 +46,7 @@ type Editor = {
     name: string;
 };
 
-type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
+type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled';
 
 export interface Services {
     id: number;
@@ -87,7 +87,8 @@ export interface Projects {
     per_property_count?: number;
     rush?: boolean;
 
-    status: 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
+    in_progress_since: string | null;
+    status: 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled';
     priority: 'urgent' | 'high' | 'normal' | 'low';
     extra_fields?: Record<string, any>;
 

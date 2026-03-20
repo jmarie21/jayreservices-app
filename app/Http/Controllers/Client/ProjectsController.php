@@ -28,6 +28,7 @@ class ProjectsController extends Controller
                 'pending' => ['todo', 'backlog'],
                 'in_progress' => ['in_progress', 'for_qa', 'done_qa', 'revision'],
                 'completed' => ['revision_completed', 'sent_to_client'],
+                'cancelled' => ['cancelled'],
             ];
 
             if ($request->filled('status')) {

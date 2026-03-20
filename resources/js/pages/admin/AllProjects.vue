@@ -17,7 +17,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
-type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
+type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled';
 type Priority = 'urgent' | 'high' | 'normal' | 'low';
 interface Filters {
     status?: string;
@@ -90,6 +90,7 @@ const statusLabels: Record<Status, string> = {
     revision_completed: 'Revision Completed',
     backlog: 'Backlog',
     sent_to_client: 'Sent to Client',
+    cancelled: 'Cancelled',
 };
 
 const openViewModal = (project: Projects) => {
@@ -267,6 +268,17 @@ const deleteProject = () => {
     });
 };
 
+const exportUrl = computed(() => {
+    const params = new URLSearchParams();
+    Object.entries(filters.value).forEach(([key, value]) => {
+        if (value !== '' && value !== null && value !== undefined) {
+            params.append(key, value);
+        }
+    });
+    const qs = params.toString();
+    return route('projects.all.export') + (qs ? `?${qs}` : '');
+});
+
 // 👇 Add this: Handle opening modal from notification
 onMounted(() => {
     console.log('Page mounted'); // 👈 Debug
@@ -294,7 +306,12 @@ onMounted(() => {
             <div class="mb-2 flex items-center justify-between">
                 <h1 class="text-3xl font-bold">All Projects</h1>
 
-                <NotificationBell />
+                <div class="flex items-center gap-3">
+                    <a :href="exportUrl" target="_blank">
+                        <Button variant="outline">Export to Excel</Button>
+                    </a>
+                    <NotificationBell />
+                </div>
             </div>
 
             <!-- Filters section -->
@@ -368,6 +385,7 @@ onMounted(() => {
                                         'text-purple-500': project.status === 'sent_to_client',
                                         'text-red-500': project.status === 'revision',
                                         'text-green-500': project.status === 'revision_completed',
+                                        'text-rose-700': project.status === 'cancelled',
                                     }"
                                 >
                                     <SelectValue placeholder="Select status" />
@@ -386,6 +404,7 @@ onMounted(() => {
                                             'text-purple-500': key === 'sent_to_client',
                                             'text-red-500': key === 'revision',
                                             'text-green-500': key === 'revision_completed',
+                                            'text-rose-700': key === 'cancelled',
                                         }"
                                     >
                                         {{ label }}

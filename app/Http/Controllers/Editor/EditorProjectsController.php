@@ -7,7 +7,6 @@ use App\Mail\ProjectSentToClientMail;
 use App\Models\Project;
 use App\Notifications\ClientProjectStatusNotification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -26,12 +25,12 @@ class EditorProjectsController extends Controller
 
         $projects = Project::with(['client', 'service', 'comments.user'])
             ->where('editor_id', $editor->id)
-            ->when($filters['status'] ?? null, fn($q, $status) => $q->where('status', $status))
-            ->when($filters['date_from'] ?? null, fn($q, $date) => $q->whereDate('created_at', '>=', $date))
-            ->when($filters['date_to'] ?? null, fn($q, $date) => $q->whereDate('created_at', '<=', $date))
+            ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
+            ->when($filters['date_from'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '<=', $date))
             ->when($filters['search'] ?? null, function ($q, $search) {
                 $q->where('project_name', 'like', "%$search%")
-                  ->orWhereHas('client', fn($q) => $q->where('name', 'like', "%$search%"));
+                    ->orWhereHas('client', fn ($q) => $q->where('name', 'like', "%$search%"));
             })
             ->latest()
             ->paginate(10)
@@ -55,7 +54,6 @@ class EditorProjectsController extends Controller
             abort(403, 'Unauthorized');
         }
 
-
         $validated = $request->validate([
             'editor_id' => 'nullable|exists:users,id',
             'status' => 'nullable|string',
@@ -65,16 +63,36 @@ class EditorProjectsController extends Controller
             'priority' => 'nullable|in:urgent,high,normal,low',
         ]);
 
-        if (!empty($validated['output_link'])) {
+        // Enforce forward-only status transitions for editors
+        if (isset($validated['status'])) {
+            $allowed = Project::EDITOR_ALLOWED_TRANSITIONS[$project->status] ?? [];
+            if (! in_array($validated['status'], $allowed)) {
+                abort(422, 'Invalid status transition.');
+            }
+        }
+
+        if (! empty($validated['output_link'])) {
             $validated['output_link'] = array_map(function ($item) {
-                if (is_array($item) && !empty($item['link']) && !preg_match('/^https?:\/\//', $item['link'])) {
-                    $item['link'] = 'https://' . $item['link'];
+                if (is_array($item) && ! empty($item['link']) && ! preg_match('/^https?:\/\//', $item['link'])) {
+                    $item['link'] = 'https://'.$item['link'];
                 }
+
                 return $item;
             }, $validated['output_link']);
         }
 
         $oldStatus = $project->status;
+        $newStatus = $validated['status'] ?? null;
+
+        // Track in_progress_since timer
+        if ($newStatus === 'in_progress') {
+            $validated['in_progress_since'] = now();
+        }
+
+        // Clear timer when moving forward out of in_progress
+        if ($newStatus !== null && $newStatus !== 'in_progress' && $project->status === 'in_progress') {
+            $validated['in_progress_since'] = null;
+        }
 
         $project->update($validated);
 
@@ -99,12 +117,11 @@ class EditorProjectsController extends Controller
                     ->where('created_at', '>', now()->subMinutes(5))
                     ->exists();
 
-                if (!$recentNotification) {
+                if (! $recentNotification) {
                     $admin->notify(new \App\Notifications\ProjectStatusNotification($project, $newStatus, 'editor'));
                 }
             }
         }
-
 
         // ✅ Send email if status changed to "sent_to_client"
         if (
@@ -128,7 +145,7 @@ class EditorProjectsController extends Controller
                     ->where('created_at', '>', now()->subMinutes(5))
                     ->exists();
 
-                if (!$recentClientNotification) {
+                if (! $recentClientNotification) {
                     $client->notify(new ClientProjectStatusNotification($project, 'sent_to_client'));
 
                     Log::info('Client notified about project sent to client', [
@@ -144,5 +161,4 @@ class EditorProjectsController extends Controller
 
         return back()->with('success', 'Project updated successfully.');
     }
-
 }

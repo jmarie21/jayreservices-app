@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ProjectsExport;
 use App\Http\Controllers\Controller;
 use App\Mail\ProjectSentToClientMail;
 use App\Models\Project;
@@ -15,6 +16,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProjectManagement extends Controller
 {
@@ -140,6 +143,19 @@ class ProjectManagement extends Controller
         ]);
     }
 
+    public function exportAllProjects(Request $request): BinaryFileResponse
+    {
+        $export = new ProjectsExport(
+            status: $request->input('status'),
+            dateFrom: $request->input('date_from'),
+            dateTo: $request->input('date_to'),
+            search: $request->input('search'),
+            editorId: $request->input('editor_id'),
+        );
+
+        return Excel::download($export, 'projects-'.now()->format('Y-m-d').'.xlsx');
+    }
+
     public function update(Request $request, Project $project)
     {
         $validated = $request->validate([
@@ -164,6 +180,15 @@ class ProjectManagement extends Controller
 
         $oldStatus = $project->status;
         $oldEditorId = $project->editor_id;
+
+        // Clear timer when admin re-assigns to a different editor
+        if (isset($validated['editor_id']) && $validated['editor_id'] !== $project->editor_id) {
+            $validated['in_progress_since'] = null;
+
+            if ($project->status === 'in_progress') {
+                $validated['status'] = 'todo';
+            }
+        }
 
         $project->update($validated);
 

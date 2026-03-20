@@ -34,7 +34,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
-type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
+type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled';
 type Priority = 'urgent' | 'high' | 'normal' | 'low';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Project Management', href: '/project-mgmt' }];
@@ -104,6 +104,7 @@ const statusLabels: Record<Status, string> = {
     revision_completed: 'Revision Completed',
     backlog: 'Backlog',
     sent_to_client: 'Sent to Client',
+    cancelled: 'Cancelled',
 };
 
 const openViewModal = (project: Projects) => {
@@ -337,6 +338,7 @@ const goToPage = (pageNumber: number) => {
                                         'text-purple-500': project.status === 'sent_to_client',
                                         'text-red-500': project.status === 'revision',
                                         'text-green-500': project.status === 'revision_completed',
+                                        'text-rose-700': project.status === 'cancelled',
                                     }"
                                 >
                                     <SelectValue placeholder="Select status" />
@@ -355,6 +357,7 @@ const goToPage = (pageNumber: number) => {
                                             'text-purple-500': key === 'sent_to_client',
                                             'text-red-500': key === 'revision',
                                             'text-green-500': key === 'revision_completed',
+                                            'text-rose-700': key === 'cancelled',
                                         }"
                                     >
                                         {{ label }}
