@@ -22,7 +22,10 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMap
 
     public function query(): Builder
     {
-        $query = Project::with(['client', 'service', 'editor'])->latest();
+        $query = Project::with(['client', 'service', 'editor'])
+            ->join('users', 'projects.client_id', '=', 'users.id')
+            ->orderBy('users.name')
+            ->select('projects.*');
 
         if ($this->status) {
             $query->where('status', $this->status);
@@ -37,14 +40,14 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMap
         }
 
         if ($this->dateFrom && $this->dateTo) {
-            $query->whereBetween('created_at', [
+            $query->whereBetween('projects.created_at', [
                 Carbon::parse($this->dateFrom)->startOfDay(),
                 Carbon::parse($this->dateTo)->endOfDay(),
             ]);
         } elseif ($this->dateFrom) {
-            $query->where('created_at', '>=', Carbon::parse($this->dateFrom)->startOfDay());
+            $query->where('projects.created_at', '>=', Carbon::parse($this->dateFrom)->startOfDay());
         } elseif ($this->dateTo) {
-            $query->where('created_at', '<=', Carbon::parse($this->dateTo)->endOfDay());
+            $query->where('projects.created_at', '<=', Carbon::parse($this->dateTo)->endOfDay());
         }
 
         if ($this->search) {
