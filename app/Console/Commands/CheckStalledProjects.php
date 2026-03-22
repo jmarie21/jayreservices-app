@@ -42,17 +42,17 @@ class CheckStalledProjects extends Command
 
         foreach ($stalled as $project) {
             $project->update([
-                'status' => 'todo',
+                'status' => 'overdue',
                 'editor_id' => null,
                 'in_progress_since' => null,
             ]);
 
             $admins->each(fn (User $admin) => $admin->notify(new ProjectStalledNotification($project)));
 
-            $this->info("Unassigned stalled project: {$project->project_name} (ID: {$project->id})");
+            $this->info("Overdue project: {$project->project_name} (ID: {$project->id})");
         }
 
-        $this->info("Total stalled projects unassigned: {$stalled->count()}");
+        $this->info("Total overdue projects: {$stalled->count()}");
 
         return self::SUCCESS;
     }

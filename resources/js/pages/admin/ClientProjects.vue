@@ -35,7 +35,7 @@ import { Clock } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
-type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled';
+type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled' | 'overdue';
 type Priority = 'urgent' | 'high' | 'normal' | 'low';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Project Management', href: '/project-mgmt' }];
@@ -96,7 +96,7 @@ const form = useForm<{
 });
 
 // Status labels for badges
-const statusLabels: Record<Status, string> = {
+const statusLabels: Record<Exclude<Status, 'overdue'>, string> = {
     todo: 'To Do',
     in_progress: 'In Progress',
     for_qa: 'For QA',
@@ -121,8 +121,10 @@ onUnmounted(() => clearInterval(countdownTimer));
 
 const getDeadlineHours = (project: Projects): number => {
     const name = project.service?.name ?? '';
-    if (name.includes('Premium') || name.includes('Luxury')) return 24;
-    return 12;
+    const isRush = !!project.rush;
+    if (name.includes('Luxury')) return isRush ? 18 : 36;
+    if (name.includes('Premium')) return isRush ? 12 : 24;
+    return isRush ? 6 : 12;
 };
 
 const getCountdown = (project: Projects): string | null => {
@@ -368,7 +370,8 @@ const goToPage = (pageNumber: number) => {
 
                         <!-- Status Select -->
                         <TableCell>
-                            <Select :modelValue="project.status" @update:modelValue="(value) => updateProject(project.id, 'status', value)">
+                            <span v-if="project.status === 'overdue'" class="font-semibold text-red-600">Overdue</span>
+                            <Select v-else :modelValue="project.status" @update:modelValue="(value) => updateProject(project.id, 'status', value)">
                                 <SelectTrigger
                                     class="w-[180px]"
                                     :class="{

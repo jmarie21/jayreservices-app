@@ -66,12 +66,17 @@ class Project extends Model
     public function getStallDeadlineHours(): int
     {
         $serviceName = $this->service?->name ?? '';
+        $isRush = (bool) $this->rush;
 
-        if (str_contains($serviceName, 'Premium') || str_contains($serviceName, 'Luxury')) {
-            return 24;
+        if (str_contains($serviceName, 'Luxury')) {
+            return $isRush ? 18 : 36;
         }
 
-        return 12;
+        if (str_contains($serviceName, 'Premium')) {
+            return $isRush ? 12 : 24;
+        }
+
+        return $isRush ? 6 : 12;
     }
 
     public function client(): BelongsTo

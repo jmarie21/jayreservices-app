@@ -27,7 +27,7 @@ it('auto-unassigns a basic service project stalled for 12+ hours', function () {
     $this->artisan('projects:check-stalled')->assertSuccessful();
 
     $project->refresh();
-    expect($project->status)->toBe('todo');
+    expect($project->status)->toBe('overdue');
     expect($project->editor_id)->toBeNull();
     expect($project->in_progress_since)->toBeNull();
 });
@@ -58,7 +58,7 @@ it('auto-unassigns a premium service project stalled for 24+ hours', function ()
     $this->artisan('projects:check-stalled')->assertSuccessful();
 
     $project->refresh();
-    expect($project->status)->toBe('todo');
+    expect($project->status)->toBe('overdue');
     expect($project->editor_id)->toBeNull();
     expect($project->in_progress_since)->toBeNull();
 });

@@ -102,8 +102,10 @@ onUnmounted(() => clearInterval(countdownTimer));
 
 const getDeadlineHours = (project: Projects): number => {
     const name = project.service?.name ?? '';
-    if (name.includes('Premium') || name.includes('Luxury')) return 24;
-    return 12;
+    const isRush = !!project.rush;
+    if (name.includes('Luxury')) return isRush ? 18 : 36;
+    if (name.includes('Premium')) return isRush ? 12 : 24;
+    return isRush ? 6 : 12;
 };
 
 const getCountdown = (project: Projects): string | null => {
