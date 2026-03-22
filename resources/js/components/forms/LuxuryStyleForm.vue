@@ -691,7 +691,7 @@ function decrementPerProperty() {
 
                     <!-- 3D Text and Captions -->
                     <div class="space-y-2">
-                        <Label>Do you need 3D text and captions?</Label>
+                        <Label>Do you need 3D text and captions? (Just the intro and outro are included. If you have additional talking parts to include, there will be an extra $5 per part (Except caption).)</Label>
                         <div class="flex flex-col gap-2">
                             <div v-for="caption in captionsOptions" :key="caption.id" class="mb-1 flex items-center gap-2">
                                 <Checkbox
