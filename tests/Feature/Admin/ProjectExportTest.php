@@ -63,3 +63,33 @@ it('returns a successful response when date range filter is applied', function (
         ->assertSuccessful()
         ->assertDownload();
 });
+
+// Preview export tests
+
+it('returns json data for export preview', function () {
+    $project = Project::factory()->create(['status' => 'todo']);
+
+    $this->actingAs($this->admin)
+        ->getJson(route('projects.all.preview-export'))
+        ->assertSuccessful()
+        ->assertJsonCount(1)
+        ->assertJsonFragment(['project_name' => $project->project_name]);
+});
+
+it('filters preview data by status', function () {
+    Project::factory()->create(['status' => 'todo']);
+    Project::factory()->create(['status' => 'in_progress']);
+
+    $this->actingAs($this->admin)
+        ->getJson(route('projects.all.preview-export', ['status' => 'todo']))
+        ->assertSuccessful()
+        ->assertJsonCount(1);
+});
+
+it('forbids non-admin users from accessing the preview', function () {
+    $client = User::factory()->create(['role' => 'client']);
+
+    $this->actingAs($client)
+        ->getJson(route('projects.all.preview-export'))
+        ->assertForbidden();
+});

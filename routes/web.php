@@ -46,6 +46,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/all-projects', [ProjectManagement::class, 'showAllProjects'])->name('projects.all');
     Route::get('/all-projects/export', [ProjectManagement::class, 'exportAllProjects'])->name('projects.all.export');
+    Route::get('/all-projects/preview-export', [ProjectManagement::class, 'previewExport'])->name('projects.all.preview-export');
     Route::put('/project-mgmt/{project}', [ProjectManagement::class, 'adminUpdateProject'])->name('admin.project.update');
 
     // Services
