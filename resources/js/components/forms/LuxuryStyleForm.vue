@@ -69,7 +69,7 @@ const effectsOptions: Option[] = [
 const captionsOptions: Option[] = [
     { id: '3D Text behind the Agent Talking', label: '3D Text behind the Agent Talking (ADD $10)' },
     { id: '3D Text tracked on the ground etc.', label: '3D Text tracked on the ground etc. (ADD $15)' },
-    { id: '3D Graphics together with text', label: '3D Graphics together with text (ADD $10)' },
+    { id: '3D Graphics together with text', label: '3D Graphics together with text (ADD $20)' },
     { id: 'Captions while the agent is talking', label: 'Captions while the agent is talking (ADD $10)' },
     { id: 'No Captions', label: 'NO NEED TO ADD TEXT OR CAPTIONS' },
 ];
@@ -175,7 +175,7 @@ function calculateTotalPrice() {
     // Captions cost
     if (form.extra_fields?.captions.includes('3D Text behind the Agent Talking')) total += 10;
     if (form.extra_fields?.captions.includes('3D Text tracked on the ground etc.')) total += 15;
-    if (form.extra_fields?.captions.includes('3D Graphics together with text')) total += 10;
+    if (form.extra_fields?.captions.includes('3D Graphics together with text')) total += 20;
     if (form.extra_fields?.captions.includes('Captions while the agent is talking')) total += 10;
 
     // Effects with quantities
