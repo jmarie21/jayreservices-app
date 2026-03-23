@@ -522,6 +522,11 @@ class ProjectManagement extends Controller
             if (in_array('3D Text tracked on the ground etc.', $captions)) {
                 $editorPrice += 400;
             }
+
+            // 3D Graphics together with text
+            if (in_array('3D Graphics together with text', $captions)) {
+                $editorPrice += 500;
+            }
         }
 
         // =====================
@@ -751,6 +756,11 @@ class ProjectManagement extends Controller
             // 3D Track Text
             if (in_array('3D Text tracked on the ground etc.', $captions)) {
                 $editorPrice += 400;
+            }
+
+            // 3D Graphics together with text
+            if (in_array('3D Graphics together with text', $captions)) {
+                $editorPrice += 500;
             }
         }
 

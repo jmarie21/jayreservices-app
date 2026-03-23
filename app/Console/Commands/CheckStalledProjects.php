@@ -17,7 +17,7 @@ class CheckStalledProjects extends Command
     /**
      * @var string
      */
-    protected $description = 'Auto-unassign editors from in_progress projects that exceed their service tier deadline';
+    protected $description = 'Mark in_progress projects as overdue when they exceed their service tier deadline';
 
     public function handle(): int
     {
@@ -43,8 +43,6 @@ class CheckStalledProjects extends Command
         foreach ($stalled as $project) {
             $project->update([
                 'status' => 'overdue',
-                'editor_id' => null,
-                'in_progress_since' => null,
             ]);
 
             $admins->each(fn (User $admin) => $admin->notify(new ProjectStalledNotification($project)));
