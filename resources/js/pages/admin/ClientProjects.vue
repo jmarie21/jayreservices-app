@@ -31,10 +31,11 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { Clock } from 'lucide-vue-next';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
-type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
+type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled' | 'overdue';
 type Priority = 'urgent' | 'high' | 'normal' | 'low';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Project Management', href: '/project-mgmt' }];
@@ -95,7 +96,7 @@ const form = useForm<{
 });
 
 // Status labels for badges
-const statusLabels: Record<Status, string> = {
+const statusLabels: Record<Exclude<Status, 'overdue'>, string> = {
     todo: 'To Do',
     in_progress: 'In Progress',
     for_qa: 'For QA',
@@ -104,6 +105,49 @@ const statusLabels: Record<Status, string> = {
     revision_completed: 'Revision Completed',
     backlog: 'Backlog',
     sent_to_client: 'Sent to Client',
+    cancelled: 'Cancelled',
+};
+
+// Countdown timer
+const now = ref(Date.now());
+let countdownTimer: ReturnType<typeof setInterval>;
+
+onMounted(() => {
+    countdownTimer = setInterval(() => {
+        now.value = Date.now();
+    }, 60_000);
+});
+onUnmounted(() => clearInterval(countdownTimer));
+
+const getDeadlineHours = (project: Projects): number => {
+    const name = project.service?.name ?? '';
+    const isRush = !!project.rush;
+    if (name.includes('Luxury')) return isRush ? 18 : 36;
+    if (name.includes('Premium')) return isRush ? 12 : 24;
+    return isRush ? 6 : 12;
+};
+
+const getCountdown = (project: Projects): string | null => {
+    if (project.status !== 'in_progress' || !project.in_progress_since) return null;
+    const deadlineMs = getDeadlineHours(project) * 60 * 60 * 1000;
+    const deadline = new Date(project.in_progress_since).getTime() + deadlineMs;
+    const remaining = deadline - now.value;
+    if (remaining <= 0) return 'overdue';
+    const hours = Math.floor(remaining / 3_600_000);
+    const minutes = Math.floor((remaining % 3_600_000) / 60_000);
+    return `${hours}h ${minutes}m`;
+};
+
+const getCountdownColor = (project: Projects): string => {
+    const countdown = getCountdown(project);
+    if (!countdown || countdown === 'overdue') return 'text-red-500';
+    const deadlineMs = getDeadlineHours(project) * 60 * 60 * 1000;
+    const deadline = new Date(project.in_progress_since!).getTime() + deadlineMs;
+    const remaining = deadline - now.value;
+    const hours = remaining / 3_600_000;
+    if (hours < 4) return 'text-red-500';
+    if (hours < 12) return 'text-yellow-500';
+    return 'text-green-600';
 };
 
 const openViewModal = (project: Projects) => {
@@ -326,7 +370,8 @@ const goToPage = (pageNumber: number) => {
 
                         <!-- Status Select -->
                         <TableCell>
-                            <Select :modelValue="project.status" @update:modelValue="(value) => updateProject(project.id, 'status', value)">
+                            <span v-if="project.status === 'overdue'" class="font-semibold text-red-600">Overdue</span>
+                            <Select v-else :modelValue="project.status" @update:modelValue="(value) => updateProject(project.id, 'status', value)">
                                 <SelectTrigger
                                     class="w-[180px]"
                                     :class="{
@@ -337,6 +382,7 @@ const goToPage = (pageNumber: number) => {
                                         'text-purple-500': project.status === 'sent_to_client',
                                         'text-red-500': project.status === 'revision',
                                         'text-green-500': project.status === 'revision_completed',
+                                        'text-rose-700': project.status === 'cancelled',
                                     }"
                                 >
                                     <SelectValue placeholder="Select status" />
@@ -355,12 +401,22 @@ const goToPage = (pageNumber: number) => {
                                             'text-purple-500': key === 'sent_to_client',
                                             'text-red-500': key === 'revision',
                                             'text-green-500': key === 'revision_completed',
+                                            'text-rose-700': key === 'cancelled',
                                         }"
                                     >
                                         {{ label }}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
+
+                            <div
+                                v-if="getCountdown(project)"
+                                class="mt-1 flex items-center gap-1 text-xs font-medium"
+                                :class="getCountdownColor(project)"
+                            >
+                                <Clock class="size-3" />
+                                {{ getCountdown(project) === 'overdue' ? 'Overdue' : `${getCountdown(project)} left` }}
+                            </div>
                         </TableCell>
 
                         <!-- Priority Select -->

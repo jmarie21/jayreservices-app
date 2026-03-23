@@ -4,9 +4,11 @@ import NotificationBell from '@/components/NotificationBell.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Toaster } from '@/components/ui/sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -14,10 +16,12 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import axios from 'axios';
+import { ChevronDown, Clock, Download, Eye } from 'lucide-vue-next';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
-type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog';
+type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled' | 'overdue';
 type Priority = 'urgent' | 'high' | 'normal' | 'low';
 interface Filters {
     status?: string;
@@ -81,7 +85,7 @@ const form = useForm<{ editor_id: number | null; status: Status; editor_price: n
 });
 
 // Status labels for badges
-const statusLabels: Record<Status, string> = {
+const statusLabels: Record<Exclude<Status, 'overdue'>, string> = {
     todo: 'To Do',
     in_progress: 'In Progress',
     for_qa: 'For QA',
@@ -90,6 +94,49 @@ const statusLabels: Record<Status, string> = {
     revision_completed: 'Revision Completed',
     backlog: 'Backlog',
     sent_to_client: 'Sent to Client',
+    cancelled: 'Cancelled',
+};
+
+// Countdown timer
+const now = ref(Date.now());
+let countdownTimer: ReturnType<typeof setInterval>;
+
+onMounted(() => {
+    countdownTimer = setInterval(() => {
+        now.value = Date.now();
+    }, 60_000);
+});
+onUnmounted(() => clearInterval(countdownTimer));
+
+const getDeadlineHours = (project: Projects): number => {
+    const name = project.service?.name ?? '';
+    const isRush = !!project.rush;
+    if (name.includes('Luxury')) return isRush ? 18 : 36;
+    if (name.includes('Premium')) return isRush ? 12 : 24;
+    return isRush ? 6 : 12;
+};
+
+const getCountdown = (project: Projects): string | null => {
+    if (project.status !== 'in_progress' || !project.in_progress_since) return null;
+    const deadlineMs = getDeadlineHours(project) * 60 * 60 * 1000;
+    const deadline = new Date(project.in_progress_since).getTime() + deadlineMs;
+    const remaining = deadline - now.value;
+    if (remaining <= 0) return 'overdue';
+    const hours = Math.floor(remaining / 3_600_000);
+    const minutes = Math.floor((remaining % 3_600_000) / 60_000);
+    return `${hours}h ${minutes}m`;
+};
+
+const getCountdownColor = (project: Projects): string => {
+    const countdown = getCountdown(project);
+    if (!countdown || countdown === 'overdue') return 'text-red-500';
+    const deadlineMs = getDeadlineHours(project) * 60 * 60 * 1000;
+    const deadline = new Date(project.in_progress_since!).getTime() + deadlineMs;
+    const remaining = deadline - now.value;
+    const hours = remaining / 3_600_000;
+    if (hours < 4) return 'text-red-500';
+    if (hours < 12) return 'text-yellow-500';
+    return 'text-green-600';
 };
 
 const openViewModal = (project: Projects) => {
@@ -267,6 +314,53 @@ const deleteProject = () => {
     });
 };
 
+const filterQueryString = computed(() => {
+    const params = new URLSearchParams();
+    Object.entries(filters.value).forEach(([key, value]) => {
+        if (value !== '' && value !== null && value !== undefined) {
+            params.append(key, value);
+        }
+    });
+    return params.toString();
+});
+
+const exportUrl = computed(() => {
+    const qs = filterQueryString.value;
+    return route('projects.all.export') + (qs ? `?${qs}` : '');
+});
+
+// Export preview
+interface ExportRow {
+    project_name: string;
+    service: string;
+    client: string;
+    editor: string;
+    status: string;
+    priority: string;
+    total_price: number | null;
+    editor_price: number | null;
+    created_at: string;
+}
+
+const showPreviewModal = ref(false);
+const previewData = ref<ExportRow[]>([]);
+const previewLoading = ref(false);
+
+const previewExport = async () => {
+    previewLoading.value = true;
+    try {
+        const qs = filterQueryString.value;
+        const url = route('projects.all.preview-export') + (qs ? `?${qs}` : '');
+        const { data } = await axios.get<ExportRow[]>(url);
+        previewData.value = data;
+        showPreviewModal.value = true;
+    } catch {
+        toast.error('Failed to load export preview.', { position: 'top-right' });
+    } finally {
+        previewLoading.value = false;
+    }
+};
+
 // 👇 Add this: Handle opening modal from notification
 onMounted(() => {
     console.log('Page mounted'); // 👈 Debug
@@ -294,7 +388,29 @@ onMounted(() => {
             <div class="mb-2 flex items-center justify-between">
                 <h1 class="text-3xl font-bold">All Projects</h1>
 
-                <NotificationBell />
+                <div class="flex items-center gap-3">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                            <Button variant="outline">
+                                Export to Excel
+                                <ChevronDown class="ml-1 size-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem @click="previewExport" :disabled="previewLoading">
+                                <Eye class="mr-2 size-4" />
+                                {{ previewLoading ? 'Loading...' : 'View Data' }}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem as-child>
+                                <a :href="exportUrl" target="_blank">
+                                    <Download class="mr-2 size-4" />
+                                    Export
+                                </a>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <NotificationBell />
+                </div>
             </div>
 
             <!-- Filters section -->
@@ -357,7 +473,8 @@ onMounted(() => {
 
                         <!-- Status Select -->
                         <TableCell>
-                            <Select :modelValue="project.status" @update:modelValue="(value) => updateProject(project.id, 'status', value)">
+                            <span v-if="project.status === 'overdue'" class="font-semibold text-red-600">Overdue</span>
+                            <Select v-else :modelValue="project.status" @update:modelValue="(value) => updateProject(project.id, 'status', value)">
                                 <SelectTrigger
                                     class="w-[180px]"
                                     :class="{
@@ -368,6 +485,7 @@ onMounted(() => {
                                         'text-purple-500': project.status === 'sent_to_client',
                                         'text-red-500': project.status === 'revision',
                                         'text-green-500': project.status === 'revision_completed',
+                                        'text-rose-700': project.status === 'cancelled',
                                     }"
                                 >
                                     <SelectValue placeholder="Select status" />
@@ -386,12 +504,22 @@ onMounted(() => {
                                             'text-purple-500': key === 'sent_to_client',
                                             'text-red-500': key === 'revision',
                                             'text-green-500': key === 'revision_completed',
+                                            'text-rose-700': key === 'cancelled',
                                         }"
                                     >
                                         {{ label }}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
+
+                            <div
+                                v-if="getCountdown(project)"
+                                class="mt-1 flex items-center gap-1 text-xs font-medium"
+                                :class="getCountdownColor(project)"
+                            >
+                                <Clock class="size-3" />
+                                {{ getCountdown(project) === 'overdue' ? 'Overdue' : `${getCountdown(project)} left` }}
+                            </div>
                         </TableCell>
 
                         <!-- Priority Select -->
@@ -502,6 +630,54 @@ onMounted(() => {
             :role="pageProps.auth.user.role"
             @close="closeViewModal"
         />
+
+        <!-- Export Preview Modal -->
+        <Dialog :open="showPreviewModal" @update:open="showPreviewModal = $event">
+            <DialogContent class="flex max-h-[80vh] flex-col sm:max-w-5xl">
+                <DialogHeader>
+                    <DialogTitle>Export Preview ({{ previewData.length }} records)</DialogTitle>
+                </DialogHeader>
+                <ScrollArea class="min-h-0 max-h-[480px] flex-1">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Project Name</TableHead>
+                                <TableHead>Service</TableHead>
+                                <TableHead>Client</TableHead>
+                                <TableHead>Editor</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Priority</TableHead>
+                                <TableHead>Total Price</TableHead>
+                                <TableHead>Editor Price</TableHead>
+                                <TableHead>Created At</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="(row, index) in previewData" :key="index">
+                                <TableCell class="max-w-[180px] truncate">{{ row.project_name }}</TableCell>
+                                <TableCell>{{ row.service }}</TableCell>
+                                <TableCell>{{ row.client }}</TableCell>
+                                <TableCell>{{ row.editor }}</TableCell>
+                                <TableCell>{{ row.status }}</TableCell>
+                                <TableCell>{{ row.priority }}</TableCell>
+                                <TableCell>{{ row.total_price != null ? `$${row.total_price}` : '—' }}</TableCell>
+                                <TableCell>{{ row.editor_price != null ? `₱${row.editor_price}` : '—' }}</TableCell>
+                                <TableCell class="whitespace-nowrap">{{ row.created_at.split(' ')[0] }}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </ScrollArea>
+                <div class="flex shrink-0 justify-end gap-2 pt-2">
+                    <Button variant="outline" @click="showPreviewModal = false">Close</Button>
+                    <a :href="exportUrl" target="_blank">
+                        <Button>
+                            <Download class="mr-2 size-4" />
+                            Export to Excel
+                        </Button>
+                    </a>
+                </div>
+            </DialogContent>
+        </Dialog>
 
         <!-- Confirmation Delete Modal -->
         <Dialog :open="showDeleteModal" @update:open="showDeleteModal = $event">

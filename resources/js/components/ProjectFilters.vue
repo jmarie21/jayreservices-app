@@ -89,6 +89,7 @@ const handleEditorChange = (value: any) => {
                         <SelectItem value="revision">Revision</SelectItem>
                         <SelectItem value="revision_completed">Revision Completed</SelectItem>
                         <SelectItem value="backlog">Backlog</SelectItem>
+                        <SelectItem value="overdue">Overdue</SelectItem>
                     </template>
 
                     <!-- Client sees simplified statuses -->

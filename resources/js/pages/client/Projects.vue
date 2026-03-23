@@ -48,6 +48,7 @@ const clientStatusLabels: Record<string, string> = {
     pending: 'Pending',
     in_progress: 'In Progress',
     completed: 'Completed',
+    cancelled: 'Cancelled',
 };
 
 // Colors for statuses
@@ -55,6 +56,7 @@ const clientStatusClasses: Record<string, string> = {
     pending: 'bg-yellow-500 text-white',
     in_progress: 'bg-blue-500 text-white',
     completed: 'bg-green-600 text-white',
+    cancelled: 'bg-rose-700 text-white',
 };
 
 const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any; viewProjectId?: number | null }>>();
@@ -242,7 +244,7 @@ const markForRevision = (projectId: number) => {
                         </TableCell>
 
                         <TableCell class="space-x-4">
-                            <Button @click="openEditModal(project)" :disabled="mapStatusForClient(project.status) === 'completed'"> Edit </Button>
+                            <Button @click="openEditModal(project)" :disabled="mapStatusForClient(project.status) === 'completed' || mapStatusForClient(project.status) === 'cancelled'"> Edit </Button>
                             <Button @click="openViewModal(project)" class="bg-blue-500 hover:bg-blue-600 focus:ring-blue-300">View order</Button>
                             <Button
                                 @click="markForRevision(project.id)"
@@ -293,7 +295,17 @@ const markForRevision = (projectId: number) => {
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"
-            :project="selectedProject"
+            :project="
+                selectedProject
+                    ? {
+                          ...selectedProject,
+                          extra_fields: {
+                              effects: selectedProject.extra_fields?.effects ?? [],
+                              captions: selectedProject.extra_fields?.captions ?? [],
+                          },
+                      }
+                    : null
+            "
             @close="closeModal"
         />
 

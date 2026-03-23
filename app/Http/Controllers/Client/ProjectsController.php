@@ -28,6 +28,7 @@ class ProjectsController extends Controller
                 'pending' => ['todo', 'backlog'],
                 'in_progress' => ['in_progress', 'for_qa', 'done_qa', 'revision'],
                 'completed' => ['revision_completed', 'sent_to_client'],
+                'cancelled' => ['cancelled'],
             ];
 
             if ($request->filled('status')) {
@@ -249,6 +250,11 @@ class ProjectsController extends Controller
                 // 3D Track Text
                 if (in_array('3D Text tracked on the ground etc.', $captions)) {
                     $editorPrice += 400;
+                }
+
+                // 3D Graphics together with text
+                if (in_array('3D Graphics together with text', $captions)) {
+                    $editorPrice += 500;
                 }
             }
 

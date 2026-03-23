@@ -2,21 +2,24 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        "name",
-        "description",
-        "features",
-        "price",
-        "video_link"
+        'name',
+        'description',
+        'features',
+        'price',
+        'video_link',
     ];
 
     protected $casts = [
-        "features" => "array"
+        'features' => 'array',
     ];
 
     public function projects(): HasMany

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ProjectsExport;
 use App\Http\Controllers\Controller;
 use App\Mail\ProjectSentToClientMail;
 use App\Models\Project;
@@ -15,6 +16,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProjectManagement extends Controller
 {
@@ -140,6 +143,46 @@ class ProjectManagement extends Controller
         ]);
     }
 
+    public function previewExport(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $export = new ProjectsExport(
+            status: $request->input('status'),
+            dateFrom: $request->input('date_from'),
+            dateTo: $request->input('date_to'),
+            search: $request->input('search'),
+            editorId: $request->input('editor_id'),
+        );
+
+        $projects = $export->query()->get();
+
+        $data = $projects->map(fn (Project $project) => [
+            'project_name' => $project->project_name,
+            'service' => $project->service?->name ?? 'N/A',
+            'client' => $project->client?->name ?? 'N/A',
+            'editor' => $project->editor?->name ?? 'Unassigned',
+            'status' => $project->status,
+            'priority' => $project->priority,
+            'total_price' => $project->total_price,
+            'editor_price' => $project->editor_price,
+            'created_at' => Carbon::parse($project->created_at)->format('Y-m-d H:i:s'),
+        ]);
+
+        return response()->json($data);
+    }
+
+    public function exportAllProjects(Request $request): BinaryFileResponse
+    {
+        $export = new ProjectsExport(
+            status: $request->input('status'),
+            dateFrom: $request->input('date_from'),
+            dateTo: $request->input('date_to'),
+            search: $request->input('search'),
+            editorId: $request->input('editor_id'),
+        );
+
+        return Excel::download($export, 'projects-'.now()->format('Y-m-d').'.xlsx');
+    }
+
     public function update(Request $request, Project $project)
     {
         $validated = $request->validate([
@@ -164,6 +207,15 @@ class ProjectManagement extends Controller
 
         $oldStatus = $project->status;
         $oldEditorId = $project->editor_id;
+
+        // Clear timer when admin re-assigns to a different editor
+        if (isset($validated['editor_id']) && $validated['editor_id'] !== $project->editor_id) {
+            $validated['in_progress_since'] = null;
+
+            if (in_array($project->status, ['pending', 'in_progress', 'overdue'])) {
+                $validated['status'] = 'todo';
+            }
+        }
 
         $project->update($validated);
 
@@ -470,6 +522,11 @@ class ProjectManagement extends Controller
             if (in_array('3D Text tracked on the ground etc.', $captions)) {
                 $editorPrice += 400;
             }
+
+            // 3D Graphics together with text
+            if (in_array('3D Graphics together with text', $captions)) {
+                $editorPrice += 500;
+            }
         }
 
         // =====================
@@ -699,6 +756,11 @@ class ProjectManagement extends Controller
             // 3D Track Text
             if (in_array('3D Text tracked on the ground etc.', $captions)) {
                 $editorPrice += 400;
+            }
+
+            // 3D Graphics together with text
+            if (in_array('3D Graphics together with text', $captions)) {
+                $editorPrice += 500;
             }
         }
 

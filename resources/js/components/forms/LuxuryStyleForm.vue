@@ -69,6 +69,7 @@ const effectsOptions: Option[] = [
 const captionsOptions: Option[] = [
     { id: '3D Text behind the Agent Talking', label: '3D Text behind the Agent Talking (ADD $10)' },
     { id: '3D Text tracked on the ground etc.', label: '3D Text tracked on the ground etc. (ADD $15)' },
+    { id: '3D Graphics together with text', label: '3D Graphics together with text (ADD $20)' },
     { id: 'Captions while the agent is talking', label: 'Captions while the agent is talking (ADD $10)' },
     { id: 'No Captions', label: 'NO NEED TO ADD TEXT OR CAPTIONS' },
 ];
@@ -174,6 +175,7 @@ function calculateTotalPrice() {
     // Captions cost
     if (form.extra_fields?.captions.includes('3D Text behind the Agent Talking')) total += 10;
     if (form.extra_fields?.captions.includes('3D Text tracked on the ground etc.')) total += 15;
+    if (form.extra_fields?.captions.includes('3D Graphics together with text')) total += 20;
     if (form.extra_fields?.captions.includes('Captions while the agent is talking')) total += 10;
 
     // Effects with quantities
@@ -689,7 +691,7 @@ function decrementPerProperty() {
 
                     <!-- 3D Text and Captions -->
                     <div class="space-y-2">
-                        <Label>Do you need 3D text and captions?</Label>
+                        <Label>Do you need 3D text and captions? (Just the intro and outro are included. If you have additional talking parts to include, there will be an extra $5 per part (Except caption).)</Label>
                         <div class="flex flex-col gap-2">
                             <div v-for="caption in captionsOptions" :key="caption.id" class="mb-1 flex items-center gap-2">
                                 <Checkbox
