@@ -208,9 +208,21 @@ class ProjectManagement extends Controller
         $oldStatus = $project->status;
         $oldEditorId = $project->editor_id;
 
+        // Track revision_since timer
+        $newStatus = $validated['status'] ?? null;
+        if ($newStatus === 'revision') {
+            $validated['revision_since'] = now();
+        }
+
+        // Clear revision timer when moving out of revision
+        if ($newStatus !== null && $newStatus !== 'revision' && $project->status === 'revision') {
+            $validated['revision_since'] = null;
+        }
+
         // Clear timer when admin re-assigns to a different editor
         if (isset($validated['editor_id']) && $validated['editor_id'] !== $project->editor_id) {
             $validated['in_progress_since'] = null;
+            $validated['revision_since'] = null;
 
             if (in_array($project->status, ['pending', 'in_progress', 'overdue'])) {
                 $validated['status'] = 'todo';

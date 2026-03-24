@@ -94,6 +94,11 @@ class EditorProjectsController extends Controller
             $validated['in_progress_since'] = null;
         }
 
+        // Clear revision timer when moving forward out of revision
+        if ($newStatus !== null && $newStatus !== 'revision' && $project->status === 'revision') {
+            $validated['revision_since'] = null;
+        }
+
         $project->update($validated);
 
         /* ✅ Notify admin if editor changes the project status to:

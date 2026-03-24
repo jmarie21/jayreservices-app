@@ -88,6 +88,7 @@ export interface Projects {
     rush?: boolean;
 
     in_progress_since: string | null;
+    revision_since: string | null;
     status: 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled';
     priority: 'urgent' | 'high' | 'normal' | 'low';
     extra_fields?: Record<string, any>;

@@ -215,6 +215,78 @@ it('clears timer when admin re-assigns to a different editor', function () {
     expect($project->editor_id)->toBe($newEditor->id);
 });
 
+// --- Revision Timer Tracking Tests ---
+
+it('sets revision_since when admin moves status to revision', function () {
+    $project = Project::factory()->create([
+        'editor_id' => $this->editor->id,
+        'service_id' => $this->basicService->id,
+        'status' => 'sent_to_client',
+        'revision_since' => null,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->patch(route('projects.admin_update', $project), ['status' => 'revision'])
+        ->assertRedirect();
+
+    $project->refresh();
+    expect($project->revision_since)->not->toBeNull();
+});
+
+it('clears revision_since when editor moves forward from revision', function () {
+    $project = Project::factory()->create([
+        'editor_id' => $this->editor->id,
+        'service_id' => $this->basicService->id,
+        'status' => 'revision',
+        'revision_since' => now()->subHours(5),
+    ]);
+
+    $this->actingAs($this->editor)
+        ->patch(route('editor.projects.update', $project), ['status' => 'revision_completed'])
+        ->assertRedirect();
+
+    $project->refresh();
+    expect($project->revision_since)->toBeNull();
+});
+
+it('clears revision_since when admin re-assigns to a different editor', function () {
+    $newEditor = User::factory()->create(['role' => 'editor']);
+
+    $project = Project::factory()->create([
+        'editor_id' => $this->editor->id,
+        'service_id' => $this->basicService->id,
+        'status' => 'revision',
+        'revision_since' => now()->subHours(3),
+    ]);
+
+    $this->actingAs($this->admin)
+        ->patch(route('projects.admin_update', $project), ['editor_id' => $newEditor->id])
+        ->assertRedirect();
+
+    $project->refresh();
+    expect($project->revision_since)->toBeNull();
+});
+
+it('sets revision_since when client marks project for revision', function () {
+    $client = User::factory()->create(['role' => 'client']);
+
+    $project = Project::factory()->create([
+        'client_id' => $client->id,
+        'editor_id' => $this->editor->id,
+        'service_id' => $this->basicService->id,
+        'status' => 'sent_to_client',
+        'revision_since' => null,
+    ]);
+
+    $this->actingAs($client)
+        ->put(route('projects.updateStatus', $project), ['status' => 'revision'])
+        ->assertRedirect();
+
+    $project->refresh();
+    expect($project->status)->toBe('revision');
+    expect($project->revision_since)->not->toBeNull();
+});
+
 it('allows admin to set any status without forward-only restriction', function () {
     $project = Project::factory()->create([
         'editor_id' => $this->editor->id,

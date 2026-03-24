@@ -108,10 +108,19 @@ const getDeadlineHours = (project: Projects): number => {
     return isRush ? 6 : 12;
 };
 
+const getRevisionDeadlineHours = (): number => 3;
+
 const getCountdown = (project: Projects): string | null => {
-    if (project.status !== 'in_progress' || !project.in_progress_since) return null;
-    const deadlineMs = getDeadlineHours(project) * 60 * 60 * 1000;
-    const deadline = new Date(project.in_progress_since).getTime() + deadlineMs;
+    let since: string | null = null;
+    if (project.status === 'in_progress' && project.in_progress_since) {
+        since = project.in_progress_since;
+    } else if (project.status === 'revision' && project.revision_since) {
+        since = project.revision_since;
+    }
+    if (!since) return null;
+    const deadlineHours = project.status === 'revision' ? getRevisionDeadlineHours() : getDeadlineHours(project);
+    const deadlineMs = deadlineHours * 60 * 60 * 1000;
+    const deadline = new Date(since).getTime() + deadlineMs;
     const remaining = deadline - now.value;
     if (remaining <= 0) return 'overdue';
     const hours = Math.floor(remaining / 3_600_000);
@@ -119,11 +128,20 @@ const getCountdown = (project: Projects): string | null => {
     return `${hours}h ${minutes}m`;
 };
 
+const getTimerSince = (project: Projects): string | null => {
+    if (project.status === 'in_progress') return project.in_progress_since;
+    if (project.status === 'revision') return project.revision_since;
+    return null;
+};
+
 const getCountdownColor = (project: Projects): string => {
     const countdown = getCountdown(project);
     if (!countdown || countdown === 'overdue') return 'text-red-500';
-    const deadlineMs = getDeadlineHours(project) * 60 * 60 * 1000;
-    const deadline = new Date(project.in_progress_since!).getTime() + deadlineMs;
+    const since = getTimerSince(project);
+    if (!since) return 'text-green-600';
+    const deadlineHours = project.status === 'revision' ? getRevisionDeadlineHours() : getDeadlineHours(project);
+    const deadlineMs = deadlineHours * 60 * 60 * 1000;
+    const deadline = new Date(since).getTime() + deadlineMs;
     const remaining = deadline - now.value;
     const hours = remaining / 3_600_000;
     if (hours < 4) return 'text-red-500';
