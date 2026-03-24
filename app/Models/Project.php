@@ -50,6 +50,7 @@ class Project extends Model
         'per_property_count',
         'rush',
         'in_progress_since',
+        'revision_since',
     ];
 
     protected $casts = [
@@ -61,6 +62,7 @@ class Project extends Model
         'per_property_count' => 'integer',
         'rush' => 'boolean',
         'in_progress_since' => 'datetime',
+        'revision_since' => 'datetime',
     ];
 
     public function getStallDeadlineHours(): int

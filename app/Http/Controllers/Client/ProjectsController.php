@@ -425,7 +425,15 @@ class ProjectsController extends Controller
 
             $newStatus = strtolower($validated['status']);
             $oldStatus = $project->status;
-            $project->update(['status' => $newStatus]);
+
+            $updateData = ['status' => $newStatus];
+
+            // Track revision_since timer when client marks for revision
+            if ($newStatus === 'revision') {
+                $updateData['revision_since'] = now();
+            }
+
+            $project->update($updateData);
 
             Log::info('Project status updated', [
                 'project_id' => $project->id,
