@@ -637,7 +637,7 @@ onMounted(() => {
                 <DialogHeader>
                     <DialogTitle>Export Preview ({{ previewData.length }} records)</DialogTitle>
                 </DialogHeader>
-                <ScrollArea class="min-h-0 max-h-[480px] flex-1">
+                <ScrollArea class="min-h-0 max-h-[60vh] flex-1 overflow-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
