@@ -7,10 +7,13 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ProjectsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping
+class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, WithHeadings, WithMapping, WithStyles
 {
     public function __construct(
         private readonly ?string $status = null,
@@ -23,7 +26,7 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMap
     public function query(): Builder
     {
         $query = Project::with(['client', 'service', 'editor'])
-            ->latest();
+            ->oldest();
 
         if ($this->status) {
             $query->where('status', $this->status);
@@ -64,9 +67,10 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMap
     public function headings(): array
     {
         return [
+            'Client Name',
             'Project Name',
             'Service',
-            'Client Name',
+            'Add Ons',
             'Editor',
             'Status',
             'Priority',
@@ -82,15 +86,88 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMap
     public function map($project): array
     {
         return [
+            $project->client?->name ?? 'N/A',
             $project->project_name,
             $project->service?->name ?? 'N/A',
-            $project->client?->name ?? 'N/A',
+            self::formatAddOns($project),
             $project->editor?->name ?? 'Unassigned',
             $project->status,
             $project->priority,
             $project->total_price,
             $project->editor_price,
             Carbon::parse($project->created_at)->format('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
+     * @param  Project  $project
+     */
+    public static function formatAddOns($project): string
+    {
+        $addOns = [];
+
+        if ($project->with_agent) {
+            $addOns[] = 'With Agent';
+        }
+
+        if ($project->rush) {
+            $addOns[] = 'Rush';
+        }
+
+        if ($project->per_property) {
+            $count = $project->per_property_count ?? 0;
+            $addOns[] = "Per Property Line ({$count}x)";
+        }
+
+        $extraFields = $project->extra_fields;
+
+        if (is_array($extraFields)) {
+            if (! empty($extraFields['captions'])) {
+                foreach ($extraFields['captions'] as $caption) {
+                    $addOns[] = $caption;
+                }
+            }
+
+            if (! empty($extraFields['effects'])) {
+                foreach ($extraFields['effects'] as $effect) {
+                    $name = $effect['id'] ?? '';
+                    $qty = $effect['quantity'] ?? 1;
+                    $addOns[] = "{$name} ({$qty}x)";
+                }
+            }
+
+            if (! empty($extraFields['custom_effects'])) {
+                $customEffects = is_string($extraFields['custom_effects'])
+                    ? json_decode($extraFields['custom_effects'], true)
+                    : $extraFields['custom_effects'];
+
+                if (is_array($customEffects)) {
+                    foreach ($customEffects as $custom) {
+                        $desc = $custom['description'] ?? 'Custom Effect';
+                        $addOns[] = $desc;
+                    }
+                }
+            }
+        }
+
+        return implode(', ', $addOns);
+    }
+
+    public function columnWidths(): array
+    {
+        return [
+            'D' => 40,
+        ];
+    }
+
+    public function styles(Worksheet $sheet): array
+    {
+        return [
+            'D' => [
+                'alignment' => [
+                    'wrapText' => true,
+                ],
+            ],
         ];
     }
 }

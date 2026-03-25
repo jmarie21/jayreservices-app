@@ -156,9 +156,10 @@ class ProjectManagement extends Controller
         $projects = $export->query()->get();
 
         $data = $projects->map(fn (Project $project) => [
+            'client' => $project->client?->name ?? 'N/A',
             'project_name' => $project->project_name,
             'service' => $project->service?->name ?? 'N/A',
-            'client' => $project->client?->name ?? 'N/A',
+            'add_ons' => ProjectsExport::formatAddOns($project),
             'editor' => $project->editor?->name ?? 'Unassigned',
             'priority' => $project->priority,
             'total_price' => $project->total_price,
