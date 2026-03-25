@@ -160,7 +160,6 @@ class ProjectManagement extends Controller
             'service' => $project->service?->name ?? 'N/A',
             'client' => $project->client?->name ?? 'N/A',
             'editor' => $project->editor?->name ?? 'Unassigned',
-            'status' => $project->status,
             'priority' => $project->priority,
             'total_price' => $project->total_price,
             'editor_price' => $project->editor_price,

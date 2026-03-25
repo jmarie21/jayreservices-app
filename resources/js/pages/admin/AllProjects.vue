@@ -353,7 +353,6 @@ interface ExportRow {
     service: string;
     client: string;
     editor: string;
-    status: string;
     priority: string;
     total_price: number | null;
     editor_price: number | null;
@@ -663,7 +662,6 @@ onMounted(() => {
                                 <TableHead>Service</TableHead>
                                 <TableHead>Client</TableHead>
                                 <TableHead>Editor</TableHead>
-                                <TableHead>Status</TableHead>
                                 <TableHead>Priority</TableHead>
                                 <TableHead>Total Price</TableHead>
                                 <TableHead>Editor Price</TableHead>
@@ -676,7 +674,6 @@ onMounted(() => {
                                 <TableCell>{{ row.service }}</TableCell>
                                 <TableCell>{{ row.client }}</TableCell>
                                 <TableCell>{{ row.editor }}</TableCell>
-                                <TableCell>{{ row.status }}</TableCell>
                                 <TableCell>{{ row.priority }}</TableCell>
                                 <TableCell>{{ row.total_price != null ? `$${row.total_price}` : '—' }}</TableCell>
                                 <TableCell>{{ row.editor_price != null ? `₱${row.editor_price}` : '—' }}</TableCell>
