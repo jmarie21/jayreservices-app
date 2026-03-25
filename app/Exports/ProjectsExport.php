@@ -23,9 +23,7 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMap
     public function query(): Builder
     {
         $query = Project::with(['client', 'service', 'editor'])
-            ->join('users', 'projects.client_id', '=', 'users.id')
-            ->orderBy('users.name')
-            ->select('projects.*');
+            ->latest();
 
         if ($this->status) {
             $query->where('status', $this->status);
