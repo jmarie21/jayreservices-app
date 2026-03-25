@@ -8,7 +8,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Toaster } from '@/components/ui/sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -356,6 +355,7 @@ interface ExportRow {
     priority: string;
     total_price: number | null;
     editor_price: number | null;
+    add_ons: string;
     created_at: string;
 }
 
@@ -654,34 +654,47 @@ onMounted(() => {
                 <DialogHeader>
                     <DialogTitle>Export Preview ({{ previewData.length }} records)</DialogTitle>
                 </DialogHeader>
-                <ScrollArea class="min-h-0 max-h-[60vh] flex-1 overflow-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Project Name</TableHead>
-                                <TableHead>Service</TableHead>
-                                <TableHead>Client</TableHead>
-                                <TableHead>Editor</TableHead>
-                                <TableHead>Priority</TableHead>
-                                <TableHead>Total Price</TableHead>
-                                <TableHead>Editor Price</TableHead>
-                                <TableHead>Created At</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow v-for="(row, index) in previewData" :key="index">
-                                <TableCell class="max-w-[180px] truncate">{{ row.project_name }}</TableCell>
-                                <TableCell>{{ row.service }}</TableCell>
-                                <TableCell>{{ row.client }}</TableCell>
-                                <TableCell>{{ row.editor }}</TableCell>
-                                <TableCell>{{ row.priority }}</TableCell>
-                                <TableCell>{{ row.total_price != null ? `$${row.total_price}` : '—' }}</TableCell>
-                                <TableCell>{{ row.editor_price != null ? `₱${row.editor_price}` : '—' }}</TableCell>
-                                <TableCell class="whitespace-nowrap">{{ row.created_at.split(' ')[0] }}</TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </ScrollArea>
+                <div class="min-h-0 flex-1 overflow-auto">
+                    <table class="w-full table-fixed border-collapse text-sm">
+                        <colgroup>
+                            <col class="w-[90px]" />
+                            <col class="w-[150px]" />
+                            <col class="w-[160px]" />
+                            <col class="w-[250px]" />
+                            <col class="w-[100px]" />
+                            <col class="w-[70px]" />
+                            <col class="w-[90px]" />
+                            <col class="w-[90px]" />
+                            <col class="w-[100px]" />
+                        </colgroup>
+                        <thead>
+                            <tr class="border-b">
+                                <th class="p-2 text-left font-medium text-muted-foreground">Client</th>
+                                <th class="p-2 text-left font-medium text-muted-foreground">Project Name</th>
+                                <th class="p-2 text-left font-medium text-muted-foreground">Service</th>
+                                <th class="p-2 text-left font-medium text-muted-foreground">Add Ons</th>
+                                <th class="p-2 text-left font-medium text-muted-foreground">Editor</th>
+                                <th class="p-2 text-left font-medium text-muted-foreground">Priority</th>
+                                <th class="p-2 text-left font-medium text-muted-foreground">Total Price</th>
+                                <th class="p-2 text-left font-medium text-muted-foreground">Editor Price</th>
+                                <th class="p-2 text-left font-medium text-muted-foreground">Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(row, index) in previewData" :key="index" class="border-b">
+                                <td class="p-2">{{ row.client }}</td>
+                                <td class="truncate p-2" :title="row.project_name">{{ row.project_name }}</td>
+                                <td class="p-2">{{ row.service }}</td>
+                                <td class="break-words p-2">{{ row.add_ons || '—' }}</td>
+                                <td class="p-2">{{ row.editor }}</td>
+                                <td class="p-2">{{ row.priority }}</td>
+                                <td class="p-2">{{ row.total_price != null ? `$${row.total_price}` : '—' }}</td>
+                                <td class="p-2">{{ row.editor_price != null ? `₱${row.editor_price}` : '—' }}</td>
+                                <td class="p-2">{{ row.created_at.split(' ')[0] }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 <div class="flex shrink-0 justify-end gap-2 pt-2">
                     <Button variant="outline" @click="showPreviewModal = false">Close</Button>
                     <a :href="exportUrl" target="_blank">
