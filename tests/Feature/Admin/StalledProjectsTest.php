@@ -16,7 +16,7 @@ beforeEach(function () {
 
 // --- CheckStalledProjects Command Tests ---
 
-it('auto-unassigns a basic service project stalled for 12+ hours', function () {
+it('notifies admins for a basic service project stalled for 12+ hours without changing status', function () {
     $project = Project::factory()->create([
         'editor_id' => $this->editor->id,
         'service_id' => $this->basicService->id,
@@ -27,9 +27,11 @@ it('auto-unassigns a basic service project stalled for 12+ hours', function () {
     $this->artisan('projects:check-stalled')->assertSuccessful();
 
     $project->refresh();
-    expect($project->status)->toBe('overdue');
+    expect($project->status)->toBe('in_progress');
     expect($project->editor_id)->toBe($this->editor->id);
     expect($project->in_progress_since)->not->toBeNull();
+
+    Notification::assertSentTo($this->admin, ProjectStalledNotification::class);
 });
 
 it('does not mark a premium service project as overdue at 12 hours', function () {
@@ -47,7 +49,7 @@ it('does not mark a premium service project as overdue at 12 hours', function ()
     expect($project->editor_id)->toBe($this->editor->id);
 });
 
-it('marks a premium service project as overdue after 24+ hours', function () {
+it('notifies admins for a premium service project stalled for 24+ hours without changing status', function () {
     $project = Project::factory()->create([
         'editor_id' => $this->editor->id,
         'service_id' => $this->premiumService->id,
@@ -58,9 +60,11 @@ it('marks a premium service project as overdue after 24+ hours', function () {
     $this->artisan('projects:check-stalled')->assertSuccessful();
 
     $project->refresh();
-    expect($project->status)->toBe('overdue');
+    expect($project->status)->toBe('in_progress');
     expect($project->editor_id)->toBe($this->editor->id);
     expect($project->in_progress_since)->not->toBeNull();
+
+    Notification::assertSentTo($this->admin, ProjectStalledNotification::class);
 });
 
 it('does not touch a fresh in_progress project', function () {
