@@ -17,7 +17,7 @@ class CheckStalledProjects extends Command
     /**
      * @var string
      */
-    protected $description = 'Mark in_progress projects as overdue when they exceed their service tier deadline';
+    protected $description = 'Notify admins when in_progress projects exceed their service tier deadline';
 
     public function handle(): int
     {
@@ -41,16 +41,12 @@ class CheckStalledProjects extends Command
         $admins = User::where('role', 'admin')->get();
 
         foreach ($stalled as $project) {
-            $project->update([
-                'status' => 'overdue',
-            ]);
-
             $admins->each(fn (User $admin) => $admin->notify(new ProjectStalledNotification($project)));
 
-            $this->info("Overdue project: {$project->project_name} (ID: {$project->id})");
+            $this->info("Stalled project: {$project->project_name} (ID: {$project->id})");
         }
 
-        $this->info("Total overdue projects: {$stalled->count()}");
+        $this->info("Total stalled projects: {$stalled->count()}");
 
         return self::SUCCESS;
     }

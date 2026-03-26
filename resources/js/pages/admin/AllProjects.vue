@@ -20,7 +20,7 @@ import { ChevronDown, Clock, Download, Eye } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
-type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled' | 'overdue';
+type Status = 'todo' | 'in_progress' | 'for_qa' | 'done_qa' | 'sent_to_client' | 'revision' | 'revision_completed' | 'backlog' | 'cancelled';
 type Priority = 'urgent' | 'high' | 'normal' | 'low';
 interface Filters {
     status?: string;
@@ -84,7 +84,7 @@ const form = useForm<{ editor_id: number | null; status: Status; editor_price: n
 });
 
 // Status labels for badges
-const statusLabels: Record<Exclude<Status, 'overdue'>, string> = {
+const statusLabels: Record<Status, string> = {
     todo: 'To Do',
     in_progress: 'In Progress',
     for_qa: 'For QA',
@@ -490,8 +490,7 @@ onMounted(() => {
 
                         <!-- Status Select -->
                         <TableCell>
-                            <span v-if="project.status === 'overdue'" class="font-semibold text-red-600">Overdue</span>
-                            <Select v-else :modelValue="project.status" @update:modelValue="(value) => updateProject(project.id, 'status', value)">
+                            <Select :modelValue="project.status" @update:modelValue="(value) => updateProject(project.id, 'status', value)">
                                 <SelectTrigger
                                     class="w-[180px]"
                                     :class="{

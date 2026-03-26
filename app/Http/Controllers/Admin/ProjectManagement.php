@@ -224,7 +224,7 @@ class ProjectManagement extends Controller
             $validated['in_progress_since'] = null;
             $validated['revision_since'] = null;
 
-            if (in_array($project->status, ['pending', 'in_progress', 'overdue'])) {
+            if (in_array($project->status, ['pending', 'in_progress'])) {
                 $validated['status'] = 'todo';
             }
         }
