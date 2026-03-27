@@ -208,8 +208,18 @@ class ProjectManagement extends Controller
         $oldStatus = $project->status;
         $oldEditorId = $project->editor_id;
 
-        // Track revision_since timer
+        // Track in_progress_since timer
         $newStatus = $validated['status'] ?? null;
+        if ($newStatus === 'in_progress') {
+            $validated['in_progress_since'] = now();
+        }
+
+        // Clear timer when moving forward out of in_progress
+        if ($newStatus !== null && $newStatus !== 'in_progress' && $project->status === 'in_progress') {
+            $validated['in_progress_since'] = null;
+        }
+
+        // Track revision_since timer
         if ($newStatus === 'revision') {
             $validated['revision_since'] = now();
         }
@@ -221,11 +231,15 @@ class ProjectManagement extends Controller
 
         // Clear timer when admin re-assigns to a different editor
         if (isset($validated['editor_id']) && $validated['editor_id'] !== $project->editor_id) {
-            $validated['in_progress_since'] = null;
-            $validated['revision_since'] = null;
-
-            if (in_array($project->status, ['pending', 'in_progress'])) {
-                $validated['status'] = 'todo';
+            if ($project->editor_id === null && $validated['editor_id'] !== null) {
+                // First-time assignment: start the timer and move to in_progress
+                $validated['in_progress_since'] = now();
+                $validated['status'] = 'in_progress';
+            } else {
+                // Re-assignment: restart timer and move to in_progress
+                $validated['in_progress_since'] = now();
+                $validated['revision_since'] = null;
+                $validated['status'] = 'in_progress';
             }
         }
 

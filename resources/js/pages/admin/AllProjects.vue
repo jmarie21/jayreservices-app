@@ -198,12 +198,7 @@ const updateProject = <K extends keyof typeof form>(projectId: number, field: K,
         { [field]: value },
         {
             preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                // Optimistic update in frontend
-                const project = projects.value.data.find((p) => p.id === projectId);
-                if (project) (project as any)[field] = value;
-            },
+            preserveState: false,
         },
     );
 };
@@ -688,7 +683,7 @@ onMounted(() => {
                                 <td class="p-2">{{ row.editor }}</td>
                                 <td class="p-2">{{ row.priority }}</td>
                                 <td class="p-2">{{ row.total_price != null ? `$${row.total_price}` : '—' }}</td>
-                                <td class="p-2">{{ row.editor_price != null ? `₱${row.editor_price}` : '—' }}</td>
+                                <td class="p-2">{{ row.editor_price != null ? row.editor_price : '—' }}</td>
                                 <td class="p-2">{{ row.created_at.split(' ')[0] }}</td>
                             </tr>
                         </tbody>
