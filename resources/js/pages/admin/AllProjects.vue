@@ -644,14 +644,14 @@ onMounted(() => {
 
         <!-- Export Preview Modal -->
         <Dialog :open="showPreviewModal" @update:open="showPreviewModal = $event">
-            <DialogContent class="flex max-h-[80vh] flex-col sm:max-w-5xl">
+            <DialogContent class="flex max-h-[80vh] flex-col sm:max-w-7xl">
                 <DialogHeader>
                     <DialogTitle>Export Preview ({{ previewData.length }} records)</DialogTitle>
                 </DialogHeader>
                 <div class="min-h-0 flex-1 overflow-auto">
                     <table class="w-full table-fixed border-collapse text-sm">
                         <colgroup>
-                            <col class="w-[90px]" />
+                            <col class="w-[160px]" />
                             <col class="w-[150px]" />
                             <col class="w-[160px]" />
                             <col class="w-[250px]" />
