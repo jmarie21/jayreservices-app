@@ -105,6 +105,9 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
     public static function formatAddOns($project): string
     {
         $addOns = [];
+        $style = strtolower(trim($project->style ?? ''));
+        $isPremiumOrLuxury = str_contains($style, 'premium') || str_contains($style, 'luxury');
+        $isLuxury = str_contains($style, 'luxury');
 
         if ($project->with_agent) {
             $addOns[] = 'With Agent';
@@ -122,29 +125,39 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
         $extraFields = $project->extra_fields;
 
         if (is_array($extraFields)) {
+            // Only include captions that have a price for this style
+            $pricedCaptions = [];
+            if ($isPremiumOrLuxury) {
+                $pricedCaptions[] = 'Captions while the agent is talking';
+                $pricedCaptions[] = '3D Text behind the Agent Talking';
+            }
+            if ($isLuxury) {
+                $pricedCaptions[] = '3D Text tracked on the ground etc.';
+                $pricedCaptions[] = '3D Graphics together with text';
+            }
+
             if (! empty($extraFields['captions'])) {
                 foreach ($extraFields['captions'] as $caption) {
-                    $addOns[] = $caption;
+                    if (in_array($caption, $pricedCaptions)) {
+                        $addOns[] = $caption;
+                    }
                 }
             }
 
-            if (! empty($extraFields['effects'])) {
+            // Only include effects that have a price (premium/luxury only)
+            if ($isPremiumOrLuxury && ! empty($extraFields['effects'])) {
+                $pricedEffects = [
+                    'Painting Transition',
+                    'Earth Zoom Transition',
+                    'Day to Night AI',
+                    'Virtual Staging AI',
+                ];
+
                 foreach ($extraFields['effects'] as $effect) {
                     $name = $effect['id'] ?? '';
                     $qty = $effect['quantity'] ?? 1;
-                    $addOns[] = "{$name} ({$qty}x)";
-                }
-            }
-
-            if (! empty($extraFields['custom_effects'])) {
-                $customEffects = is_string($extraFields['custom_effects'])
-                    ? json_decode($extraFields['custom_effects'], true)
-                    : $extraFields['custom_effects'];
-
-                if (is_array($customEffects)) {
-                    foreach ($customEffects as $custom) {
-                        $desc = $custom['description'] ?? 'Custom Effect';
-                        $addOns[] = $desc;
+                    if (in_array($name, $pricedEffects)) {
+                        $addOns[] = "{$name} ({$qty}x)";
                     }
                 }
             }
