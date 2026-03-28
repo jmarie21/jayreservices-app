@@ -84,8 +84,8 @@ class EditorProjectsController extends Controller
         $oldStatus = $project->status;
         $newStatus = $validated['status'] ?? null;
 
-        // Track in_progress_since timer
-        if ($newStatus === 'in_progress') {
+        // Track in_progress_since timer (preserve existing timer from assignment)
+        if ($newStatus === 'in_progress' && $project->in_progress_since === null) {
             $validated['in_progress_since'] = now();
         }
 
