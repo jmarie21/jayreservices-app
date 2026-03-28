@@ -165,7 +165,7 @@ it('blocks editor from moving from sent_to_client', function () {
 
 // --- Timer Tracking Tests ---
 
-it('sets in_progress_since when editor moves to in_progress', function () {
+it('sets in_progress_since when editor moves to in_progress without existing timer', function () {
     $project = Project::factory()->create([
         'editor_id' => $this->editor->id,
         'service_id' => $this->basicService->id,
@@ -179,6 +179,24 @@ it('sets in_progress_since when editor moves to in_progress', function () {
 
     $project->refresh();
     expect($project->in_progress_since)->not->toBeNull();
+});
+
+it('preserves in_progress_since when editor moves to in_progress with existing timer', function () {
+    $originalTime = now()->subHours(3);
+
+    $project = Project::factory()->create([
+        'editor_id' => $this->editor->id,
+        'service_id' => $this->basicService->id,
+        'status' => 'todo',
+        'in_progress_since' => $originalTime,
+    ]);
+
+    $this->actingAs($this->editor)
+        ->patch(route('editor.projects.update', $project), ['status' => 'in_progress'])
+        ->assertRedirect();
+
+    $project->refresh();
+    expect($project->in_progress_since->timestamp)->toBe($originalTime->timestamp);
 });
 
 it('clears in_progress_since when editor moves forward from in_progress', function () {
@@ -213,7 +231,7 @@ it('starts timer when admin assigns an editor to an unassigned project', functio
 
     $project->refresh();
     expect($project->in_progress_since)->not->toBeNull();
-    expect($project->status)->toBe('in_progress');
+    expect($project->status)->toBe('todo');
     expect($project->editor_id)->toBe($this->editor->id);
 });
 
@@ -234,11 +252,11 @@ it('restarts timer when admin re-assigns to a different editor', function () {
     $project->refresh();
     expect($project->in_progress_since)->not->toBeNull();
     expect($project->in_progress_since->diffInMinutes(now()))->toBeLessThan(1);
-    expect($project->status)->toBe('in_progress');
+    expect($project->status)->toBe('todo');
     expect($project->editor_id)->toBe($newEditor->id);
 });
 
-it('sets in_progress_since when admin moves status to in_progress', function () {
+it('sets in_progress_since when admin moves status to in_progress without existing timer', function () {
     $project = Project::factory()->create([
         'editor_id' => $this->editor->id,
         'service_id' => $this->basicService->id,
@@ -252,6 +270,24 @@ it('sets in_progress_since when admin moves status to in_progress', function () 
 
     $project->refresh();
     expect($project->in_progress_since)->not->toBeNull();
+});
+
+it('preserves in_progress_since when admin moves status to in_progress with existing timer', function () {
+    $originalTime = now()->subHours(3);
+
+    $project = Project::factory()->create([
+        'editor_id' => $this->editor->id,
+        'service_id' => $this->basicService->id,
+        'status' => 'todo',
+        'in_progress_since' => $originalTime,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->patch(route('projects.admin_update', $project), ['status' => 'in_progress'])
+        ->assertRedirect();
+
+    $project->refresh();
+    expect($project->in_progress_since->timestamp)->toBe($originalTime->timestamp);
 });
 
 it('clears in_progress_since when admin moves forward from in_progress', function () {
@@ -320,7 +356,7 @@ it('clears revision_since when admin re-assigns to a different editor', function
 
     $project->refresh();
     expect($project->revision_since)->toBeNull();
-    expect($project->status)->toBe('in_progress');
+    expect($project->status)->toBe('todo');
     expect($project->in_progress_since)->not->toBeNull();
 });
 
