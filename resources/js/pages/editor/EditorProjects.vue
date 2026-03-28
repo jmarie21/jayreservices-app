@@ -112,7 +112,7 @@ const getRevisionDeadlineHours = (): number => 3;
 
 const getCountdown = (project: Projects): string | null => {
     let since: string | null = null;
-    if (project.status === 'in_progress' && project.in_progress_since) {
+    if ((project.status === 'todo' || project.status === 'in_progress') && project.in_progress_since) {
         since = project.in_progress_since;
     } else if (project.status === 'revision' && project.revision_since) {
         since = project.revision_since;
@@ -129,7 +129,7 @@ const getCountdown = (project: Projects): string | null => {
 };
 
 const getTimerSince = (project: Projects): string | null => {
-    if (project.status === 'in_progress') return project.in_progress_since;
+    if (project.status === 'todo' || project.status === 'in_progress') return project.in_progress_since;
     if (project.status === 'revision') return project.revision_since;
     return null;
 };
