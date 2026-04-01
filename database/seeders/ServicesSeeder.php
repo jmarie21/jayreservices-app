@@ -88,6 +88,7 @@ class ServicesSeeder extends Seeder
                     'Retiming the clip with beat of the music',
                     'With 2-3 smooth speed ramps only',
                     'Some simple transitions like zoom after speed ramps',
+                    'SFX for text ',
                 ],
                 'price' => 0,
                 'video_link' => 'https://www.youtube.com/embed/PCTdP__t9bI',
@@ -96,8 +97,12 @@ class ServicesSeeder extends Seeder
                 'name' => 'Horsemen Style',
                 'features' => [
                     'Retiming the clip with beat of the music',
-                    'With 2-3 smooth speed ramps only',
-                    'Some simple transitions like zoom after speed ramps',
+                    'With few 3D Text (if requested additional)',
+                    'With 3D Graphics together with text (if requested additional)',
+                    'Virtual Staging (if requested additional)',
+                    'Day to night AI (if requested additional)',
+                    'Or Any AI animation (if requested additional)',
+                    'With SFX'
                 ],
                 'price' => 0,
                 'video_link' => 'https://www.youtube.com/embed/n7ZHZ1KIgz8',
