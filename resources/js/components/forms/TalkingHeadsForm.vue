@@ -9,27 +9,7 @@ import { TalkingHeadsForm } from '@/types/app-page-prop';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
-import { Checkbox } from '../ui/checkbox';
 import { Textarea } from '../ui/textarea';
-
-interface Option {
-    id: string;
-    label: string;
-    link?: string | null;
-}
-
-const effectsOptions: Option[] = [
-    { id: 'Virtual Staging AI', label: 'Virtual Staging AI ($20 per clip)', link: 'https://youtu.be/79vg5WqKgYE?si=TkXflrhPmUfTAQFX' },
-    { id: 'Day to Night AI', label: 'Day to Night AI ($15 per clip)', link: 'https://youtu.be/OPpyyb77ijs?si=q-IjufGmarVw8kMu' },
-];
-
-const captionsOptions: Option[] = [
-    { id: '3D Text behind the Agent Talking', label: '3D Text behind the Agent Talking (ADD $10)' },
-    { id: '3D Text tracked on the ground etc.', label: '3D Text tracked on the ground etc. (ADD $15)' },
-    { id: '3D Graphics together with text', label: '3D Graphics together with text (ADD $20)' },
-    { id: 'Captions while the agent is talking', label: 'Captions while the agent is talking (ADD $10)' },
-    { id: 'No Captions', label: 'NO NEED TO ADD TEXT OR CAPTIONS' },
-];
 
 const props = defineProps<{
     open: boolean;
@@ -51,15 +31,6 @@ const emit = defineEmits<{
 // const perPropertyOption = ref<'add-per-property' | 'no' | ''>(props.project?.per_property ? 'add-per-property' : '');
 const rushOption = ref<'true' | 'false' | ''>('');
 
-// Helper function to format effects from backend
-function formatEffectsFromBackend(effects: any): Array<{ id: string; quantity: number }> {
-    if (!Array.isArray(effects)) return [];
-    return effects.map((effect) => {
-        if (typeof effect === 'string') return { id: effect, quantity: 1 };
-        return effect;
-    });
-}
-
 // Form initialization
 const form = useForm<TalkingHeadsForm>({
     style: props.project?.style ?? '',
@@ -74,71 +45,8 @@ const form = useForm<TalkingHeadsForm>({
     total_price: Number(props.project?.total_price ?? props.basePrice),
     service_id: props.serviceId,
     rush: props.project?.rush ?? false,
-    extra_fields: {
-        effects: props.project?.extra_fields?.effects ? formatEffectsFromBackend(props.project.extra_fields.effects) : [],
-        captions: props.project?.extra_fields?.captions ? [...props.project.extra_fields.captions] : [],
-    },
     ...(isAdmin.value ? { client_id: props.project?.client_id ?? null } : {}),
 });
-
-// Effect helpers
-function isEffectSelected(id: string): boolean {
-    return form.extra_fields?.effects.some((e) => e.id === id) ?? false;
-}
-
-function getEffectQuantity(id: string): number {
-    const effect = form.extra_fields?.effects.find((e) => e.id === id);
-    return effect?.quantity ?? 1;
-}
-
-function incrementEffect(id: string) {
-    if (!form.extra_fields) return;
-    const arr = [...form.extra_fields.effects];
-    const effect = arr.find((e) => e.id === id);
-    if (effect) {
-        effect.quantity = (effect.quantity || 1) + 1;
-        form.extra_fields.effects = arr;
-        form.extra_fields = { ...form.extra_fields };
-    }
-}
-
-function decrementEffect(id: string) {
-    if (!form.extra_fields) return;
-    const arr = [...form.extra_fields.effects];
-    const effect = arr.find((e) => e.id === id);
-    if (effect && effect.quantity > 1) {
-        effect.quantity -= 1;
-        form.extra_fields.effects = arr;
-        form.extra_fields = { ...form.extra_fields };
-    }
-}
-
-function handleEffectChange(id: string, checked: boolean | 'indeterminate') {
-    form.extra_fields ??= { effects: [], captions: [] };
-    const isChecked = checked === true;
-    const arr = [...form.extra_fields.effects];
-    if (isChecked) {
-        if (!arr.some((e) => e.id === id)) arr.push({ id, quantity: 1 });
-    } else {
-        const index = arr.findIndex((e) => e.id === id);
-        if (index !== -1) arr.splice(index, 1);
-    }
-    form.extra_fields.effects = arr;
-    form.extra_fields = { ...form.extra_fields };
-}
-
-function handleCaptionChange(captionId: string, value: boolean | 'indeterminate') {
-    form.extra_fields ??= { effects: [], captions: [] };
-    const checked = value === true;
-    const current = [...form.extra_fields.captions];
-    if (checked && !current.includes(captionId)) {
-        current.push(captionId);
-    } else {
-        current.splice(current.indexOf(captionId), 1);
-    }
-    form.extra_fields.captions = current;
-    form.extra_fields = { ...form.extra_fields };
-}
 
 // const calculateExtraPrice = () => {
 //     let extra = 0;
@@ -178,19 +86,6 @@ const totalPrice = computed(() => {
 
     // Rush extra price
     if (rushOption.value === 'true') extra += 5;
-
-    // Captions cost
-    if (form.extra_fields?.captions.includes('3D Text behind the Agent Talking')) extra += 10;
-    if (form.extra_fields?.captions.includes('3D Text tracked on the ground etc.')) extra += 15;
-    if (form.extra_fields?.captions.includes('3D Graphics together with text')) extra += 20;
-    if (form.extra_fields?.captions.includes('Captions while the agent is talking')) extra += 10;
-
-    // Effects with quantities
-    form.extra_fields?.effects.forEach((effect) => {
-        const quantity = effect.quantity || 1;
-        if (effect.id === 'Virtual Staging AI') extra += 20 * quantity;
-        if (effect.id === 'Day to Night AI') extra += 15 * quantity;
-    });
 
     return extra;
 });
@@ -253,10 +148,6 @@ watch(
             form.file_link = project.file_link ?? '';
             form.notes = project.notes ?? '';
             rushOption.value = project.rush ? 'true' : 'false';
-            form.extra_fields = {
-                effects: project.extra_fields?.effects ? formatEffectsFromBackend(project.extra_fields.effects) : [],
-                captions: project.extra_fields?.captions ? [...project.extra_fields.captions] : [],
-            };
         } else {
             // Reset form
             form.style = '';
@@ -269,7 +160,6 @@ watch(
             form.file_link = '';
             form.notes = '';
             rushOption.value = '';
-            form.extra_fields = { effects: [], captions: [] };
         }
     },
     { immediate: true },
@@ -493,74 +383,7 @@ const sortedClients = computed(() => [...clients].sort((a, b) => a.name.localeCo
                         <Textarea v-model="form.notes" placeholder="Enter more instructions" class="min-h-[120px]" />
                     </div>
 
-                    <!-- Customize the Effects -->
-                    <div class="space-y-2">
-                        <Label>Do you want to customize the effects?</Label>
-                        <div class="flex flex-col gap-2">
-                            <div v-for="effect in effectsOptions" :key="effect.id" class="mb-1 flex items-center gap-2">
-                                <Checkbox
-                                    :id="effect.id"
-                                    :model-value="isEffectSelected(effect.id)"
-                                    @update:model-value="(value) => handleEffectChange(effect.id, value)"
-                                />
-                                <label :for="effect.id" class="cursor-pointer">{{ effect.label }}</label>
-                                <a
-                                    v-if="effect.link"
-                                    :href="effect.link"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="text-sm text-blue-400 hover:underline"
-                                >
-                                    (see sample)
-                                </a>
-                                <!-- Quantity Controls -->
-                                <div v-if="isEffectSelected(effect.id)" class="ml-1 flex items-center gap-1">
-                                    <button
-                                        type="button"
-                                        @click="decrementEffect(effect.id)"
-                                        class="flex h-6 w-6 items-center justify-center rounded border border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700"
-                                    >
-                                        <span class="text-lg leading-none">−</span>
-                                    </button>
-                                    <span class="w-5 text-center text-sm">{{ getEffectQuantity(effect.id) }}</span>
-                                    <button
-                                        type="button"
-                                        @click="incrementEffect(effect.id)"
-                                        class="flex h-6 w-6 items-center justify-center rounded border border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            class="h-4 w-4"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                        >
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- 3D Text and Captions -->
-                    <div class="space-y-2">
-                        <Label>Do you need 3D text and captions?</Label>
-                        <div class="flex flex-col gap-2">
-                            <div v-for="caption in captionsOptions" :key="caption.id" class="mb-1 flex items-center gap-2">
-                                <Checkbox
-                                    :id="caption.id"
-                                    :model-value="form.extra_fields?.captions.includes(caption.id)"
-                                    @update:model-value="(value) => handleCaptionChange(caption.id, value)"
-                                />
-                                <label :for="caption.id" class="cursor-pointer">
-                                    {{ caption.label }}
-                                </label>
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <!-- Total & Submit -->
                 <div class="mt-8 text-xl font-semibold">Total: ${{ form.total_price.toFixed(2) }}</div>
