@@ -108,6 +108,7 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
         $style = strtolower(trim($project->style ?? ''));
         $isPremiumOrLuxury = str_contains($style, 'premium') || str_contains($style, 'luxury');
         $isLuxury = str_contains($style, 'luxury');
+        $isHorsemenStyle = str_contains($style, 'horsemen');
 
         if ($project->with_agent) {
             $addOns[] = 'With Agent';
@@ -135,6 +136,12 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
                 $pricedCaptions[] = '3D Text tracked on the ground etc.';
                 $pricedCaptions[] = '3D Graphics together with text';
             }
+            if ($isHorsemenStyle) {
+                $pricedCaptions[] = 'Captions while the agent is talking';
+                $pricedCaptions[] = '3D Text behind the Agent Talking';
+                $pricedCaptions[] = '3D Text tracked on the ground etc.';
+                $pricedCaptions[] = '3D Graphics together with text';
+            }
 
             if (! empty($extraFields['captions'])) {
                 foreach ($extraFields['captions'] as $caption) {
@@ -144,8 +151,8 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
                 }
             }
 
-            // Only include effects that have a price (premium/luxury only)
-            if ($isPremiumOrLuxury && ! empty($extraFields['effects'])) {
+            // Include effects that have a price (premium/luxury and horsemen style)
+            if (($isPremiumOrLuxury || $isHorsemenStyle) && ! empty($extraFields['effects'])) {
                 $pricedEffects = [
                     'Painting Transition',
                     'Earth Zoom Transition',

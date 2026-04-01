@@ -92,6 +92,16 @@ class ServicesSeeder extends Seeder
                 'price' => 0,
                 'video_link' => 'https://www.youtube.com/embed/PCTdP__t9bI',
             ],
+            [
+                'name' => 'Horsemen Style',
+                'features' => [
+                    'Retiming the clip with beat of the music',
+                    'With 2-3 smooth speed ramps only',
+                    'Some simple transitions like zoom after speed ramps',
+                ],
+                'price' => 0,
+                'video_link' => 'https://www.youtube.com/embed/n7ZHZ1KIgz8',
+            ],
             // Wedding Services
             [
                 'name' => 'Wedding Basic Style',

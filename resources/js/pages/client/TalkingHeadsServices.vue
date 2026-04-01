@@ -1,32 +1,26 @@
 <script setup lang="ts">
 
-// import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
-import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
-// import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
-import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
-import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
-import WeddingLuxuryForm from '@/components/forms/WeddingLuxuryForm.vue';
-// import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
+import HorsemenStyleForm from '@/components/forms/HorsemenStyleForm.vue';
+import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem, Services } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
 
 const { services } = usePage<AppPageProps<{ services: Services[] }>>().props;
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Wedding Services',
-        href: '/wedding-services',
+        title: 'Talking Heads Services',
+        href: '/talking-heads-services',
     },
 ];
 
 const selectedService = ref<Services | null>(null);
 
-const isStyle = (style: string): style is 'Talking Heads' => {
-    return ['Talking Heads'].includes(style);
+const isStyle = (style: string): style is 'Talking Heads' | 'Horsemen Style' => {
+    return ['Talking Heads', 'Horsemen Style'].includes(style);
 };
 
 function openModal(service: Services) {
@@ -84,6 +78,14 @@ function closeModal() {
             @close="closeModal"
             :service-id="selectedService.id"
         />
-        
+
+        <HorsemenStyleForm
+            v-if="selectedService?.name === 'Horsemen Style'"
+            :open="true"
+            :base-price="selectedService.price"
+            @close="closeModal"
+            :service-id="selectedService.id"
+        />
+
     </AppLayout>
 </template>
