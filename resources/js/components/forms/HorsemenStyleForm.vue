@@ -46,15 +46,12 @@ const emit = defineEmits<{
     (e: 'close'): void;
 }>();
 
-// Agent selection
-// const agentOption = ref<'with-agent' | 'no-agent' | ''>('');
-// const perPropertyOption = ref<'add-per-property' | 'no' | ''>(props.project?.per_property ? 'add-per-property' : '');
 const rushOption = ref<'true' | 'false' | ''>('');
 
 // Helper function to format effects from backend
 function formatEffectsFromBackend(effects: any): Array<{ id: string; quantity: number }> {
     if (!Array.isArray(effects)) return [];
-    return effects.map((effect) => {
+    return effects.map((effect: any) => {
         if (typeof effect === 'string') return { id: effect, quantity: 1 };
         return effect;
     });
@@ -62,7 +59,7 @@ function formatEffectsFromBackend(effects: any): Array<{ id: string; quantity: n
 
 // Form initialization
 const form = useForm<TalkingHeadsForm>({
-    style: props.project?.style ?? '',
+    style: props.project?.style ?? 'horsemen style',
     project_name: props.project?.project_name ?? '',
     format: props.project?.format ?? '',
     camera: props.project?.camera ?? '',
@@ -140,41 +137,13 @@ function handleCaptionChange(captionId: string, value: boolean | 'indeterminate'
     form.extra_fields = { ...form.extra_fields };
 }
 
-// const calculateExtraPrice = () => {
-//     let extra = 0;
-
-//     // Price based on style and format
-//     if (form.style === 'basic video') {
-//         if (form.format === 'horizontal') extra += 40;
-//         else if (form.format === 'vertical') extra += 25;
-//         else if (form.format === 'horizontal and vertical package') extra += 40 + 25;
-//     } else if (form.style === 'basic drone only') {
-//         if (form.format === 'horizontal') extra += 25;
-//         else if (form.format === 'vertical') extra += 20;
-//         else if (form.format === 'horizontal and vertical package') extra += 25 + 20;
-//     }
-
-//     // Price based on agent
-//     const agentExtra = agentOption.value === 'with-agent' ? 10 : 0;
-
-//     // Price based on per property
-//     const perPropertyExtra = perPropertyOption.value === 'add-per-property' ? 5 : 0;
-
-//     return Number(props.basePrice) + extra + agentExtra + perPropertyExtra;
-// };
-
 // Computed total price based on selected options
 const totalPrice = computed(() => {
     let extra = 0;
 
-    // Price based on style and format
-    if (form.style === 'hormozi style') {
-        if (form.format === 'horizontal') extra += 40;
-        else if (form.format === 'vertical') extra += 30;
-    } else if (form.style === 'ali abdaal style') {
-        if (form.format === 'horizontal') extra += 40;
-        else if (form.format === 'vertical') extra += 30;
-    }
+    // Price based on format
+    if (form.format === 'horizontal') extra += 40;
+    else if (form.format === 'vertical') extra += 30;
 
     // Rush extra price
     if (rushOption.value === 'true') extra += 5;
@@ -196,23 +165,10 @@ const totalPrice = computed(() => {
 });
 
 const formatOptions = computed(() => {
-    if (form.style === 'hormozi style') {
-        return [
-            { value: 'horizontal', label: 'Horizontal ($40)' },
-            { value: 'vertical', label: 'Vertical ($30)' },
-        ];
-    } else if (form.style === 'ali abdaal style') {
-        return [
-            { value: 'horizontal', label: 'Horizontal ($40)' },
-            { value: 'vertical', label: 'Vertical ($30)' },
-        ];
-    } else {
-        // Default if no style selected
-        return [
-            { value: 'horizontal', label: 'Horizontal' },
-            { value: 'vertical', label: 'Vertical' },
-        ];
-    }
+    return [
+        { value: 'horizontal', label: 'Horizontal ($40)' },
+        { value: 'vertical', label: 'Vertical ($30)' },
+    ];
 });
 
 // Computed to get the label of the selected format
@@ -230,20 +186,12 @@ watch(
     { immediate: true },
 );
 
-// Update form options when selections change
-// watch(agentOption, () => {
-//     form.with_agent = agentOption.value === 'with-agent';
-// });
-// watch(perPropertyOption, () => {
-//     form.per_property = perPropertyOption.value === 'add-per-property';
-// });
-
 // Watch project prop and initialize/reset form
 watch(
     () => props.project,
     (project) => {
         if (project) {
-            form.style = project.style ?? '';
+            form.style = project.style ?? 'horsemen style';
             form.format = project.format ?? '';
             form.project_name = project.project_name ?? '';
             form.camera = project.camera ?? '';
@@ -259,7 +207,7 @@ watch(
             };
         } else {
             // Reset form
-            form.style = '';
+            form.style = 'horsemen style';
             form.format = '';
             form.project_name = '';
             form.camera = '';
@@ -278,11 +226,7 @@ watch(
 // Submit handler
 const handleSubmit = () => {
     const isEditing = !!props.project;
-
-    // Determine if the current user is an admin
-    const isAdminUser = isAdmin.value; // assuming you already have `isAdmin` ref/computed
-
-    // Choose the correct route names based on role
+    const isAdminUser = isAdmin.value;
     const createRoute = isAdminUser ? 'admin.project.create' : 'projects.store';
     const updateRoute = isAdminUser ? 'admin.project.update' : 'projects.client_update';
 
@@ -324,7 +268,7 @@ const sortedClients = computed(() => [...clients].sort((a, b) => a.name.localeCo
         <DialogContent class="max-h-[90vh] !w-full !max-w-6xl overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>
-                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Talking Heads' }}
+                    {{ props.project ? `Edit Project - ${form.project_name}` : 'Order: Horsemen Style' }}
                 </DialogTitle>
             </DialogHeader>
 
@@ -346,21 +290,6 @@ const sortedClients = computed(() => [...clients].sort((a, b) => a.name.localeCo
                         <span v-if="form.errors.client_id" class="text-sm text-red-500">{{ form.errors.client_id }}</span>
                     </div>
 
-                    <!-- Style -->
-                    <div class="space-y-2">
-                        <Label>Select Style</Label>
-                        <Select v-model="form.style">
-                            <SelectTrigger class="w-full">
-                                <SelectValue placeholder="Style" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="hormozi style">Hormozi Style</SelectItem>
-                                <SelectItem value="ali abdaal style">Ali Abdaal Style</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <span v-if="form.errors.style" class="text-sm text-red-500">{{ form.errors.style }}</span>
-                    </div>
-
                     <!-- Project Name -->
                     <div class="space-y-2">
                         <Label>Project Name</Label>
@@ -373,7 +302,6 @@ const sortedClients = computed(() => [...clients].sort((a, b) => a.name.localeCo
                         <Label>Video Format <span class="text-red-500">*</span></Label>
                         <Select v-model="form.format">
                             <SelectTrigger class="w-full">
-                                <!-- Display selected label -->
                                 <SelectValue :value="form.format" placeholder="Format">
                                     {{ selectedFormatLabel }}
                                 </SelectValue>
@@ -393,34 +321,6 @@ const sortedClients = computed(() => [...clients].sort((a, b) => a.name.localeCo
                         <Input v-model="form.camera" placeholder="Enter your camera brand and model" />
                         <span v-if="form.errors.camera" class="text-sm text-red-500">{{ form.errors.camera }}</span>
                     </div>
-
-                    <!-- Agent Option -->
-                    <!-- <div class="space-y-2">
-                        <Label>With agent or voiceover?</Label>
-                        <Select v-model="agentOption">
-                            <SelectTrigger class="w-full">
-                                <SelectValue placeholder="Agent or Voiceover?" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="with-agent">With Agent (Add $10)</SelectItem>
-                                <SelectItem value="no-agent">No Agent</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div> -->
-
-                    <!-- Per Property Option -->
-                    <!-- <div class="space-y-2">
-                        <Label>With per property line?</Label>
-                        <Select v-model="perPropertyOption">
-                            <SelectTrigger class="w-full">
-                                <SelectValue placeholder="Select an option" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="add-per-property">Add per property line (Add $5)</SelectItem>
-                                <SelectItem value="no">No</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div> -->
 
                     <!-- Quality -->
                     <div class="space-y-2">

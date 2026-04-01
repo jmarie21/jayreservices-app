@@ -3,6 +3,7 @@ import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
 import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
 import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
+import HorsemenStyleForm from '@/components/forms/HorsemenStyleForm.vue';
 import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
 
 import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
@@ -584,6 +585,15 @@ const goToPage = (pageNumber: number) => {
 
         <TalkingHeadsForm
             v-else-if="editProject && editProject.service?.name === 'Talking Heads'"
+            :open="isEditModalOpen"
+            :serviceId="editProject.service_id"
+            :project="editProject"
+            :basePrice="basePrice"
+            @close="closeEditModal"
+        />
+
+        <HorsemenStyleForm
+            v-else-if="editProject && editProject.service?.name === 'Horsemen Style'"
             :open="isEditModalOpen"
             :serviceId="editProject.service_id"
             :project="editProject"

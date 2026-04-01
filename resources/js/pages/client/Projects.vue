@@ -3,6 +3,7 @@ import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
 import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
 import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
 import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
+import HorsemenStyleForm from '@/components/forms/HorsemenStyleForm.vue';
 import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
 
 import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
@@ -512,6 +513,16 @@ const markForRevision = (projectId: number) => {
         <!-- Talking Heads -->
          <TalkingHeadsForm
             v-if="selectedStyle === 'Talking Heads'"
+            :open="showModal"
+            :base-price="selectedProject?.service?.price ?? 0"
+            :service-id="selectedProject?.service_id ?? 1"
+            :project="selectedProject"
+            @close="closeModal"
+        />
+
+        <!-- Horsemen Style -->
+        <HorsemenStyleForm
+            v-if="selectedStyle === 'Horsemen Style'"
             :open="showModal"
             :base-price="selectedProject?.service?.price ?? 0"
             :service-id="selectedProject?.service_id ?? 1"

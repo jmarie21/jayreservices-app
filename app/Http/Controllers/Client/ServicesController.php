@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Service;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ServicesController extends Controller
@@ -14,44 +13,49 @@ class ServicesController extends Controller
         // Only return services that are real estate related (names starting with "Real Estate")
         $services = Service::where('name', 'like', 'Real Estate%')->get();
 
-        return Inertia::render("client/Services", [
-            "services" => $services
+        return Inertia::render('client/Services', [
+            'services' => $services,
         ]);
     }
 
-    public function weddingServices(){
+    public function weddingServices()
+    {
         // Only return services that are wedding related (names starting with "Wedding")
         $services = Service::where('name', 'like', 'Wedding%')->get();
 
-        return Inertia::render("client/WeddingServices", [
-            "services" => $services
+        return Inertia::render('client/WeddingServices', [
+            'services' => $services,
         ]);
     }
 
-    public function eventServices(){
+    public function eventServices()
+    {
         // Only return services that are event related (names starting with "Event")
         $services = Service::where('name', 'like', 'Event%')->get();
 
-        return Inertia::render("client/EventServices", [
-            "services" => $services
+        return Inertia::render('client/EventServices', [
+            'services' => $services,
         ]);
     }
 
-    public function constructionServices(){
+    public function constructionServices()
+    {
         // Only return services that are construction related (names starting with "Construction")
         $services = Service::where('name', 'like', 'Construction%')->get();
 
-        return Inertia::render("client/ConstructionServices", [
-            "services" => $services
+        return Inertia::render('client/ConstructionServices', [
+            'services' => $services,
         ]);
     }
 
-    public function talkingHeadsServices(){
-        // Only return services that are talking head related (names starting with "Talking Head")
-        $services = Service::where('name', 'like', 'Talking Heads%')->get();
+    public function talkingHeadsServices()
+    {
+        $services = Service::where('name', 'like', 'Talking Heads%')
+            ->orWhere('name', 'Horsemen Style')
+            ->get();
 
-        return Inertia::render("client/TalkingHeadsServices", [
-            "services" => $services
+        return Inertia::render('client/TalkingHeadsServices', [
+            'services' => $services,
         ]);
     }
 }

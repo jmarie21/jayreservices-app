@@ -60,6 +60,10 @@ export type TalkingHeadsForm = {
     notes?: string;
     total_price: number;
     rush?: boolean;
+    extra_fields?: {
+        effects: EffectItem[];
+        captions: string[];
+    };
 };
 
 export type DeluxeForm = {

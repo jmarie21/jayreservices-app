@@ -369,7 +369,9 @@ class ProjectManagement extends Controller
 
     public function talkingHeadsServices()
     {
-        $services = Service::where('name', 'like', 'Talking Heads%')->get();
+        $services = Service::where('name', 'like', 'Talking Heads%')
+            ->orWhere('name', 'Horsemen Style')
+            ->get();
 
         return Inertia::render('admin/TalkingHeadsServices', [
             'services' => $services,
