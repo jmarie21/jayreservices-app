@@ -100,7 +100,7 @@ class ServicesSeeder extends Seeder
                     'Some simple transitions like zoom after speed ramps',
                 ],
                 'price' => 0,
-                'video_link' => 'https://next.frame.io/share/f93b682a-70b7-4f83-a9be-eb966c883619/view/07835439-ed11-49cb-ab19-ce7f6db06c88',
+                'video_link' => 'https://www.youtube.com/embed/n7ZHZ1KIgz8',
             ],
             // Wedding Services
             [
