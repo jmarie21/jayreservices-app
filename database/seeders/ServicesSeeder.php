@@ -86,8 +86,6 @@ class ServicesSeeder extends Seeder
                 'name' => 'Talking Heads',
                 'features' => [
                     'Retiming the clip with beat of the music',
-                    'With 2-3 smooth speed ramps only',
-                    'Some simple transitions like zoom after speed ramps',
                     'SFX for text ',
                 ],
                 'price' => 0,
