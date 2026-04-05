@@ -28,6 +28,7 @@ class Project extends Model
         'client_id',
         'editor_id',
         'service_id',
+        'service_sub_style_id',
         'style',
         'company_name',
         'contact',
@@ -57,6 +58,7 @@ class Project extends Model
         'extra_fields' => 'array',
         'output_link' => 'array',
         'total_price' => 'decimal:2',
+        'editor_price' => 'decimal:2',
         'with_agent' => 'boolean',
         'per_property' => 'boolean',
         'per_property_count' => 'integer',
@@ -94,6 +96,11 @@ class Project extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
+    }
+
+    public function subStyle(): BelongsTo
+    {
+        return $this->belongsTo(ServiceSubStyle::class, 'service_sub_style_id');
     }
 
     public function invoices(): BelongsToMany

@@ -4,23 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-class Service extends Model
+class ServiceCategory extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'name',
+        'slug',
         'description',
-        'features',
-        'price',
         'video_link',
         'thumbnail_url',
-        'service_category_id',
-        'slug',
+        'icon',
         'sort_order',
         'is_active',
     ];
@@ -28,20 +25,21 @@ class Service extends Model
     protected function casts(): array
     {
         return [
-            'features' => 'array',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
         ];
     }
 
-    public function category(): BelongsTo
+    public function services(): HasMany
     {
-        return $this->belongsTo(ServiceCategory::class, 'service_category_id');
+        return $this->hasMany(Service::class);
     }
 
-    public function subStyles(): HasMany
+    public function activeServices(): HasMany
     {
-        return $this->hasMany(ServiceSubStyle::class)->orderBy('sort_order');
+        return $this->hasMany(Service::class)
+            ->where('is_active', true)
+            ->orderBy('sort_order');
     }
 
     public function addonAssignments(): MorphMany
@@ -49,13 +47,8 @@ class Service extends Model
         return $this->morphMany(ServiceAddonAssignment::class, 'assignable');
     }
 
-    public function addonGroups(): HasMany
+    public function getRouteKeyName(): string
     {
-        return $this->hasMany(ServiceAddonGroup::class)->orderBy('sort_order');
-    }
-
-    public function projects(): HasMany
-    {
-        return $this->hasMany(Project::class);
+        return 'slug';
     }
 }

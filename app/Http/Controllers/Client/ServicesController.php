@@ -3,59 +3,52 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
-use App\Models\Service;
+use App\Models\ServiceCategory;
+use App\Services\PricingService;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ServicesController extends Controller
 {
-    public function index()
+    public function index(PricingService $pricingService): Response
     {
-        // Only return services that are real estate related (names starting with "Real Estate")
-        $services = Service::where('name', 'like', 'Real Estate%')->get();
-
-        return Inertia::render('client/Services', [
-            'services' => $services,
+        return Inertia::render('client/ServicesIndex', [
+            'categories' => $pricingService->getAllCategoriesCatalogData(),
         ]);
     }
 
-    public function weddingServices()
+    public function show(ServiceCategory $category, PricingService $pricingService): Response
     {
-        // Only return services that are wedding related (names starting with "Wedding")
-        $services = Service::where('name', 'like', 'Wedding%')->get();
+        abort_unless($category->is_active, 404);
 
-        return Inertia::render('client/WeddingServices', [
-            'services' => $services,
+        return Inertia::render('client/ServiceCategory', [
+            'category' => $pricingService->getCategoryCatalogData($category),
         ]);
     }
 
-    public function eventServices()
+    public function legacyRealEstate(): RedirectResponse
     {
-        // Only return services that are event related (names starting with "Event")
-        $services = Service::where('name', 'like', 'Event%')->get();
-
-        return Inertia::render('client/EventServices', [
-            'services' => $services,
-        ]);
+        return redirect()->route('services.category', ['category' => 'real-estate']);
     }
 
-    public function constructionServices()
+    public function legacyWedding(): RedirectResponse
     {
-        // Only return services that are construction related (names starting with "Construction")
-        $services = Service::where('name', 'like', 'Construction%')->get();
-
-        return Inertia::render('client/ConstructionServices', [
-            'services' => $services,
-        ]);
+        return redirect()->route('services.category', ['category' => 'wedding']);
     }
 
-    public function talkingHeadsServices()
+    public function legacyEvent(): RedirectResponse
     {
-        $services = Service::where('name', 'like', 'Talking Heads%')
-            ->orWhere('name', 'Horsemen Style')
-            ->get();
+        return redirect()->route('services.category', ['category' => 'event']);
+    }
 
-        return Inertia::render('client/TalkingHeadsServices', [
-            'services' => $services,
-        ]);
+    public function legacyConstruction(): RedirectResponse
+    {
+        return redirect()->route('services.category', ['category' => 'construction']);
+    }
+
+    public function legacyTalkingHeads(): RedirectResponse
+    {
+        return redirect()->route('services.category', ['category' => 'talking-heads']);
     }
 }

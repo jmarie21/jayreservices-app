@@ -1,4 +1,5 @@
 import type { Config } from 'ziggy-js';
+import type { ServicePricingData } from './services';
 
 export interface Auth {
     user: User;
@@ -64,7 +65,14 @@ export interface Projects {
     client_id: number;
     editor_id: number | null;
     service_id: number;
-    service: Record<string>;
+    service_sub_style_id?: number | null;
+    service: {
+        id?: number;
+        name?: string;
+        price?: number;
+        pricing_data?: ServicePricingData;
+        [key: string]: any;
+    };
     editor: Record<string>;
     client: Record<string>;
 
@@ -101,14 +109,26 @@ export interface Projects {
 
 export interface Comment {
     id: number;
-    body: string;
+    body: string | null;
     created_at: string;
+    user_id: number;
     user: {
         id: number;
         name: string;
         role: string;
     };
-    image_url: string;
+    image_url?: string | null;
+    attachments: CommentAttachment[];
+}
+
+export interface CommentAttachment {
+    id: number;
+    url: string;
+    mime_type?: string | null;
+    original_name?: string | null;
+    size_bytes?: number | null;
+    position: number;
+    is_legacy?: boolean;
 }
 
 // Invoice interface

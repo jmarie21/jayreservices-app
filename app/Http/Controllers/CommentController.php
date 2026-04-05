@@ -4,55 +4,40 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\ProjectComment;
+use App\Models\ProjectCommentAttachment;
 use App\Models\User;
 use App\Notifications\ClientCommentNotification;
 use App\Notifications\ClientProjectCommentNotification;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use League\Flysystem\UnableToWriteFile;
 
 class CommentController extends Controller
 {
     public function store(Request $request, Project $project)
     {
-        // Debug logging
-        Log::info('Comment submission received');
-        Log::info('Request all:', $request->all());
-        Log::info('Has file (image):', ['hasFile' => $request->hasFile('image')]);
-        Log::info('All files:', $request->allFiles());
+        $validated = $request->validate($this->commentRules());
+        $uploadedImages = $this->uploadedAttachments($request);
 
-        $request->validate([
-            'body' => 'nullable|string|max:2000',
-            'image' => 'nullable|file|image|max:5120', // max 5MB
-        ]);
-
-        // Reject if both text and image are empty
-        if (!$request->body && !$request->hasFile('image')) {
-            return back()->withErrors(['body' => 'Comment cannot be empty.'])->withInput();
-        }
-
-        $path = null;
-
-        if ($request->hasFile('image')) {
-            Log::info('Image file found, attempting upload...');
-            
-            // store in s3/chat-comments/ and just get the key
-            $path = $request->file('image')->store("chat-comments", "s3");
-            
-            Log::info('Upload successful, path:', ['path' => $path]);
-        } else {
-            Log::warning('No image file detected in request');
-        }
+        $this->ensureCommentHasContent(
+            body: $validated['body'] ?? null,
+            attachmentCount: count($uploadedImages),
+        );
 
         $comment = $project->comments()->create([
             'user_id'   => auth()->id(),
-            'body'      => $request->body,
-            'image_url' => $path, // <-- only the key (e.g., "chat-comments/abc.png")
+            'body'      => $validated['body'] ?? null,
+            'image_url' => null,
         ]);
 
-        $comment->load('user');
+        $this->appendAttachmentsToComment($comment, $uploadedImages);
+        $comment->load(['user', 'attachments']);
 
         $user = auth()->user();
 
@@ -139,27 +124,63 @@ class CommentController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $validated = $request->validate([
-            'body' => 'required|string|max:2000',
-            'image' => 'nullable|image|max:2048',
-        ]);
+        $validated = $request->validate(array_merge($this->commentRules(), [
+            'keep_attachment_ids' => ['nullable', 'array'],
+            'keep_attachment_ids.*' => ['integer'],
+            'keep_legacy_image' => ['nullable', 'boolean'],
+        ]));
 
-        if ($request->hasFile('image')) {
-            // Optionally delete old image if exists
-            if ($comment->image_url) {
-                Storage::disk('s3')->delete($comment->image_url);
-            }
+        $uploadedImages = $this->uploadedAttachments($request);
+        $keepAttachmentIds = collect($validated['keep_attachment_ids'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
 
-            $path = $request->file('image')->store('comments', 's3');
-            $validated['image_url'] = $path;
+        $keptAttachments = $comment->attachments()
+            ->whereIn('id', $keepAttachmentIds)
+            ->orderBy('position')
+            ->get();
+
+        $keepLegacyImage = (bool) ($validated['keep_legacy_image'] ?? ! empty($comment->image_url));
+
+        $this->ensureAttachmentLimit(
+            $keptAttachments->count() + count($uploadedImages) + ($keepLegacyImage && $comment->image_url ? 1 : 0)
+        );
+
+        $this->ensureCommentHasContent(
+            body: $validated['body'] ?? null,
+            attachmentCount: $keptAttachments->count() + count($uploadedImages) + ($keepLegacyImage && $comment->image_url ? 1 : 0),
+        );
+
+        $attachmentsToDelete = $comment->attachments()
+            ->whereNotIn('id', $keepAttachmentIds)
+            ->get();
+
+        foreach ($attachmentsToDelete as $attachment) {
+            $this->deleteAttachmentRecord($attachment);
         }
 
-        $comment->update([
-            'body' => $validated['body'],
-            'image_url' => $validated['image_url'] ?? $comment->image_url,
-        ]);
+        $nextPosition = 0;
 
-        
+        foreach ($keptAttachments as $attachment) {
+            if ($attachment->position !== $nextPosition) {
+                $attachment->update(['position' => $nextPosition]);
+            }
+
+            $nextPosition++;
+        }
+
+        if ($comment->image_url && ! $keepLegacyImage) {
+            $this->deleteCommentImage($comment->image_url);
+            $comment->image_url = null;
+        }
+
+        $comment->body = $validated['body'] ?? null;
+        $comment->save();
+
+        $this->appendAttachmentsToComment($comment, $uploadedImages, $nextPosition);
 
         return back()->with('success', 'Comment updated successfully.');
     }
@@ -174,9 +195,13 @@ class CommentController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        foreach ($comment->attachments as $attachment) {
+            $this->deleteAttachmentRecord($attachment);
+        }
+
         // Optionally delete attached image
         if ($comment->image_url) {
-            Storage::disk('s3')->delete($comment->image_url);
+            $this->deleteCommentImage($comment->image_url);
         }
 
         $comment->delete();
@@ -184,5 +209,200 @@ class CommentController extends Controller
         return back()->with('success', 'Comment deleted successfully.');
     }
 
-    
+    protected function commentRules(): array
+    {
+        return [
+            'body' => ['nullable', 'string', 'max:2000'],
+            'attachments' => ['nullable', 'array', 'max:3'],
+            'attachments.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ];
+    }
+
+    /**
+     * @return array<int, UploadedFile>
+     */
+    protected function uploadedAttachments(Request $request): array
+    {
+        return collect($request->file('attachments', []))
+            ->filter(fn ($file) => $file instanceof UploadedFile)
+            ->values()
+            ->all();
+    }
+
+    protected function ensureCommentHasContent(?string $body, int $attachmentCount): void
+    {
+        if (filled(trim((string) $body)) || $attachmentCount > 0) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'body' => 'Comment cannot be empty.',
+        ]);
+    }
+
+    protected function ensureAttachmentLimit(int $attachmentCount): void
+    {
+        if ($attachmentCount <= 3) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'attachments' => 'You may attach up to 3 images per comment.',
+        ]);
+    }
+
+    protected function appendAttachmentsToComment(ProjectComment $comment, array $uploadedImages, int $startingPosition = 0): void
+    {
+        $position = $startingPosition;
+
+        foreach ($uploadedImages as $image) {
+            $mimeType = $image->getClientMimeType() ?: $image->getMimeType();
+            $originalName = $image->getClientOriginalName();
+            $sizeBytes = $image->getSize();
+            $storedFile = $this->storeCommentAttachment($image);
+
+            $comment->attachments()->create([
+                'disk' => $storedFile['disk'],
+                'path' => $storedFile['path'],
+                'mime_type' => $mimeType,
+                'original_name' => $originalName,
+                'size_bytes' => $sizeBytes,
+                'position' => $position,
+            ]);
+
+            $position++;
+        }
+    }
+
+    /**
+     * @return array{disk:string,path:string}
+     */
+    protected function storeCommentAttachment(UploadedFile $image): array
+    {
+        try {
+            $path = $image->store('comment-attachments', 's3');
+
+            if (! is_string($path) || $path === '') {
+                throw new UnableToWriteFile('Unable to store comment image on s3.');
+            }
+
+            return [
+                'disk' => 's3',
+                'path' => $path,
+            ];
+        } catch (\Throwable $exception) {
+            Log::warning('Comment image upload to s3 failed, falling back to the public web directory.', [
+                'message' => $exception->getMessage(),
+            ]);
+
+            $directory = public_path('comment-attachments');
+            File::ensureDirectoryExists($directory);
+
+            $fileName = $image->hashName();
+            $image->move($directory, $fileName);
+
+            return [
+                'disk' => 'public_path',
+                'path' => 'comment-attachments/'.$fileName,
+            ];
+        }
+    }
+
+    protected function deleteAttachmentRecord(ProjectCommentAttachment $attachment): void
+    {
+        $this->deleteStoredFile($attachment->disk, $attachment->path);
+        $attachment->delete();
+    }
+
+    protected function deleteStoredFile(string $disk, string $path): void
+    {
+        if ($path === '') {
+            return;
+        }
+
+        if ($disk === 'public_path') {
+            File::delete(public_path($path));
+
+            return;
+        }
+
+        Storage::disk($disk)->delete($path);
+    }
+
+    protected function deleteCommentImage(?string $storedImage): void
+    {
+        if (! $storedImage) {
+            return;
+        }
+
+        [$disk, $path] = $this->resolveCommentImageLocation($storedImage);
+
+        if ($path === '') {
+            return;
+        }
+
+        if ($disk === 'public_path') {
+            File::delete(public_path($path));
+
+            return;
+        }
+
+        $this->deleteStoredFile($disk, $path);
+    }
+
+    /**
+     * @return array{0:string,1:string}
+     */
+    protected function resolveCommentImageLocation(string $storedImage): array
+    {
+        $value = trim($storedImage);
+
+        if ($value === '') {
+            return ['public', ''];
+        }
+
+        if (str_starts_with($value, 's3://')) {
+            return ['s3', substr($value, strlen('s3://'))];
+        }
+
+        if (str_starts_with($value, 'public://')) {
+            return ['public', substr($value, strlen('public://'))];
+        }
+
+        if (str_starts_with($value, 'public-path://')) {
+            return ['public_path', substr($value, strlen('public-path://'))];
+        }
+
+        if (str_starts_with($value, '/storage/')) {
+            return ['public', substr($value, strlen('/storage/'))];
+        }
+
+        if (str_starts_with($value, 'storage/')) {
+            return ['public', substr($value, strlen('storage/'))];
+        }
+
+        if (str_starts_with($value, '/chat-comments/')) {
+            return ['public_path', ltrim($value, '/')];
+        }
+
+        if (str_starts_with($value, 'chat-comments/')) {
+            return ['public_path', $value];
+        }
+
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            $path = ltrim((string) parse_url($value, PHP_URL_PATH), '/');
+
+            if (str_starts_with($path, 'storage/')) {
+                return ['public', substr($path, strlen('storage/'))];
+            }
+
+            if (str_starts_with($path, 'chat-comments/')) {
+                return ['public_path', $path];
+            }
+
+            return ['s3', $path];
+        }
+
+        return ['s3', $value];
+    }
 }

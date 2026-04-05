@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
@@ -25,7 +26,12 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
 
     public function query(): Builder
     {
-        $query = Project::with(['client', 'service', 'editor'])
+        $query = Project::with([
+            'client',
+            'service.category.addonAssignments.addon',
+            'service.addonAssignments.addon',
+            'editor',
+        ])
             ->oldest();
 
         if ($this->status) {
@@ -104,28 +110,66 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
      */
     public static function formatAddOns($project): string
     {
-        $addOns = [];
+        $addOns = collect();
+        $availableAddons = self::availableServiceAddons($project);
+        $appendAddOn = static function (string $label, int $quantity = 1, bool $showQuantity = false) use ($addOns): void {
+            $safeLabel = trim($label);
+
+            if ($safeLabel === '') {
+                return;
+            }
+
+            $normalized = strtolower($safeLabel);
+
+            if ($addOns->contains(fn (array $item) => $item['key'] === $normalized)) {
+                return;
+            }
+
+            $addOns->push([
+                'key' => $normalized,
+                'label' => $showQuantity || $quantity > 1 ? "{$safeLabel} ({$quantity}x)" : $safeLabel,
+            ]);
+        };
+
         $style = strtolower(trim($project->style ?? ''));
         $isPremiumOrLuxury = str_contains($style, 'premium') || str_contains($style, 'luxury');
         $isLuxury = str_contains($style, 'luxury');
         $isHorsemenStyle = str_contains($style, 'horsemen');
 
         if ($project->with_agent) {
-            $addOns[] = 'With Agent';
+            $appendAddOn('With Agent');
         }
 
         if ($project->rush) {
-            $addOns[] = 'Rush';
+            $appendAddOn('Rush');
         }
 
         if ($project->per_property) {
             $count = $project->per_property_count ?? 0;
-            $addOns[] = "Per Property Line ({$count}x)";
+            $appendAddOn('Per Property Line', (int) max(1, $count), true);
         }
 
         $extraFields = $project->extra_fields;
 
         if (is_array($extraFields)) {
+            $serviceAddons = $extraFields['service_addons'] ?? [];
+
+            if (is_array($serviceAddons) && ! empty($serviceAddons)) {
+                foreach ($serviceAddons as $addon) {
+                    $matchedAddon = $availableAddons->first(function (array $serviceAddon) use ($addon) {
+                        return (int) ($serviceAddon['id'] ?? 0) === (int) ($addon['addon_id'] ?? 0)
+                            || self::normalizeAddonValue((string) ($serviceAddon['slug'] ?? '')) === self::normalizeAddonValue((string) ($addon['slug'] ?? ''))
+                            || self::normalizeAddonValue((string) ($serviceAddon['name'] ?? '')) === self::normalizeAddonValue((string) ($addon['name'] ?? ''));
+                    });
+
+                    $appendAddOn(
+                        (string) ($addon['name'] ?? $addon['slug'] ?? ''),
+                        (int) max(1, (int) ($addon['quantity'] ?? 1)),
+                        (bool) (($matchedAddon['has_quantity'] ?? false) || ($matchedAddon['addon_type'] ?? null) === 'quantity')
+                    );
+                }
+            }
+
             // Only include captions that have a price for this style
             $pricedCaptions = [];
             if ($isPremiumOrLuxury) {
@@ -146,7 +190,7 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
             if (! empty($extraFields['captions'])) {
                 foreach ($extraFields['captions'] as $caption) {
                     if (in_array($caption, $pricedCaptions)) {
-                        $addOns[] = $caption;
+                        $appendAddOn($caption);
                     }
                 }
             }
@@ -164,13 +208,59 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
                     $name = $effect['id'] ?? '';
                     $qty = $effect['quantity'] ?? 1;
                     if (in_array($name, $pricedEffects)) {
-                        $addOns[] = "{$name} ({$qty}x)";
+                        $appendAddOn($name, (int) max(1, $qty), true);
                     }
                 }
             }
         }
 
-        return implode(', ', $addOns);
+        return $addOns
+            ->pluck('label')
+            ->implode(', ');
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    protected static function availableServiceAddons(Project $project): Collection
+    {
+        $assignments = collect();
+
+        if ($project->service?->category) {
+            $assignments = $assignments->concat($project->service->category->addonAssignments ?? []);
+        }
+
+        $assignments = $assignments->concat($project->service->addonAssignments ?? []);
+
+        return $assignments
+            ->map(function ($assignment) {
+                $addon = $assignment->addon;
+
+                if (! $addon) {
+                    return null;
+                }
+
+                return [
+                    'id' => $addon->id,
+                    'name' => $addon->name,
+                    'slug' => $addon->slug,
+                    'addon_type' => $addon->addon_type,
+                    'has_quantity' => (bool) $addon->has_quantity,
+                ];
+            })
+            ->filter()
+            ->values();
+    }
+
+    protected static function normalizeAddonValue(?string $value): string
+    {
+        return str((string) $value)
+            ->trim()
+            ->lower()
+            ->replace('&', 'and')
+            ->replaceMatches('/[^a-z0-9]+/', '-')
+            ->trim('-')
+            ->value();
     }
 
     public function columnWidths(): array

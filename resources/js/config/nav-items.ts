@@ -1,5 +1,5 @@
 import { NavItem } from '@/types';
-import { BookHeart, Brush, Church, ClipboardList, Construction, FolderOpenDot, HandCoins, Hotel, House, Laugh, LayoutGrid, PartyPopper, SquareGanttChart, UserCog } from 'lucide-vue-next';
+import { Brush, ClipboardList, FolderOpenDot, HandCoins, LayoutGrid, SquareGanttChart, UserCog } from 'lucide-vue-next';
 
 export const allNavItems: { [key: string]: NavItem[] } = {
     admin: [
@@ -34,56 +34,21 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             icon: HandCoins,
         },
         {
-            title: 'Real Estate Services',
-            href: '/admin-realestate-services',
-            icon: Hotel,
+            title: 'Services',
+            href: '/admin-service-catalog',
+            icon: ClipboardList,
         },
         {
-            title: 'Wedding Services',
-            href: '/admin-wedding-services',
-            icon: Church,
-        },
-        {
-            title: 'Event Services',
-            href: '/admin-event-services',
-            icon: PartyPopper,
-        },
-        {
-            title: 'Construction Services',
-            href: '/admin-construction-services',
-            icon: Construction,
-        },
-        {
-            title: 'Talking Heads Services',
-            href: '/admin-talkingheads-services',
-            icon: Laugh,
+            title: 'Services Management',
+            href: '/admin-services',
+            icon: ClipboardList,
         },
     ],
     client: [
         {
-            title: 'Real Estate Services',
-            href: '/realestate-services',
+            title: 'Services',
+            href: '/services',
             icon: ClipboardList,
-        },
-        {
-            title: 'Wedding Services',
-            href: '/wedding-services',
-            icon: BookHeart,
-        },
-        {
-            title: 'Event Services',
-            href: '/event-services',
-            icon: PartyPopper,
-        },
-        {
-            title: 'Construction Services',
-            href: '/construction-services',
-            icon: Construction,
-        },
-        {
-            title: 'Talking Heads Services',
-            href: '/talkingheads-services',
-            icon: Laugh,
         },
         {
             title: 'Projects',
