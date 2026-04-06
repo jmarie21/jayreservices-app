@@ -23,6 +23,7 @@ export type AppPageProps<T extends Record<string, unknown> = Record<string, unkn
     auth: Auth;
     ziggy: Config & { location: string };
     sidebarOpen: boolean;
+    supportChatBootstrap?: SupportChatBootstrap | null;
 };
 
 export interface User {
@@ -37,12 +38,12 @@ export interface User {
     additional_emails: string | null;
 }
 
-type Client = {
+export type Client = {
     id: number;
     name: string;
 };
 
-type Editor = {
+export type Editor = {
     id: number;
     name: string;
 };
@@ -147,6 +148,43 @@ export interface Invoice {
     status: 'pending' | 'sent' | 'paid' | 'cancelled';
     created_at: string;
     updated_at: string;
+}
+
+export interface SupportChatBootstrap {
+    conversation_id: number | null;
+    unread_count: number;
+}
+
+export type SupportMessageSenderRole = 'admin' | 'client' | 'editor' | 'unknown';
+
+export interface SupportConversationClient {
+    id: number | null;
+    name: string;
+    email?: string | null;
+}
+
+export interface SupportConversationSummary {
+    id: number;
+    client: SupportConversationClient;
+    last_message_preview: string;
+    last_message_at: string | null;
+    last_message_sender_id: number | null;
+    last_message_sender_role: SupportMessageSenderRole | null;
+    admin_unread_count: number;
+    client_unread_count: number;
+}
+
+export interface SupportMessage {
+    id: number;
+    body: string;
+    sender_id: number | null;
+    sender_name: string;
+    sender_role: SupportMessageSenderRole;
+    created_at: string | null;
+}
+
+export interface SupportConversationDetail extends SupportConversationSummary {
+    messages: SupportMessage[];
 }
 
 export type BreadcrumbItemType = BreadcrumbItem;

@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -72,6 +73,16 @@ class User extends Authenticatable
     public function comments(): HasMany
     {
         return $this->hasMany(ProjectComment::class);
+    }
+
+    public function supportConversation(): HasOne
+    {
+        return $this->hasOne(SupportConversation::class, 'client_id');
+    }
+
+    public function supportMessages(): HasMany
+    {
+        return $this->hasMany(SupportMessage::class, 'sender_id');
     }
 
     // Role check helpers

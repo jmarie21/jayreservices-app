@@ -6,9 +6,12 @@ use App\Http\Controllers\Admin\EditorManagement;
 use App\Http\Controllers\Admin\InvoiceManagementController;
 use App\Http\Controllers\Admin\ProjectManagement;
 use App\Http\Controllers\Admin\ServiceManagementController;
+use App\Http\Controllers\Admin\SupportConversationController;
+use App\Http\Controllers\Admin\SupportMessageController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Client\ProjectsController;
 use App\Http\Controllers\Client\ServicesController;
+use App\Http\Controllers\Client\SupportChatController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Editor\EditorProjectsController;
 use App\Http\Controllers\NotificationController;
@@ -32,6 +35,10 @@ Route::middleware(['auth', 'client'])->group(function () {
     Route::post('/projects', [ProjectsController::class, 'createProject'])->name('projects.store');
     Route::put('/projects/{project}', [ProjectsController::class, 'updateProject'])->name('projects.client_update');
     Route::put('/projects/{project}/status', [ProjectsController::class, 'updateStatus'])->name('projects.updateStatus');
+
+    Route::get('/support-chat', [SupportChatController::class, 'show'])->name('support-chat.show');
+    Route::post('/support-chat/messages', [SupportChatController::class, 'storeMessage'])->name('support-chat.messages.store');
+    Route::post('/support-chat/read', [SupportChatController::class, 'markRead'])->name('support-chat.read');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -102,6 +109,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Bulk Notification Routes
     Route::post('/bulk-notification/send', [BulkNotificationController::class, 'sendToAllClients'])->name('bulk-notification.send');
     Route::get('/bulk-notification/stats', [BulkNotificationController::class, 'getClientEmailStats'])->name('bulk-notification.stats');
+
+    Route::get('/messages', [SupportConversationController::class, 'index'])->name('admin.messages.index');
+    Route::get('/messages/{conversation}', [SupportConversationController::class, 'show'])->name('admin.messages.show');
+    Route::post('/messages/{conversation}/messages', [SupportMessageController::class, 'store'])->name('admin.messages.messages.store');
+    Route::post('/messages/{conversation}/read', [SupportConversationController::class, 'markRead'])->name('admin.messages.read');
 
 });
 
