@@ -751,7 +751,7 @@ onBeforeUnmount(() => {
                                             v-html="linkify(comment.body)"
                                         ></p>
 
-                                        <div v-if="comment.attachments?.length" class="mt-2 grid max-w-[320px] grid-cols-2 gap-2">
+                                        <div v-if="comment.attachments?.length" class="mt-2 space-y-2">
                                             <template
                                                 v-for="attachment in comment.attachments"
                                                 :key="`${comment.id}-${attachment.id}-${attachment.position}`"
@@ -763,14 +763,14 @@ onBeforeUnmount(() => {
                                                     controlslist="nodownload"
                                                     preload="metadata"
                                                     playsinline
-                                                    class="h-28 w-full rounded-lg border object-cover"
+                                                    class="max-h-64 w-full rounded-lg border object-contain"
                                                     @error="($event.target as HTMLVideoElement).replaceWith(Object.assign(document.createElement('div'), { className: 'flex h-28 w-full items-center justify-center rounded-lg border bg-gray-100 text-xs text-gray-400', textContent: 'Attachment expired' }))"
                                                 />
                                                 <img
                                                     v-else
                                                     :src="attachment.url"
                                                     :alt="attachment.original_name ?? 'comment attachment'"
-                                                    class="h-28 w-full cursor-pointer rounded-lg border object-cover transition hover:opacity-80"
+                                                    class="max-h-52 w-full cursor-pointer rounded-lg border object-contain transition hover:opacity-80"
                                                     @click="openNativeFullscreen"
                                                     @error="($event.target as HTMLImageElement).replaceWith(Object.assign(document.createElement('div'), { className: 'flex h-28 w-full items-center justify-center rounded-lg border bg-gray-100 text-xs text-gray-400', textContent: 'Attachment expired' }))"
                                                 />
