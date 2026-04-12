@@ -76,6 +76,7 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
             'Client Name',
             'Project Name',
             'Service',
+            'Video Format',
             'Add Ons',
             'Editor',
             'Status',
@@ -95,6 +96,7 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
             $project->client?->name ?? 'N/A',
             $project->project_name,
             $project->service?->name ?? 'N/A',
+            self::formatVideoFormat($project),
             self::formatAddOns($project),
             $project->editor?->name ?? 'Unassigned',
             $project->status,
@@ -103,6 +105,16 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
             $project->editor_price,
             Carbon::parse($project->created_at)->format('Y-m-d H:i:s'),
         ];
+    }
+
+    /**
+     * @param  Project  $project
+     */
+    public static function formatVideoFormat($project): string
+    {
+        $videoFormat = trim((string) ($project->format ?? ''));
+
+        return $videoFormat !== '' ? $videoFormat : 'N/A';
     }
 
     /**
@@ -266,14 +278,15 @@ class ProjectsExport implements FromQuery, ShouldAutoSize, WithColumnWidths, Wit
     public function columnWidths(): array
     {
         return [
-            'D' => 40,
+            'D' => 24,
+            'E' => 40,
         ];
     }
 
     public function styles(Worksheet $sheet): array
     {
         return [
-            'D' => [
+            'E' => [
                 'alignment' => [
                     'wrapText' => true,
                 ],

@@ -118,9 +118,15 @@ const featureRows = computed(() =>
     })),
 );
 
-const moneyFormatter = new Intl.NumberFormat('en-US', {
+const customerMoneyFormatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
+    minimumFractionDigits: 2,
+});
+
+const editorMoneyFormatter = new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
     minimumFractionDigits: 2,
 });
 
@@ -130,8 +136,12 @@ function tabButtonClass(tab: TabType) {
         : 'border-b-2 border-transparent text-slate-500 hover:text-slate-900';
 }
 
-function formatMoney(value?: number) {
-    return moneyFormatter.format(Number(value ?? 0));
+function formatCustomerMoney(value?: number) {
+    return customerMoneyFormatter.format(Number(value ?? 0));
+}
+
+function formatEditorMoney(value?: number) {
+    return editorMoneyFormatter.format(Number(value ?? 0));
 }
 
 function formatInputTypeLabel(value: AddonInputType) {
@@ -720,8 +730,8 @@ function deleteAddonOption(option: ServiceAddonGroupOption) {
                             </div>
 
                             <div class="flex flex-col gap-3 md:flex-row md:items-center md:gap-6">
-                                <div class="text-sm font-medium text-emerald-600">Customer: {{ formatMoney(pricing.client_price) }}</div>
-                                <div class="text-sm font-medium text-slate-600">Editor: {{ formatMoney(pricing.editor_price) }}</div>
+                                <div class="text-sm font-medium text-emerald-600">Customer: {{ formatCustomerMoney(pricing.client_price) }}</div>
+                                <div class="text-sm font-medium text-slate-600">Editor: {{ formatEditorMoney(pricing.editor_price) }}</div>
                                 <div class="flex gap-2 md:justify-end">
                                     <Button variant="outline" size="icon" @click="openFormatDialog(subStyle, pricing)">
                                         <Pencil class="h-4 w-4" />
@@ -800,8 +810,8 @@ function deleteAddonOption(option: ServiceAddonGroupOption) {
                                 </div>
 
                                 <div class="flex flex-wrap gap-4 text-sm">
-                                    <span class="font-medium text-emerald-600">Customer: {{ formatMoney(option.client_price) }}</span>
-                                    <span class="font-medium text-slate-600">Editor: {{ formatMoney(option.editor_price) }}</span>
+                                    <span class="font-medium text-emerald-600">Customer: {{ formatCustomerMoney(option.client_price) }}</span>
+                                    <span class="font-medium text-slate-600">Editor: {{ formatEditorMoney(option.editor_price) }}</span>
                                 </div>
 
                                 <a v-if="option.sample_link" :href="option.sample_link" target="_blank" rel="noreferrer" class="inline-flex text-sm font-medium text-indigo-600 hover:text-indigo-700">
@@ -900,7 +910,7 @@ function deleteAddonOption(option: ServiceAddonGroupOption) {
                     </div>
 
                     <div class="space-y-2">
-                        <Label>Editor Price</Label>
+                        <Label>Editor Price (₱)</Label>
                         <Input v-model.number="formatForm.editor_price" type="number" min="0" step="0.01" />
                     </div>
 
@@ -992,7 +1002,7 @@ function deleteAddonOption(option: ServiceAddonGroupOption) {
                     </div>
 
                     <div class="space-y-2">
-                        <Label>Editor Price</Label>
+                        <Label>Editor Price (₱)</Label>
                         <Input v-model.number="addonOptionForm.editor_price" type="number" min="0" step="0.01" />
                     </div>
 

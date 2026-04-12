@@ -8,6 +8,7 @@ use App\Models\SupportConversation;
 use App\Models\SupportMessage;
 use App\Services\SupportChatBroadcaster;
 use App\Services\SupportChatPayload;
+use App\Services\SupportMessageAttachmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,8 +17,8 @@ class SupportChatController extends Controller
 {
     public function __construct(
         protected SupportChatBroadcaster $broadcaster,
-    ) {
-    }
+        protected SupportMessageAttachmentService $attachmentService,
+    ) {}
 
     public function show(Request $request): JsonResponse
     {
@@ -62,6 +63,8 @@ class SupportChatController extends Controller
             return [$conversation, $message];
         });
 
+        $this->attachmentService->storeAttachments($request, $message);
+
         $conversation = $this->loadConversation($conversation->id);
         $message = $this->loadMessage($message->id);
 
@@ -101,6 +104,7 @@ class SupportChatController extends Controller
             ->withSupportSummaryData()
             ->with([
                 'messages.sender:id,name,role',
+                'messages.attachments',
             ])
             ->findOrFail($conversationId);
     }
@@ -108,7 +112,7 @@ class SupportChatController extends Controller
     protected function loadMessage(int $messageId): SupportMessage
     {
         return SupportMessage::query()
-            ->with('sender:id,name,role')
+            ->with(['sender:id,name,role', 'attachments'])
             ->findOrFail($messageId);
     }
 }

@@ -4,7 +4,8 @@ import { Textarea } from '@/components/ui/textarea';
 import type { AppPageProps, SupportChatBootstrap, SupportConversationDetail, SupportConversationSummary, SupportMessage } from '@/types';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { LoaderCircle, MessageCircleMore, SendHorizontal, X } from 'lucide-vue-next';
+import imageCompression from 'browser-image-compression';
+import { ImagePlus, LoaderCircle, MessageCircleMore, SendHorizontal, X } from 'lucide-vue-next';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 
 const page = usePage<AppPageProps>();
@@ -23,6 +24,90 @@ const conversationId = ref<number | null>(bootstrap.value?.conversation_id ?? nu
 const subscribedConversationId = ref<number | null>(null);
 
 const messages = computed(() => conversation.value?.messages ?? []);
+
+type PendingChatAttachment = { key: string; file: File; previewUrl: string; kind: 'image' | 'video' };
+const maxChatAttachments = 3;
+const maxChatImageBytes = 5 * 1024 * 1024;
+const maxChatVideoBytes = 25 * 1024 * 1024;
+const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const allowedVideoTypes = new Set(['video/mp4', 'video/quicktime', 'video/webm']);
+const pendingAttachments = ref<PendingChatAttachment[]>([]);
+const chatAttachmentInput = ref<HTMLInputElement | null>(null);
+const isCompressing = ref(false);
+const totalAttachments = computed(() => pendingAttachments.value.length);
+const hasContent = computed(() => body.value.trim().length > 0 || totalAttachments.value > 0);
+
+const openAttachmentPicker = () => chatAttachmentInput.value?.click();
+
+const addChatAttachments = async (files: File[]) => {
+    let remaining = maxChatAttachments - totalAttachments.value;
+    if (remaining <= 0) {
+        errorMessage.value = `You can attach up to ${maxChatAttachments} files per message.`;
+        return;
+    }
+
+    for (const file of files) {
+        const isImage = allowedImageTypes.has(file.type);
+        const isVideo = allowedVideoTypes.has(file.type);
+
+        if (!isImage && !isVideo) {
+            errorMessage.value = `"${file.name}" is not supported. Use JPG, PNG, WEBP, MP4, MOV, or WEBM.`;
+            continue;
+        }
+
+        if (isImage && file.size > maxChatImageBytes) {
+            errorMessage.value = `"${file.name}" exceeds the 5 MB image limit.`;
+            continue;
+        }
+
+        if (isVideo && file.size > maxChatVideoBytes) {
+            errorMessage.value = `"${file.name}" exceeds the 25 MB video limit.`;
+            continue;
+        }
+
+        if (remaining <= 0) {
+            errorMessage.value = `You can attach up to ${maxChatAttachments} files per message.`;
+            break;
+        }
+
+        let finalFile = file;
+        if (isImage) {
+            try {
+                isCompressing.value = true;
+                const compressed = await imageCompression(file, { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true, fileType: file.type });
+                finalFile = new File([compressed], file.name, { type: file.type, lastModified: file.lastModified });
+            } catch { /* use original */ } finally {
+                isCompressing.value = false;
+            }
+        }
+
+        pendingAttachments.value.push({
+            key: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            file: finalFile,
+            previewUrl: URL.createObjectURL(finalFile),
+            kind: isImage ? 'image' : 'video',
+        });
+        remaining--;
+    }
+};
+
+const removePendingAttachment = (key: string) => {
+    const item = pendingAttachments.value.find((a) => a.key === key);
+    if (item) URL.revokeObjectURL(item.previewUrl);
+    pendingAttachments.value = pendingAttachments.value.filter((a) => a.key !== key);
+};
+
+const clearPendingAttachments = () => {
+    pendingAttachments.value.forEach((a) => URL.revokeObjectURL(a.previewUrl));
+    pendingAttachments.value = [];
+    if (chatAttachmentInput.value) chatAttachmentInput.value.value = '';
+};
+
+const handleChatFileSelection = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    addChatAttachments(Array.from(target.files ?? []));
+    target.value = '';
+};
 
 const syncBootstrap = (nextBootstrap: SupportChatBootstrap | null | undefined) => {
     unreadCount.value = nextBootstrap?.unread_count ?? 0;
@@ -180,7 +265,7 @@ const toggleOpen = async () => {
 };
 
 const sendMessage = async () => {
-    if (isSending.value || body.value.trim().length === 0) {
+    if (isSending.value || !hasContent.value) {
         return;
     }
 
@@ -188,18 +273,23 @@ const sendMessage = async () => {
     errorMessage.value = '';
 
     try {
+        const formData = new FormData();
+        formData.append('body', body.value);
+        pendingAttachments.value.forEach((a, i) => formData.append(`attachments[${i}]`, a.file));
+
         const { data } = await axios.post<{
             conversation: SupportConversationDetail;
             message: SupportMessage;
             bootstrap: SupportChatBootstrap;
-        }>(route('support-chat.messages.store'), {
-            body: body.value,
+        }>(route('support-chat.messages.store'), formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
         });
 
         replaceConversation(data.conversation);
         syncBootstrap(data.bootstrap);
         unreadCount.value = 0;
         body.value = '';
+        clearPendingAttachments();
     } catch (error: any) {
         errorMessage.value = error?.response?.data?.message ?? 'Unable to send your message right now.';
         console.error('Failed to send support chat message.', error);
@@ -227,6 +317,7 @@ const formatTimestamp = (value: string | null) => {
 };
 
 onBeforeUnmount(() => {
+    clearPendingAttachments();
     if (subscribedConversationId.value && window.Echo) {
         window.Echo.leave(`private-support.conversation.${subscribedConversationId.value}`);
     }
@@ -296,16 +387,57 @@ onBeforeUnmount(() => {
                                     {{ formatTimestamp(message.created_at) }}
                                 </span>
                             </div>
-                            <p class="text-sm whitespace-pre-wrap">{{ message.body }}</p>
+                            <p v-if="message.body" class="text-sm whitespace-pre-wrap">{{ message.body }}</p>
+                            <div v-if="message.attachments?.length" class="mt-2 grid grid-cols-2 gap-1.5">
+                                <template v-for="attachment in message.attachments" :key="attachment.id">
+                                    <video
+                                        v-if="attachment.mime_type?.startsWith('video/')"
+                                        :src="attachment.url"
+                                        controls
+                                        controlslist="nodownload"
+                                        preload="metadata"
+                                        playsinline
+                                        class="h-24 w-full rounded-lg object-cover"
+                                        @error="($event.target as HTMLVideoElement).replaceWith(Object.assign(document.createElement('div'), { className: 'flex h-24 w-full items-center justify-center rounded-lg bg-gray-100 text-[10px] text-gray-400', textContent: 'Expired' }))"
+                                    />
+                                    <img
+                                        v-else
+                                        :src="attachment.url"
+                                        :alt="attachment.original_name ?? 'attachment'"
+                                        class="h-24 w-full cursor-pointer rounded-lg object-cover"
+                                        @error="($event.target as HTMLImageElement).replaceWith(Object.assign(document.createElement('div'), { className: 'flex h-24 w-full items-center justify-center rounded-lg bg-gray-100 text-[10px] text-gray-400', textContent: 'Expired' }))"
+                                    />
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="border-t border-slate-200 bg-white p-3">
+                    <input
+                        ref="chatAttachmentInput"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                        multiple
+                        class="hidden"
+                        @change="handleChatFileSelection"
+                    />
                     <p v-if="errorMessage" class="mb-2 text-xs text-rose-600">
                         {{ errorMessage }}
                     </p>
+                    <div v-if="pendingAttachments.length" class="mb-2 grid grid-cols-3 gap-1.5">
+                        <div v-for="a in pendingAttachments" :key="a.key" class="group relative overflow-hidden rounded-lg border">
+                            <video v-if="a.kind === 'video'" :src="a.previewUrl" preload="metadata" playsinline muted class="h-16 w-full object-cover" />
+                            <img v-else :src="a.previewUrl" class="h-16 w-full object-cover" />
+                            <button type="button" @click="removePendingAttachment(a.key)" class="absolute top-0.5 right-0.5 rounded-full bg-black/70 p-0.5 text-white hover:bg-black">
+                                <X class="h-3 w-3" />
+                            </button>
+                        </div>
+                    </div>
                     <div class="flex items-end gap-2">
+                        <Button type="button" size="icon" variant="ghost" class="h-11 w-11 shrink-0" :disabled="totalAttachments >= maxChatAttachments || isCompressing" @click="openAttachmentPicker">
+                            <ImagePlus class="h-4 w-4" />
+                        </Button>
                         <Textarea
                             v-model="body"
                             rows="2"
@@ -313,12 +445,12 @@ onBeforeUnmount(() => {
                             placeholder="Type your message..."
                             @keydown.enter.exact.prevent="sendMessage"
                         />
-                        <Button type="button" size="icon" class="h-11 w-11 shrink-0" :disabled="isSending || body.trim().length === 0" @click="sendMessage">
+                        <Button type="button" size="icon" class="h-11 w-11 shrink-0" :disabled="isSending || !hasContent" @click="sendMessage">
                             <LoaderCircle v-if="isSending" class="h-4 w-4 animate-spin" />
                             <SendHorizontal v-else class="h-4 w-4" />
                         </Button>
                     </div>
-                    <p class="mt-2 text-[11px] text-slate-400">Press Enter to send. Use Shift + Enter for a new line.</p>
+                    <p class="mt-2 text-[11px] text-slate-400">Images (5 MB) or videos (25 MB). Press Enter to send.</p>
                 </div>
             </div>
         </transition>

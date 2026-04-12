@@ -57,6 +57,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/all-projects', [ProjectManagement::class, 'showAllProjects'])->name('projects.all');
     Route::get('/all-projects/export', [ProjectManagement::class, 'exportAllProjects'])->name('projects.all.export');
     Route::get('/all-projects/preview-export', [ProjectManagement::class, 'previewExport'])->name('projects.all.preview-export');
+    Route::get('/editors-projects', [EditorManagement::class, 'index'])->name('admin.editors-projects.index');
     Route::put('/project-mgmt/{project}', [ProjectManagement::class, 'adminUpdateProject'])->name('admin.project.update');
 
     // Admin services management
@@ -93,7 +94,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
-
     Route::get('/editor-mgmt/{editor}', [EditorManagement::class, 'showEditorProjects'])->name('admin.editor.projects');
 
     Route::get('/invoice-mgmt', [InvoiceManagementController::class, 'index'])->name('invoice.index');

@@ -22,6 +22,8 @@ const role = computed(() => user.value?.role);
 const clients = computed<Client[]>(() => (page.props.clients as Client[]) ?? []);
 const editors = computed<Editor[]>(() => (page.props.editors as Editor[]) ?? []);
 
+const supportUnreadCount = computed<number>(() => (page.props.supportUnreadCount as number) ?? 0);
+
 const mainNavItems = computed<NavItem[]>(() => {
     let navItems = [...(allNavItems[role.value] ?? [])];
 
@@ -50,6 +52,14 @@ const mainNavItems = computed<NavItem[]>(() => {
                         title: editor.name,
                         href: `/editor-mgmt/${editor.id}`,
                     })),
+                };
+            }
+
+            // Messages badge
+            if (item.title === 'Messages') {
+                return {
+                    ...item,
+                    badge: supportUnreadCount.value,
                 };
             }
 

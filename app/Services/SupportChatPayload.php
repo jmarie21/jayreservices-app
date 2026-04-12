@@ -90,7 +90,7 @@ class SupportChatPayload
      */
     public static function message(SupportMessage $message): array
     {
-        $message->loadMissing('sender:id,name,role');
+        $message->loadMissing(['sender:id,name,role', 'attachments']);
 
         return [
             'id' => $message->id,
@@ -99,14 +99,18 @@ class SupportChatPayload
             'sender_name' => $message->sender?->name ?? 'Deleted user',
             'sender_role' => $message->sender?->role ?? 'unknown',
             'created_at' => $message->created_at?->toISOString(),
+            'attachments' => $message->attachments
+                ->values()
+                ->map(fn ($attachment) => $attachment->toArray())
+                ->all(),
         ];
     }
 
     protected static function messagePreview(?string $body): string
     {
-        return (string) Str::of((string) $body)
-            ->squish()
-            ->limit(80);
+        $text = (string) Str::of((string) $body)->squish()->limit(80);
+
+        return $text !== '' ? $text : '[Media attached]';
     }
 
     protected static function calculateUnreadCount(SupportConversation $conversation, string $viewerRole): int

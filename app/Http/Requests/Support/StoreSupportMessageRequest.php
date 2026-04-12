@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Support;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 
 class StoreSupportMessageRequest extends FormRequest
 {
@@ -40,7 +41,43 @@ class StoreSupportMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => ['required', 'string', 'max:2000'],
+            'body' => ['nullable', 'string', 'max:2000'],
+            'attachments' => ['nullable', 'array', 'max:3'],
+            'attachments.*' => [
+                'file',
+                'mimes:jpg,jpeg,png,webp,mp4,mov,webm,quicktime',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! $value instanceof UploadedFile) {
+                        return;
+                    }
+
+                    $mime = $value->getMimeType() ?: '';
+                    $sizeBytes = $value->getSize();
+
+                    if (str_starts_with($mime, 'image/') && $sizeBytes > 5 * 1024 * 1024) {
+                        $fail('Images must be 5 MB or smaller.');
+
+                        return;
+                    }
+
+                    if (str_starts_with($mime, 'video/') && $sizeBytes > 25 * 1024 * 1024) {
+                        $fail('Videos must be 25 MB or smaller.');
+                    }
+                },
+            ],
         ];
+    }
+
+    public function withValidator(\Illuminate\Validation\Validator $validator): void
+    {
+        $validator->after(function (\Illuminate\Validation\Validator $validator) {
+            $body = $this->input('body');
+            $hasBody = is_string($body) && trim($body) !== '';
+            $hasAttachments = count($this->allFiles()) > 0;
+
+            if (! $hasBody && ! $hasAttachments) {
+                $validator->errors()->add('body', 'Message cannot be empty.');
+            }
+        });
     }
 }

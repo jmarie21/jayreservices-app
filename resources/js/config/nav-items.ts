@@ -1,5 +1,17 @@
 import { NavItem } from '@/types';
-import { Brush, ClipboardList, FolderOpenDot, HandCoins, LayoutGrid, MessageSquareText, SquareGanttChart, UserCog } from 'lucide-vue-next';
+import {
+    Brush,
+    ClipboardList,
+    FolderOpenDot,
+    Folders,
+    HandCoins,
+    LayoutGrid,
+    MessageSquareText,
+    Settings,
+    SquareGanttChart,
+    UserCog,
+    UsersRound,
+} from 'lucide-vue-next';
 
 export const allNavItems: { [key: string]: NavItem[] } = {
     admin: [
@@ -19,9 +31,14 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             icon: SquareGanttChart,
         },
         {
+            title: 'Editors Projects',
+            href: '/editors-projects',
+            icon: UsersRound,
+        },
+        {
             title: 'Project Management',
             href: undefined,
-            icon: FolderOpenDot,
+            icon: Folders,
         },
         {
             title: 'Editor Management',
@@ -46,7 +63,7 @@ export const allNavItems: { [key: string]: NavItem[] } = {
         {
             title: 'Services Management',
             href: '/admin-services',
-            icon: ClipboardList,
+            icon: Settings,
         },
     ],
     client: [

@@ -15,6 +15,7 @@ export interface NavItem {
     href?: string;
     icon?: any;
     children?: NavItem[];
+    badge?: number;
 }
 
 export type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
@@ -174,6 +175,15 @@ export interface SupportConversationSummary {
     client_unread_count: number;
 }
 
+export interface SupportMessageAttachment {
+    id: number;
+    url: string;
+    mime_type?: string | null;
+    original_name?: string | null;
+    size_bytes?: number | null;
+    position: number;
+}
+
 export interface SupportMessage {
     id: number;
     body: string;
@@ -181,6 +191,7 @@ export interface SupportMessage {
     sender_name: string;
     sender_role: SupportMessageSenderRole;
     created_at: string | null;
+    attachments?: SupportMessageAttachment[];
 }
 
 export interface SupportConversationDetail extends SupportConversationSummary {

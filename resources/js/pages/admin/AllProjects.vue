@@ -345,6 +345,7 @@ const exportUrl = computed(() => {
 interface ExportRow {
     project_name: string;
     service: string;
+    video_format: string;
     client: string;
     editor: string;
     priority: string;
@@ -446,6 +447,7 @@ onMounted(() => {
                     <TableRow>
                         <TableHead>Project Name</TableHead>
                         <TableHead>Service</TableHead>
+                        <TableHead>Video Format</TableHead>
                         <TableHead>Client Name</TableHead>
                         <TableHead>Editor</TableHead>
                         <TableHead>Status</TableHead>
@@ -465,6 +467,7 @@ onMounted(() => {
                             </div>
                         </TableCell>
                         <TableCell>{{ project.service?.name || 'N/A' }}</TableCell>
+                        <TableCell>{{ project.format || 'N/A' }}</TableCell>
 
                         <TableCell>{{ project.client?.name || 'N/A' }}</TableCell>
 
@@ -653,6 +656,7 @@ onMounted(() => {
                         <colgroup>
                             <col class="w-[160px]" />
                             <col class="w-[150px]" />
+                            <col class="w-[150px]" />
                             <col class="w-[160px]" />
                             <col class="w-[250px]" />
                             <col class="w-[100px]" />
@@ -666,6 +670,7 @@ onMounted(() => {
                                 <th class="p-2 text-left font-medium text-muted-foreground">Client</th>
                                 <th class="p-2 text-left font-medium text-muted-foreground">Project Name</th>
                                 <th class="p-2 text-left font-medium text-muted-foreground">Service</th>
+                                <th class="p-2 text-left font-medium text-muted-foreground">Video Format</th>
                                 <th class="p-2 text-left font-medium text-muted-foreground">Add Ons</th>
                                 <th class="p-2 text-left font-medium text-muted-foreground">Editor</th>
                                 <th class="p-2 text-left font-medium text-muted-foreground">Priority</th>
@@ -679,6 +684,7 @@ onMounted(() => {
                                 <td class="p-2">{{ row.client }}</td>
                                 <td class="truncate p-2" :title="row.project_name">{{ row.project_name }}</td>
                                 <td class="p-2">{{ row.service }}</td>
+                                <td class="p-2">{{ row.video_format }}</td>
                                 <td class="break-words p-2">{{ row.add_ons || '—' }}</td>
                                 <td class="p-2">{{ row.editor }}</td>
                                 <td class="p-2">{{ row.priority }}</td>

@@ -8,14 +8,13 @@ use App\Models\ProjectCommentAttachment;
 use App\Models\User;
 use App\Notifications\ClientCommentNotification;
 use App\Notifications\ClientProjectCommentNotification;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
 use League\Flysystem\UnableToWriteFile;
 
 class CommentController extends Controller
@@ -23,24 +22,23 @@ class CommentController extends Controller
     public function store(Request $request, Project $project)
     {
         $validated = $request->validate($this->commentRules());
-        $uploadedImages = $this->uploadedAttachments($request);
+        $uploadedAttachments = $this->uploadedAttachments($request);
 
         $this->ensureCommentHasContent(
             body: $validated['body'] ?? null,
-            attachmentCount: count($uploadedImages),
+            attachmentCount: count($uploadedAttachments),
         );
 
         $comment = $project->comments()->create([
-            'user_id'   => auth()->id(),
-            'body'      => $validated['body'] ?? null,
+            'user_id' => auth()->id(),
+            'body' => $validated['body'] ?? null,
             'image_url' => null,
         ]);
 
-        $this->appendAttachmentsToComment($comment, $uploadedImages);
+        $this->appendAttachmentsToComment($comment, $uploadedAttachments);
         $comment->load(['user', 'attachments']);
 
         $user = auth()->user();
-
 
         // 🔔 Send notification if comment is from client
         if (auth()->user()->role === 'client') {
@@ -130,7 +128,7 @@ class CommentController extends Controller
             'keep_legacy_image' => ['nullable', 'boolean'],
         ]));
 
-        $uploadedImages = $this->uploadedAttachments($request);
+        $uploadedAttachments = $this->uploadedAttachments($request);
         $keepAttachmentIds = collect($validated['keep_attachment_ids'] ?? [])
             ->map(fn ($id) => (int) $id)
             ->filter(fn (int $id) => $id > 0)
@@ -146,12 +144,12 @@ class CommentController extends Controller
         $keepLegacyImage = (bool) ($validated['keep_legacy_image'] ?? ! empty($comment->image_url));
 
         $this->ensureAttachmentLimit(
-            $keptAttachments->count() + count($uploadedImages) + ($keepLegacyImage && $comment->image_url ? 1 : 0)
+            $keptAttachments->count() + count($uploadedAttachments) + ($keepLegacyImage && $comment->image_url ? 1 : 0)
         );
 
         $this->ensureCommentHasContent(
             body: $validated['body'] ?? null,
-            attachmentCount: $keptAttachments->count() + count($uploadedImages) + ($keepLegacyImage && $comment->image_url ? 1 : 0),
+            attachmentCount: $keptAttachments->count() + count($uploadedAttachments) + ($keepLegacyImage && $comment->image_url ? 1 : 0),
         );
 
         $attachmentsToDelete = $comment->attachments()
@@ -180,7 +178,7 @@ class CommentController extends Controller
         $comment->body = $validated['body'] ?? null;
         $comment->save();
 
-        $this->appendAttachmentsToComment($comment, $uploadedImages, $nextPosition);
+        $this->appendAttachmentsToComment($comment, $uploadedAttachments, $nextPosition);
 
         return back()->with('success', 'Comment updated successfully.');
     }
@@ -214,7 +212,28 @@ class CommentController extends Controller
         return [
             'body' => ['nullable', 'string', 'max:2000'],
             'attachments' => ['nullable', 'array', 'max:3'],
-            'attachments.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'attachments.*' => [
+                'file',
+                'mimes:jpg,jpeg,png,webp,mp4,mov,webm,quicktime',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! $value instanceof UploadedFile) {
+                        return;
+                    }
+
+                    $mime = $value->getMimeType() ?: '';
+                    $sizeBytes = $value->getSize();
+
+                    if (str_starts_with($mime, 'image/') && $sizeBytes > 5 * 1024 * 1024) {
+                        $fail('Images must be 5 MB or smaller.');
+
+                        return;
+                    }
+
+                    if (str_starts_with($mime, 'video/') && $sizeBytes > 25 * 1024 * 1024) {
+                        $fail('Videos must be 25 MB or smaller.');
+                    }
+                },
+            ],
         ];
     }
 
@@ -247,19 +266,19 @@ class CommentController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'attachments' => 'You may attach up to 3 images per comment.',
+            'attachments' => 'You may attach up to 3 files per comment.',
         ]);
     }
 
-    protected function appendAttachmentsToComment(ProjectComment $comment, array $uploadedImages, int $startingPosition = 0): void
+    protected function appendAttachmentsToComment(ProjectComment $comment, array $uploadedAttachments, int $startingPosition = 0): void
     {
         $position = $startingPosition;
 
-        foreach ($uploadedImages as $image) {
-            $mimeType = $image->getClientMimeType() ?: $image->getMimeType();
-            $originalName = $image->getClientOriginalName();
-            $sizeBytes = $image->getSize();
-            $storedFile = $this->storeCommentAttachment($image);
+        foreach ($uploadedAttachments as $file) {
+            $mimeType = $file->getClientMimeType() ?: $file->getMimeType();
+            $originalName = $file->getClientOriginalName();
+            $sizeBytes = $file->getSize();
+            $storedFile = $this->storeCommentAttachment($file);
 
             $comment->attachments()->create([
                 'disk' => $storedFile['disk'],
@@ -277,13 +296,13 @@ class CommentController extends Controller
     /**
      * @return array{disk:string,path:string}
      */
-    protected function storeCommentAttachment(UploadedFile $image): array
+    protected function storeCommentAttachment(UploadedFile $file): array
     {
         try {
-            $path = $image->store('comment-attachments', 's3');
+            $path = $file->store('chat-comments', 's3');
 
             if (! is_string($path) || $path === '') {
-                throw new UnableToWriteFile('Unable to store comment image on s3.');
+                throw new UnableToWriteFile('Unable to store comment attachment on s3.');
             }
 
             return [
@@ -291,19 +310,19 @@ class CommentController extends Controller
                 'path' => $path,
             ];
         } catch (\Throwable $exception) {
-            Log::warning('Comment image upload to s3 failed, falling back to the public web directory.', [
+            Log::warning('Comment attachment upload to s3 failed, falling back to the public web directory.', [
                 'message' => $exception->getMessage(),
             ]);
 
-            $directory = public_path('comment-attachments');
+            $directory = public_path('chat-comments');
             File::ensureDirectoryExists($directory);
 
-            $fileName = $image->hashName();
-            $image->move($directory, $fileName);
+            $fileName = $file->hashName();
+            $file->move($directory, $fileName);
 
             return [
                 'disk' => 'public_path',
-                'path' => 'comment-attachments/'.$fileName,
+                'path' => 'chat-comments/'.$fileName,
             ];
         }
     }

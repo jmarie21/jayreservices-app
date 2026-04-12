@@ -138,6 +138,7 @@ class ProjectManagement extends Controller
             'client' => $project->client?->name ?? 'N/A',
             'project_name' => $project->project_name,
             'service' => $project->service?->name ?? 'N/A',
+            'video_format' => ProjectsExport::formatVideoFormat($project),
             'add_ons' => ProjectsExport::formatAddOns($project),
             'editor' => $project->editor?->name ?? 'Unassigned',
             'priority' => $project->priority,

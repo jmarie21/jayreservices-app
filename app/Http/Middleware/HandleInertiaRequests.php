@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SupportConversation;
 use App\Models\User;
 use App\Services\SupportChatPayload;
 use Illuminate\Foundation\Inspiring;
@@ -82,6 +83,12 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             'supportChatBootstrap' => $user && $user->role === 'client'
                 ? fn () => SupportChatPayload::bootstrapForClient($user)
+                : null,
+            'supportUnreadCount' => $isAdmin
+                ? fn () => (int) SupportConversation::query()
+                    ->withAdminUnreadCount()
+                    ->get()
+                    ->sum('admin_unread_count')
                 : null,
         ];
     }

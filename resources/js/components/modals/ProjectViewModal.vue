@@ -7,6 +7,7 @@ import { Paginated } from '@/types/app-page-prop';
 import { linkify } from '@/utils/linkify';
 import { mapStatusForClient } from '@/utils/statusMapper';
 import { router, useForm, usePage } from '@inertiajs/vue3';
+import imageCompression from 'browser-image-compression';
 import { ImagePlus, MoreVertical, Pencil, Plus, Trash2, X } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
@@ -224,52 +225,60 @@ const saveOutputLinks = () => {
     );
 };
 
-type PendingCommentImage = {
+type PendingCommentAttachment = {
     key: string;
     file: File;
     previewUrl: string;
+    kind: 'image' | 'video';
 };
 
-const maxCommentImages = 3;
+const maxCommentAttachments = 3;
 const maxCommentImageBytes = 5 * 1024 * 1024;
+const maxCommentVideoBytes = 25 * 1024 * 1024;
 const allowedCommentImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const allowedCommentVideoTypes = new Set(['video/mp4', 'video/quicktime', 'video/webm']);
 
 const commentForm = useForm({
     body: '',
 });
 
 const attachmentInput = ref<HTMLInputElement | null>(null);
-const pendingImages = ref<PendingCommentImage[]>([]);
+const pendingAttachments = ref<PendingCommentAttachment[]>([]);
 const retainedAttachments = ref<CommentAttachment[]>([]);
 const isSubmittingComment = ref(false);
+const isCompressingImage = ref(false);
 
 const previewAttachments = computed(() => [
     ...retainedAttachments.value.map((attachment) => ({
         key: `existing-${attachment.id}-${attachment.position}-${attachment.is_legacy ? 'legacy' : 'db'}`,
         url: attachment.url,
-        originalName: attachment.original_name ?? 'Existing image',
+        mimeType: attachment.mime_type ?? null,
+        originalName: attachment.original_name ?? 'Existing attachment',
         existing: true as const,
+        kind: (attachment.mime_type?.startsWith('video/') ? 'video' : 'image') as 'image' | 'video',
         attachment,
     })),
-    ...pendingImages.value.map((image) => ({
-        key: image.key,
-        url: image.previewUrl,
-        originalName: image.file.name,
+    ...pendingAttachments.value.map((pending) => ({
+        key: pending.key,
+        url: pending.previewUrl,
+        mimeType: pending.file.type,
+        originalName: pending.file.name,
         existing: false as const,
-        image,
+        kind: pending.kind,
+        pending,
     })),
 ]);
 
-const totalSelectedImages = computed(() => retainedAttachments.value.length + pendingImages.value.length);
-const hasCommentContent = computed(() => commentForm.body.trim().length > 0 || totalSelectedImages.value > 0);
+const totalSelectedAttachments = computed(() => retainedAttachments.value.length + pendingAttachments.value.length);
+const hasCommentContent = computed(() => commentForm.body.trim().length > 0 || totalSelectedAttachments.value > 0);
 
-const revokePendingImage = (image: PendingCommentImage) => {
-    URL.revokeObjectURL(image.previewUrl);
+const revokePendingAttachment = (pending: PendingCommentAttachment) => {
+    URL.revokeObjectURL(pending.previewUrl);
 };
 
-const clearPendingImages = () => {
-    pendingImages.value.forEach(revokePendingImage);
-    pendingImages.value = [];
+const clearPendingAttachments = () => {
+    pendingAttachments.value.forEach(revokePendingAttachment);
+    pendingAttachments.value = [];
 
     if (attachmentInput.value) {
         attachmentInput.value.value = '';
@@ -280,68 +289,96 @@ const resetCommentComposer = () => {
     editingCommentId.value = null;
     commentForm.reset('body');
     retainedAttachments.value = [];
-    clearPendingImages();
+    clearPendingAttachments();
 };
 
 const openAttachmentPicker = () => {
     attachmentInput.value?.click();
 };
 
-const buildPendingImage = (file: File): PendingCommentImage => ({
+const buildPendingAttachment = (file: File, kind: 'image' | 'video'): PendingCommentAttachment => ({
     key: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2, 8)}`,
     file,
     previewUrl: URL.createObjectURL(file),
+    kind,
 });
 
-const addPendingImages = (files: File[]) => {
-    let remainingSlots = maxCommentImages - totalSelectedImages.value;
+const addPendingAttachments = async (files: File[]) => {
+    let remainingSlots = maxCommentAttachments - totalSelectedAttachments.value;
 
     if (remainingSlots <= 0) {
-        toast.error(`You can attach up to ${maxCommentImages} images per comment.`);
+        toast.error(`You can attach up to ${maxCommentAttachments} files per comment.`);
         return;
     }
 
-    const acceptedImages: PendingCommentImage[] = [];
+    const accepted: PendingCommentAttachment[] = [];
 
     for (const file of files) {
-        if (!allowedCommentImageTypes.has(file.type)) {
-            toast.error(`${file.name} must be a JPG, PNG, or WEBP image.`);
+        const isImage = allowedCommentImageTypes.has(file.type);
+        const isVideo = allowedCommentVideoTypes.has(file.type);
+
+        if (!isImage && !isVideo) {
+            toast.error(`"${file.name}" is not a supported file type. Please upload JPG, PNG, WEBP images or MP4, MOV, WEBM videos.`);
             continue;
         }
 
-        if (file.size > maxCommentImageBytes) {
-            toast.error(`${file.name} exceeds the 5MB image limit.`);
+        if (isImage && file.size > maxCommentImageBytes) {
+            toast.error(`"${file.name}" exceeds the 5 MB image limit. Please choose a smaller image.`);
+            continue;
+        }
+
+        if (isVideo && file.size > maxCommentVideoBytes) {
+            toast.error(`"${file.name}" exceeds the 25 MB video limit. Please choose a shorter or lower-resolution clip.`);
             continue;
         }
 
         if (remainingSlots <= 0) {
-            toast.error(`You can attach up to ${maxCommentImages} images per comment.`);
+            toast.error(`You can attach up to ${maxCommentAttachments} files per comment.`);
             break;
         }
 
-        acceptedImages.push(buildPendingImage(file));
+        if (isImage) {
+            try {
+                isCompressingImage.value = true;
+                const compressed = await imageCompression(file, {
+                    maxSizeMB: 1,
+                    maxWidthOrHeight: 1920,
+                    useWebWorker: true,
+                    fileType: file.type,
+                });
+                const compressedFile = new File([compressed], file.name, { type: file.type, lastModified: file.lastModified });
+                accepted.push(buildPendingAttachment(compressedFile, 'image'));
+            } catch {
+                accepted.push(buildPendingAttachment(file, 'image'));
+            } finally {
+                isCompressingImage.value = false;
+            }
+        } else {
+            accepted.push(buildPendingAttachment(file, 'video'));
+        }
+
         remainingSlots--;
     }
 
-    if (acceptedImages.length > 0) {
-        pendingImages.value = [...pendingImages.value, ...acceptedImages];
+    if (accepted.length > 0) {
+        pendingAttachments.value = [...pendingAttachments.value, ...accepted];
     }
 };
 
 const handleFileSelection = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    addPendingImages(Array.from(target.files ?? []));
+    addPendingAttachments(Array.from(target.files ?? []));
     target.value = '';
 };
 
-const removePendingImage = (key: string) => {
-    const image = pendingImages.value.find((item) => item.key === key);
+const removePendingAttachment = (key: string) => {
+    const pending = pendingAttachments.value.find((item) => item.key === key);
 
-    if (image) {
-        revokePendingImage(image);
+    if (pending) {
+        revokePendingAttachment(pending);
     }
 
-    pendingImages.value = pendingImages.value.filter((item) => item.key !== key);
+    pendingAttachments.value = pendingAttachments.value.filter((item) => item.key !== key);
 };
 
 const removeRetainedAttachment = (attachmentToRemove: CommentAttachment) => {
@@ -354,8 +391,8 @@ const buildCommentFormData = () => {
     const formData = new FormData();
 
     formData.append('body', commentForm.body);
-    pendingImages.value.forEach((image, index) => {
-        formData.append(`attachments[${index}]`, image.file);
+    pendingAttachments.value.forEach((pending, index) => {
+        formData.append(`attachments[${index}]`, pending.file);
     });
 
     if (editingCommentId.value) {
@@ -423,13 +460,18 @@ const submitComment = () => {
 const handlePaste = (event: ClipboardEvent) => {
     if (!event.clipboardData) return;
 
+    const pastedFiles: File[] = [];
     for (const item of event.clipboardData.items) {
-        if (item.type.startsWith('image/')) {
+        if (item.type.startsWith('image/') || item.type.startsWith('video/')) {
             const file = item.getAsFile();
             if (file) {
-                addPendingImages([file]);
+                pastedFiles.push(file);
             }
         }
+    }
+
+    if (pastedFiles.length > 0) {
+        addPendingAttachments(pastedFiles);
     }
 };
 
@@ -441,7 +483,7 @@ const canManage = (comment: Comment) => {
 const editComment = (comment: Comment) => {
     editingCommentId.value = comment.id;
     commentForm.body = comment.body ?? '';
-    clearPendingImages();
+    clearPendingAttachments();
     retainedAttachments.value = [...(comment.attachments ?? [])].sort((a, b) => a.position - b.position);
 };
 
@@ -463,7 +505,7 @@ const confirmDelete = () => {
 };
 
 onBeforeUnmount(() => {
-    clearPendingImages();
+    clearPendingAttachments();
 });
 </script>
 
@@ -710,14 +752,29 @@ onBeforeUnmount(() => {
                                         ></p>
 
                                         <div v-if="comment.attachments?.length" class="mt-2 grid max-w-[320px] grid-cols-2 gap-2">
-                                            <img
+                                            <template
                                                 v-for="attachment in comment.attachments"
                                                 :key="`${comment.id}-${attachment.id}-${attachment.position}`"
-                                                :src="attachment.url"
-                                                :alt="attachment.original_name ?? 'comment attachment'"
-                                                class="h-28 w-full cursor-pointer rounded-lg border object-cover transition hover:opacity-80"
-                                                @click="openNativeFullscreen"
-                                            />
+                                            >
+                                                <video
+                                                    v-if="attachment.mime_type?.startsWith('video/')"
+                                                    :src="attachment.url"
+                                                    controls
+                                                    controlslist="nodownload"
+                                                    preload="metadata"
+                                                    playsinline
+                                                    class="h-28 w-full rounded-lg border object-cover"
+                                                    @error="($event.target as HTMLVideoElement).replaceWith(Object.assign(document.createElement('div'), { className: 'flex h-28 w-full items-center justify-center rounded-lg border bg-gray-100 text-xs text-gray-400', textContent: 'Attachment expired' }))"
+                                                />
+                                                <img
+                                                    v-else
+                                                    :src="attachment.url"
+                                                    :alt="attachment.original_name ?? 'comment attachment'"
+                                                    class="h-28 w-full cursor-pointer rounded-lg border object-cover transition hover:opacity-80"
+                                                    @click="openNativeFullscreen"
+                                                    @error="($event.target as HTMLImageElement).replaceWith(Object.assign(document.createElement('div'), { className: 'flex h-28 w-full items-center justify-center rounded-lg border bg-gray-100 text-xs text-gray-400', textContent: 'Attachment expired' }))"
+                                                />
+                                            </template>
                                         </div>
 
                                         <span class="text-xs text-gray-400">
@@ -752,17 +809,17 @@ onBeforeUnmount(() => {
                         <input
                             ref="attachmentInput"
                             type="file"
-                            accept="image/jpeg,image/png,image/webp"
+                            accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
                             multiple
                             class="hidden"
                             @change="handleFileSelection"
                         />
 
                         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-                            <p class="text-xs text-gray-500">Up to 3 images, 5MB each. Paste or upload JPG, PNG, or WEBP.</p>
-                            <Button type="button" size="sm" variant="outline" @click="openAttachmentPicker" :disabled="totalSelectedImages >= maxCommentImages">
+                            <p class="text-xs text-gray-500">Up to 3 files: images (5 MB) or videos (25 MB). JPG, PNG, WEBP, MP4, MOV, WEBM.</p>
+                            <Button type="button" size="sm" variant="outline" @click="openAttachmentPicker" :disabled="totalSelectedAttachments >= maxCommentAttachments || isCompressingImage">
                                 <ImagePlus class="mr-2 h-4 w-4" />
-                                Upload image
+                                {{ isCompressingImage ? 'Compressing...' : 'Upload' }}
                             </Button>
                         </div>
                         <div v-if="previewAttachments.length" class="mb-3 grid grid-cols-3 gap-2">
@@ -771,7 +828,16 @@ onBeforeUnmount(() => {
                                 :key="attachment.key"
                                 class="group relative overflow-hidden rounded-lg border bg-muted/30"
                             >
+                                <video
+                                    v-if="attachment.kind === 'video'"
+                                    :src="attachment.url"
+                                    preload="metadata"
+                                    playsinline
+                                    muted
+                                    class="h-24 w-full object-cover"
+                                />
                                 <img
+                                    v-else
                                     :src="attachment.url"
                                     :alt="attachment.originalName"
                                     class="h-24 w-full cursor-pointer object-cover transition group-hover:opacity-80"
@@ -782,7 +848,7 @@ onBeforeUnmount(() => {
                                 @click="
                                     attachment.existing
                                         ? removeRetainedAttachment(attachment.attachment)
-                                        : removePendingImage(attachment.image.key)
+                                        : removePendingAttachment(attachment.pending.key)
                                 "
                                 class="absolute top-2 right-2 rounded-full bg-black/70 p-1 leading-none text-[0px] transition hover:bg-black"
                             >
@@ -796,7 +862,7 @@ onBeforeUnmount(() => {
                         <div class="flex items-end space-x-2">
                             <textarea
                                 v-model="commentForm.body"
-                                placeholder="Write a comment, paste screenshots, or upload images..."
+                                placeholder="Write a comment, paste screenshots, or upload files..."
                                 class="max-h-[150px] min-h-[40px] flex-1 resize-none overflow-y-auto rounded border p-2"
                                 @input="
                                     (e: Event) => {

@@ -59,9 +59,17 @@ const isActive = (href?: string) => {
                 <SidebarMenuItem v-else>
                     <SidebarMenuButton as-child :is-active="isActive(item.href)" :tooltip="item.title">
                         <Link :href="item.href || '#'">
-                            <div class="flex items-center gap-2">
-                                <component :is="item.icon" v-if="item.icon" class="h-5 w-5 flex-shrink-0" />
-                                <span>{{ item.title }}</span>
+                            <div class="flex w-full items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <component :is="item.icon" v-if="item.icon" class="h-5 w-5 flex-shrink-0" />
+                                    <span>{{ item.title }}</span>
+                                </div>
+                                <span
+                                    v-if="item.badge && item.badge > 0"
+                                    class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white"
+                                >
+                                    {{ item.badge > 99 ? '99+' : item.badge }}
+                                </span>
                             </div>
                         </Link>
                     </SidebarMenuButton>
