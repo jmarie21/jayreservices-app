@@ -314,7 +314,7 @@ onBeforeUnmount(() => {
         return;
     }
 
-    window.Echo.leave('private-support.admin.inbox');
+    // Do NOT leave support.admin.inbox here — AppSidebar manages that channel globally
 
     if (activeConversationChannelId.value) {
         window.Echo.leave(`private-support.conversation.${activeConversationChannelId.value}`);

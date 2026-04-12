@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 import Sidebar from '@/components/ui/sidebar/Sidebar.vue';
 import SidebarContent from '@/components/ui/sidebar/SidebarContent.vue';
@@ -22,7 +22,36 @@ const role = computed(() => user.value?.role);
 const clients = computed<Client[]>(() => (page.props.clients as Client[]) ?? []);
 const editors = computed<Editor[]>(() => (page.props.editors as Editor[]) ?? []);
 
-const supportUnreadCount = computed<number>(() => (page.props.supportUnreadCount as number) ?? 0);
+const supportUnreadCount = ref<number>((page.props.supportUnreadCount as number) ?? 0);
+
+// Sync with server value on Inertia page visits
+watch(() => page.props.supportUnreadCount, (newVal) => {
+    supportUnreadCount.value = (newVal as number) ?? 0;
+});
+
+// Listen for real-time messages on the admin inbox channel
+onMounted(() => {
+    if (role.value !== 'admin' || !window.Echo) return;
+
+    window.Echo.private('support.admin.inbox').listen('.support.message.sent', (payload: any) => {
+        // Only increment if the message was sent by a client (not by the admin themselves)
+        if (payload.message?.sender_role !== 'admin') {
+            supportUnreadCount.value++;
+        }
+    });
+
+    // Reset count when admin navigates to the Messages page (they'll read messages there)
+    router.on('navigate', (event) => {
+        if (event.detail.page.url.startsWith('/messages')) {
+            supportUnreadCount.value = 0;
+        }
+    });
+});
+
+onUnmounted(() => {
+    if (role.value !== 'admin' || !window.Echo) return;
+    window.Echo.leave('private-support.admin.inbox');
+});
 
 const mainNavItems = computed<NavItem[]>(() => {
     let navItems = [...(allNavItems[role.value] ?? [])];
