@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Client;
 use App\Events\NewProjectCreatedEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Models\SupportConversation;
 use App\Models\User;
 use App\Notifications\NewProjectCreatedNotification;
 use App\Notifications\ProjectStatusNotification;
 use App\Services\PricingService;
+use App\Services\SupportChatBroadcaster;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
@@ -203,6 +205,10 @@ class ProjectsController extends Controller
 
             $project->update($updateData);
 
+            if ($newStatus === 'revision') {
+                $this->sendRevisionChatMessage($request->user(), $project);
+            }
+
             Log::info('Project status updated', [
                 'project_id' => $project->id,
                 'project_name' => $project->project_name,
@@ -378,5 +384,44 @@ class ProjectsController extends Controller
 
             return $project;
         });
+    }
+
+    protected function sendRevisionChatMessage(User $client, Project $project): void
+    {
+        try {
+            $conversation = SupportConversation::query()->firstOrCreate([
+                'client_id' => $client->id,
+            ]);
+
+            $serviceName = $project->service?->name ?? 'Unknown Service';
+            $body = "Hi, I'd like to request a revision for my project \"{$project->project_name}\" ({$serviceName}). Please check the comments for details.";
+
+            $message = $conversation->messages()->create([
+                'sender_id' => $client->id,
+                'body' => $body,
+            ]);
+
+            $conversation->forceFill([
+                'last_message_at' => $message->created_at,
+                'last_message_sender_id' => $client->id,
+                'client_last_read_at' => $message->created_at,
+            ])->save();
+
+            $broadcaster = app(SupportChatBroadcaster::class);
+            $conversation = SupportConversation::query()
+                ->withSupportSummaryData()
+                ->with(['messages.sender:id,name,role', 'messages.attachments'])
+                ->findOrFail($conversation->id);
+
+            $message->load(['sender:id,name,role', 'attachments']);
+
+            $broadcaster->dispatch($conversation, $message);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send revision chat message', [
+                'project_id' => $project->id,
+                'client_id' => $client->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

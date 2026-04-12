@@ -124,6 +124,13 @@ const scrollThreadToBottom = async () => {
     }
 
     threadViewport.value.scrollTop = threadViewport.value.scrollHeight;
+
+    // Second pass after browser paint to account for async content rendering
+    requestAnimationFrame(() => {
+        if (threadViewport.value) {
+            threadViewport.value.scrollTop = threadViewport.value.scrollHeight;
+        }
+    });
 };
 
 const upsertConversationSummary = (summary: SupportConversationSummary) => {
@@ -181,12 +188,12 @@ const loadConversation = async (conversationId: number) => {
         selectedConversation.value = data.conversation;
         selectedConversationId.value = data.conversation.id;
         upsertConversationSummary(data.conversation);
-        await scrollThreadToBottom();
     } catch (error) {
         toast.error('Unable to load that conversation right now.');
         console.error('Failed to load support conversation.', error);
     } finally {
         isLoadingConversation.value = false;
+        await scrollThreadToBottom();
     }
 };
 
@@ -327,7 +334,7 @@ onBeforeUnmount(() => {
     <Toaster />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-4 p-4">
+        <div class="flex h-[calc(100vh-4rem)] flex-col gap-4 overflow-hidden p-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold">Messages</h1>
