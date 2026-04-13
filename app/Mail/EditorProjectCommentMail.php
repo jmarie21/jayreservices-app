@@ -19,8 +19,6 @@ class EditorProjectCommentMail extends Mailable implements ShouldQueue
 
     public Project $project;
 
-    public string $commenterLabel;
-
     /**
      * Create a new message instance.
      */
@@ -28,11 +26,6 @@ class EditorProjectCommentMail extends Mailable implements ShouldQueue
     {
         $this->comment = $comment;
         $this->project = $project;
-        $this->commenterLabel = match (strtolower((string) $comment->user?->role)) {
-            'admin' => 'Admin',
-            'editor' => 'Editor',
-            default => 'Team',
-        };
     }
 
     /**
@@ -55,7 +48,6 @@ class EditorProjectCommentMail extends Mailable implements ShouldQueue
             with: [
                 'project' => $this->project,
                 'comment' => $this->comment,
-                'commenterLabel' => $this->commenterLabel,
                 'projectUrl' => route('projects', ['view' => $this->project->id]),
             ],
         );

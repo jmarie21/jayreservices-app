@@ -31,14 +31,13 @@ it('queues an email to the client notification addresses when an editor comments
     Mail::assertQueued(EditorProjectCommentMail::class, function (EditorProjectCommentMail $mail) use ($client, $project) {
         return $mail->project->is($project)
             && $mail->comment->project_id === $project->id
-            && $mail->commenterLabel === 'Editor'
             && $mail->hasTo($client->email)
             && $mail->hasTo('assistant@example.com')
             && $mail->hasTo('manager@example.com');
     });
 });
 
-it('queues an email to the client notification addresses when an admin comments on a project', function () {
+it('does not queue the client comment email when the commenter is an admin', function () {
     Mail::fake();
     Notification::fake();
 
@@ -59,13 +58,7 @@ it('queues an email to the client notification addresses when an admin comments 
 
     $response->assertRedirect();
 
-    Mail::assertQueued(EditorProjectCommentMail::class, function (EditorProjectCommentMail $mail) use ($client, $project) {
-        return $mail->project->is($project)
-            && $mail->comment->project_id === $project->id
-            && $mail->commenterLabel === 'Admin'
-            && $mail->hasTo($client->email)
-            && $mail->hasTo('assistant@example.com');
-    });
+    Mail::assertNothingQueued();
 });
 
 it('does not queue the client comment email when the commenter is a client', function () {

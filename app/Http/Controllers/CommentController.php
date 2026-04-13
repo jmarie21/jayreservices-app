@@ -73,7 +73,6 @@ class CommentController extends Controller
                 $client = User::find($project->client_id);
                 if ($client) {
                     $client->notify(new ClientProjectCommentNotification($comment, $project));
-                    $this->queueClientCommentEmail($client, $comment, $project);
 
                     Log::info('Client notified about admin comment', [
                         'project_id' => $project->id,
@@ -94,7 +93,7 @@ class CommentController extends Controller
                 $client = User::find($project->client_id);
                 if ($client) {
                     $client->notify(new ClientProjectCommentNotification($comment, $project));
-                    $this->queueClientCommentEmail($client, $comment, $project);
+                    $this->queueEditorCommentEmail($client, $comment, $project);
 
                     Log::info('Client notified about editor comment', [
                         'project_id' => $project->id,
@@ -119,7 +118,7 @@ class CommentController extends Controller
         return back()->with('newComment', $comment);
     }
 
-    protected function queueClientCommentEmail(User $client, ProjectComment $comment, Project $project): void
+    protected function queueEditorCommentEmail(User $client, ProjectComment $comment, Project $project): void
     {
         $recipients = collect($client->getAllEmails())
             ->filter(fn ($email) => is_string($email) && $email !== '')
