@@ -1,24 +1,6 @@
 <script setup lang="ts">
-import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
-import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
-import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
-import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
-import HorsemenStyleForm from '@/components/forms/HorsemenStyleForm.vue';
-import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
-
-import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
-import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
-import WeddingLuxuryForm from '@/components/forms/WeddingLuxuryForm.vue';
-
-import EventBasicForm from '@/components/forms/EventBasicForm.vue';
-import EventPremiumForm from '@/components/forms/EventPremiumForm.vue';
-import EventLuxuryForm from '@/components/forms/EventLuxuryForm.vue';
-
-import ConstructionBasicForm from '@/components/forms/ConstructionBasicForm.vue';
-import ConstructionPremiumForm from '@/components/forms/ConstructionPremiumForm.vue';
-import ConstructionLuxuryForm from '@/components/forms/ConstructionLuxuryForm.vue';
-
 import NotificationBell from '@/components/NotificationBell.vue';
+import DynamicOrderForm from '@/components/forms/DynamicOrderForm.vue';
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Badge } from '@/components/ui/badge';
@@ -60,21 +42,19 @@ const clientStatusClasses: Record<string, string> = {
     cancelled: 'bg-rose-700 text-white',
 };
 
-const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any; viewProjectId?: number | null }>>();
+const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any; viewProjectId?: number | null; viewProject?: Projects | null }>>();
 const projects = computed(() => page.props.projects);
 const viewProjectId = computed(() => page.props.viewProjectId);
+const deepLinkedProject = computed(() => page.props.viewProject ?? null);
 
 const showModal = ref(false);
 const showViewModal = ref(false);
 const selectedProject = ref<Projects | null>(null);
-const selectedStyle = computed(() => selectedProject.value?.service.name ?? '');
-const viewProject = ref<Projects | null>(null);
+const activeViewProject = ref<Projects | null>(null);
 
 const openEditModal = (project: Projects) => {
     selectedProject.value = project;
     showModal.value = true;
-    console.log(selectedProject.value);
-    console.log(selectedStyle.value);
 };
 
 const closeModal = () => {
@@ -83,18 +63,21 @@ const closeModal = () => {
 };
 
 const openViewModal = (project: Projects) => {
-    viewProject.value = project;
+    activeViewProject.value = project;
     showViewModal.value = true;
 };
 
 const closeViewModal = () => {
     showViewModal.value = false;
-    viewProject.value = null;
+    activeViewProject.value = null;
 };
 
 // Auto-open project view modal when viewProjectId is present (from notification click)
 const openProjectFromId = (projectId: number) => {
-    const project = projects.value.data.find((p) => p.id === projectId);
+    const project = deepLinkedProject.value?.id === projectId
+        ? deepLinkedProject.value
+        : projects.value.data.find((p) => p.id === projectId);
+
     if (project) {
         openViewModal(project);
     }
@@ -282,250 +265,18 @@ const markForRevision = (projectId: number) => {
             </div>
         </div>
 
-        <BasicStyleForm
-            v-if="selectedStyle === 'Real Estate Basic Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="selectedProject"
-            @close="closeModal"
-        />
-
-        <DeluxeStyleForm
-            v-if="selectedStyle === 'Real Estate Deluxe Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="
-                selectedProject
-                    ? {
-                          ...selectedProject,
-                          extra_fields: {
-                              effects: selectedProject.extra_fields?.effects ?? [],
-                              captions: selectedProject.extra_fields?.captions ?? [],
-                          },
-                      }
-                    : null
-            "
-            @close="closeModal"
-        />
-
-        <PremiumStyleForm
-            v-if="selectedStyle === 'Real Estate Premium Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="
-                selectedProject
-                    ? {
-                          ...selectedProject,
-                          extra_fields: {
-                              effects: selectedProject.extra_fields?.effects ?? [],
-                              captions: selectedProject.extra_fields?.captions ?? [],
-                          },
-                      }
-                    : null
-            "
-            @close="closeModal"
-        />
-
-        <LuxuryStyleForm
-            v-if="selectedStyle === 'Real Estate Luxury Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="
-                selectedProject
-                    ? {
-                          ...selectedProject,
-                          extra_fields: {
-                              effects: selectedProject.extra_fields?.effects ?? [],
-                              captions: selectedProject.extra_fields?.captions ?? [],
-                          },
-                      }
-                    : null
-            "
-            @close="closeModal"
-        />
-
-        <TalkingHeadsForm
-            v-if="selectedStyle === 'Real Estate Talking Heads'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="selectedProject"
-            @close="closeModal"
-        />
-
         <ProjectViewModal
-            v-if="viewProject"
+            v-if="activeViewProject"
             :isOpen="showViewModal"
-            :project="viewProject"
+            :project="activeViewProject"
             :role="page.props.auth.user.role"
             @close="closeViewModal"
         />
 
-
-        <!-- Wedding Services Modals -->
-        <WeddingBasicForm
-            v-if="selectedStyle === 'Wedding Basic Style'"
+        <DynamicOrderForm
+            v-if="selectedProject?.service?.pricing_data"
             :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="selectedProject"
-            @close="closeModal"
-        />
-
-        <WeddingPremiumForm
-            v-if="selectedStyle === 'Wedding Premium Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="
-                selectedProject
-                    ? {
-                          ...selectedProject,
-                          extra_fields: {
-                              effects: selectedProject.extra_fields?.effects ?? [],
-                              captions: selectedProject.extra_fields?.captions ?? [],
-                          },
-                      }
-                    : null
-            "
-            @close="closeModal"
-        />
-
-        <WeddingLuxuryForm
-            v-if="selectedStyle === 'Wedding Luxury Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="
-                selectedProject
-                    ? {
-                          ...selectedProject,
-                          extra_fields: {
-                              effects: selectedProject.extra_fields?.effects ?? [],
-                              captions: selectedProject.extra_fields?.captions ?? [],
-                          },
-                      }
-                    : null
-            "
-            @close="closeModal"
-        />
-
-        <!-- Event Services Modals -->
-        <EventBasicForm
-            v-if="selectedStyle === 'Event Basic Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="selectedProject"
-            @close="closeModal"
-        />
-
-        <EventPremiumForm
-            v-if="selectedStyle === 'Event Premium Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="
-                selectedProject
-                    ? {
-                          ...selectedProject,
-                          extra_fields: {
-                              effects: selectedProject.extra_fields?.effects ?? [],
-                              captions: selectedProject.extra_fields?.captions ?? [],
-                          },
-                      }
-                    : null
-            "
-            @close="closeModal"
-        />
-
-        <EventLuxuryForm
-            v-if="selectedStyle === 'Event Luxury Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="
-                selectedProject
-                    ? {
-                          ...selectedProject,
-                          extra_fields: {
-                              effects: selectedProject.extra_fields?.effects ?? [],
-                              captions: selectedProject.extra_fields?.captions ?? [],
-                          },
-                      }
-                    : null
-            "
-            @close="closeModal"
-        />
-
-        <!-- Construction Services Modals -->
-        <ConstructionBasicForm
-            v-if="selectedStyle === 'Construction Basic Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="selectedProject"
-            @close="closeModal"
-        />
-
-        <ConstructionPremiumForm
-            v-if="selectedStyle === 'Construction Premium Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="
-                selectedProject
-                    ? {
-                          ...selectedProject,
-                          extra_fields: {
-                              effects: selectedProject.extra_fields?.effects ?? [],
-                              captions: selectedProject.extra_fields?.captions ?? [],
-                          },
-                      }
-                    : null
-            "
-            @close="closeModal"
-        />
-
-        <ConstructionLuxuryForm
-            v-if="selectedStyle === 'Construction Luxury Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="
-                selectedProject
-                    ? {
-                          ...selectedProject,
-                          extra_fields: {
-                              effects: selectedProject.extra_fields?.effects ?? [],
-                              captions: selectedProject.extra_fields?.captions ?? [],
-                          },
-                      }
-                    : null
-            "
-            @close="closeModal"
-        />
-
-        <!-- Talking Heads -->
-         <TalkingHeadsForm
-            v-if="selectedStyle === 'Talking Heads'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
-            :project="selectedProject"
-            @close="closeModal"
-        />
-
-        <!-- Horsemen Style -->
-        <HorsemenStyleForm
-            v-if="selectedStyle === 'Horsemen Style'"
-            :open="showModal"
-            :base-price="selectedProject?.service?.price ?? 0"
-            :service-id="selectedProject?.service_id ?? 1"
+            :service="selectedProject.service.pricing_data"
             :project="selectedProject"
             @close="closeModal"
         />

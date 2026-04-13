@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('projects:check-stalled')->hourly();
 Schedule::command('notifications:prune')->daily();
+Schedule::command('attachments:prune-orphans')->dailyAt('03:00');
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');

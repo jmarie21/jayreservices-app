@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
@@ -255,6 +255,6 @@ const goToPage = (pageNumber: number) => {
             </div>
         </div>
 
-        <ProjectViewModal v-if="selectedProject" :isOpen="showModal" :project="selectedProject" @close="closeViewModal" />
+        <ProjectViewModal v-if="selectedProject" :isOpen="showModal" :project="selectedProject" role="admin" @close="closeViewModal" />
     </AppLayout>
 </template>

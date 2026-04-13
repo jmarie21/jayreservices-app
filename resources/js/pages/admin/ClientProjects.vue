@@ -1,23 +1,5 @@
 <script setup lang="ts">
-import BasicStyleForm from '@/components/forms/BasicStyleForm.vue';
-import DeluxeStyleForm from '@/components/forms/DeluxeStyleForm.vue';
-import LuxuryStyleForm from '@/components/forms/LuxuryStyleForm.vue';
-import PremiumStyleForm from '@/components/forms/PremiumStyleForm.vue';
-import HorsemenStyleForm from '@/components/forms/HorsemenStyleForm.vue';
-import TalkingHeadsForm from '@/components/forms/TalkingHeadsForm.vue';
-
-import WeddingBasicForm from '@/components/forms/WeddingBasicForm.vue';
-import WeddingPremiumForm from '@/components/forms/WeddingPremiumForm.vue';
-import WeddingLuxuryForm from '@/components/forms/WeddingLuxuryForm.vue';
-
-import EventBasicForm from '@/components/forms/EventBasicForm.vue';
-import EventPremiumForm from '@/components/forms/EventPremiumForm.vue';
-import EventLuxuryForm from '@/components/forms/EventLuxuryForm.vue';
-
-import ConstructionBasicForm from '@/components/forms/ConstructionBasicForm.vue';
-import ConstructionPremiumForm from '@/components/forms/ConstructionPremiumForm.vue';
-import ConstructionLuxuryForm from '@/components/forms/ConstructionLuxuryForm.vue';
-
+import DynamicOrderForm from '@/components/forms/DynamicOrderForm.vue';
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
 import { Button } from '@/components/ui/button';
@@ -25,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Toaster } from '@/components/ui/sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -238,12 +220,10 @@ const closeDeleteModal = () => {
 };
 
 const isEditModalOpen = ref(false);
-const basePrice = ref<number>(0);
 
 function openEditModal(project: Projects) {
     editProject.value = project;
     isEditModalOpen.value = true;
-    basePrice.value = project.service?.price ?? 0; // example: if your project has service.price
 }
 
 function closeEditModal() {
@@ -547,141 +527,11 @@ const goToPage = (pageNumber: number) => {
             @close="closeViewModal"
         />
 
-        <BasicStyleForm
-            v-if="editProject && editProject.service?.name === 'Real Estate Basic Style'"
+        <DynamicOrderForm
+            v-if="editProject?.service?.pricing_data"
             :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
+            :service="editProject.service.pricing_data"
             :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <DeluxeStyleForm
-            v-else-if="editProject && editProject.service?.name === 'Real Estate Deluxe Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <PremiumStyleForm
-            v-else-if="editProject && editProject.service?.name === 'Real Estate Premium Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <LuxuryStyleForm
-            v-else-if="editProject && editProject.service?.name === 'Real Estate Luxury Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <TalkingHeadsForm
-            v-else-if="editProject && editProject.service?.name === 'Talking Heads'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <HorsemenStyleForm
-            v-else-if="editProject && editProject.service?.name === 'Horsemen Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <!-- Wedding Services Modal -->
-        <WeddingBasicForm
-            v-if="editProject && editProject.service?.name === 'Wedding Basic Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <WeddingPremiumForm
-            v-else-if="editProject && editProject.service?.name === 'Wedding Premium Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <WeddingLuxuryForm
-            v-else-if="editProject && editProject.service?.name === 'Wedding Luxury Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <!-- Event Services Modal -->
-        <EventBasicForm
-            v-if="editProject && editProject.service?.name === 'Event Basic Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <EventPremiumForm
-            v-else-if="editProject && editProject.service?.name === 'Event Premium Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <EventLuxuryForm
-            v-else-if="editProject && editProject.service?.name === 'Event Luxury Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <!-- Construction Services Modal -->
-        <ConstructionBasicForm
-            v-if="editProject && editProject.service?.name === 'Construction Basic Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <ConstructionPremiumForm
-            v-else-if="editProject && editProject.service?.name === 'Construction Premium Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
-            @close="closeEditModal"
-        />
-
-        <ConstructionLuxuryForm
-            v-else-if="editProject && editProject.service?.name === 'Construction Luxury Style'"
-            :open="isEditModalOpen"
-            :serviceId="editProject.service_id"
-            :project="editProject"
-            :basePrice="basePrice"
             @close="closeEditModal"
         />
 

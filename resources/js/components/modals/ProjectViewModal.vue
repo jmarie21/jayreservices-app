@@ -2,13 +2,14 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AppPageProps, Projects } from '@/types';
+import { AppPageProps, Comment, CommentAttachment, Projects } from '@/types';
 import { Paginated } from '@/types/app-page-prop';
 import { linkify } from '@/utils/linkify';
 import { mapStatusForClient } from '@/utils/statusMapper';
 import { router, useForm, usePage } from '@inertiajs/vue3';
-import { MoreVertical, Plus, Trash2 } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import imageCompression from 'browser-image-compression';
+import { ImagePlus, MoreVertical, Pencil, Plus, Trash2, X } from 'lucide-vue-next';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import {
     AlertDialog,
@@ -25,19 +26,93 @@ import { Input } from '../ui/input';
 
 const props = defineProps<{
     isOpen: boolean;
-    onClose: () => void;
     project: Projects;
     role: 'client' | 'editor' | 'admin';
+}>();
+const emit = defineEmits<{
+    (e: 'close'): void;
 }>();
 
 const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any }>>();
 const user = usePage().props.auth.user;
-const comments = computed(() => {
+const comments = computed<Comment[]>(() => {
     const projectFromPage = page.props.projects.data.find((p) => p.id === props.project.id);
     return projectFromPage?.comments ?? [];
 });
 
 const linkedNotes = computed(() => linkify(props.project.notes));
+const extraFields = computed<Record<string, any>>(() => {
+    return props.project.extra_fields && typeof props.project.extra_fields === 'object' ? props.project.extra_fields : {};
+});
+
+const availableServiceAddons = computed(() => props.project.service?.pricing_data?.addons ?? []);
+
+const selectedAddonLines = computed(() => {
+    const lines: string[] = [];
+    const seen = new Set<string>();
+
+    const pushLine = (label?: string | null, quantity = 1, showQuantity = false) => {
+        const safeLabel = String(label ?? '').trim();
+        if (!safeLabel) {
+            return;
+        }
+
+        const normalizedKey = safeLabel.toLowerCase();
+
+        if (seen.has(normalizedKey)) {
+            return;
+        }
+
+        seen.add(normalizedKey);
+        lines.push(showQuantity || quantity > 1 ? `${safeLabel} (${quantity}x)` : safeLabel);
+    };
+
+    if (props.project.with_agent) {
+        pushLine('With Agent');
+    }
+
+    if (props.project.per_property) {
+        pushLine('Per Property Line', Number(props.project.per_property_count ?? extraFields.value.per_property_quantity ?? 1), true);
+    }
+
+    if (props.project.rush) {
+        pushLine('Rush');
+    }
+
+    if (Array.isArray(extraFields.value.service_addons) && extraFields.value.service_addons.length > 0) {
+        extraFields.value.service_addons.forEach((addon: any) => {
+            const matchedAddon = availableServiceAddons.value.find((serviceAddon: any) => {
+                return Number(serviceAddon?.id ?? 0) === Number(addon?.addon_id ?? 0)
+                    || normalizeAddonValue(serviceAddon?.slug) === normalizeAddonValue(addon?.slug)
+                    || normalizeAddonValue(serviceAddon?.name) === normalizeAddonValue(addon?.name);
+            });
+
+            const shouldShowQuantity = Boolean(matchedAddon?.has_quantity || matchedAddon?.addon_type === 'quantity');
+            pushLine(addon?.name ?? addon?.slug, Number(addon?.quantity ?? 1), shouldShowQuantity);
+        });
+    } else {
+        if (Array.isArray(extraFields.value.captions)) {
+            extraFields.value.captions.forEach((caption: string) => pushLine(caption));
+        }
+
+        if (Array.isArray(extraFields.value.effects)) {
+            extraFields.value.effects.forEach((effect: any) => {
+                if (typeof effect === 'string') {
+                    pushLine(effect);
+                    return;
+                }
+
+                pushLine(effect?.name ?? effect?.id ?? effect?.slug, Number(effect?.quantity ?? 1), Number(effect?.quantity ?? 0) > 0);
+            });
+        }
+    }
+
+    normalizeCustomEffects(extraFields.value.custom_effects).forEach((customEffect: any) => {
+        pushLine(customEffect?.description ?? customEffect?.name, Number(customEffect?.quantity ?? 1), Number(customEffect?.quantity ?? 0) > 0);
+    });
+
+    return lines;
+});
 
 const statusLabels: Record<'pending' | 'in_progress' | 'completed', string> = {
     pending: 'Pending',
@@ -63,6 +138,33 @@ const outputLinks = ref<{ name: string; link: string }[]>(
         : [{ name: '', link: '' }],
 );
 
+function normalizeCustomEffects(value: unknown) {
+    if (Array.isArray(value)) {
+        return value;
+    }
+
+    if (typeof value !== 'string' || value.trim() === '') {
+        return [];
+    }
+
+    try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.error('Failed to parse custom effects', error);
+        return [];
+    }
+}
+
+function normalizeAddonValue(value?: string | null) {
+    return String(value ?? '')
+        .trim()
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
 watch(
     () => props.project,
     (newProject) => {
@@ -84,6 +186,10 @@ const removeOutputLink = (index: number) => {
         outputLinks.value.push({ name: '', link: '' });
     }
 };
+
+const showDeleteDialog = ref(false);
+const commentToDelete = ref<Comment | null>(null);
+const editingCommentId = ref<number | null>(null);
 
 function openNativeFullscreen(event: MouseEvent) {
     const img = event.target as HTMLElement;
@@ -119,19 +225,191 @@ const saveOutputLinks = () => {
     );
 };
 
-const commentForm = useForm({
-    body: '',
-    image: null as File | null,
-});
-
-const previewUrl = computed(() => (commentForm.image ? URL.createObjectURL(commentForm.image) : null));
-
-const removeImage = () => {
-    commentForm.image = null;
+type PendingCommentAttachment = {
+    key: string;
+    file: File;
+    previewUrl: string;
+    kind: 'image' | 'video';
 };
 
-const getS3Url = (path: string) => {
-    return `https://jayre-services.s3.us-east-1.amazonaws.com/${path}`;
+const maxCommentAttachments = 3;
+const maxCommentImageBytes = 5 * 1024 * 1024;
+const maxCommentVideoBytes = 25 * 1024 * 1024;
+const allowedCommentImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const allowedCommentVideoTypes = new Set(['video/mp4', 'video/quicktime', 'video/webm']);
+
+const commentForm = useForm({
+    body: '',
+});
+
+const attachmentInput = ref<HTMLInputElement | null>(null);
+const pendingAttachments = ref<PendingCommentAttachment[]>([]);
+const retainedAttachments = ref<CommentAttachment[]>([]);
+const isSubmittingComment = ref(false);
+const isCompressingImage = ref(false);
+
+const previewAttachments = computed(() => [
+    ...retainedAttachments.value.map((attachment) => ({
+        key: `existing-${attachment.id}-${attachment.position}-${attachment.is_legacy ? 'legacy' : 'db'}`,
+        url: attachment.url,
+        mimeType: attachment.mime_type ?? null,
+        originalName: attachment.original_name ?? 'Existing attachment',
+        existing: true as const,
+        kind: (attachment.mime_type?.startsWith('video/') ? 'video' : 'image') as 'image' | 'video',
+        attachment,
+    })),
+    ...pendingAttachments.value.map((pending) => ({
+        key: pending.key,
+        url: pending.previewUrl,
+        mimeType: pending.file.type,
+        originalName: pending.file.name,
+        existing: false as const,
+        kind: pending.kind,
+        pending,
+    })),
+]);
+
+const totalSelectedAttachments = computed(() => retainedAttachments.value.length + pendingAttachments.value.length);
+const hasCommentContent = computed(() => commentForm.body.trim().length > 0 || totalSelectedAttachments.value > 0);
+
+const revokePendingAttachment = (pending: PendingCommentAttachment) => {
+    URL.revokeObjectURL(pending.previewUrl);
+};
+
+const clearPendingAttachments = () => {
+    pendingAttachments.value.forEach(revokePendingAttachment);
+    pendingAttachments.value = [];
+
+    if (attachmentInput.value) {
+        attachmentInput.value.value = '';
+    }
+};
+
+const resetCommentComposer = () => {
+    editingCommentId.value = null;
+    commentForm.reset('body');
+    retainedAttachments.value = [];
+    clearPendingAttachments();
+};
+
+const openAttachmentPicker = () => {
+    attachmentInput.value?.click();
+};
+
+const buildPendingAttachment = (file: File, kind: 'image' | 'video'): PendingCommentAttachment => ({
+    key: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2, 8)}`,
+    file,
+    previewUrl: URL.createObjectURL(file),
+    kind,
+});
+
+const addPendingAttachments = async (files: File[]) => {
+    let remainingSlots = maxCommentAttachments - totalSelectedAttachments.value;
+
+    if (remainingSlots <= 0) {
+        toast.error(`You can attach up to ${maxCommentAttachments} files per comment.`);
+        return;
+    }
+
+    const accepted: PendingCommentAttachment[] = [];
+
+    for (const file of files) {
+        const isImage = allowedCommentImageTypes.has(file.type);
+        const isVideo = allowedCommentVideoTypes.has(file.type);
+
+        if (!isImage && !isVideo) {
+            toast.error(`"${file.name}" is not a supported file type. Please upload JPG, PNG, WEBP images or MP4, MOV, WEBM videos.`);
+            continue;
+        }
+
+        if (isImage && file.size > maxCommentImageBytes) {
+            toast.error(`"${file.name}" exceeds the 5 MB image limit. Please choose a smaller image.`);
+            continue;
+        }
+
+        if (isVideo && file.size > maxCommentVideoBytes) {
+            toast.error(`"${file.name}" exceeds the 25 MB video limit. Please choose a shorter or lower-resolution clip.`);
+            continue;
+        }
+
+        if (remainingSlots <= 0) {
+            toast.error(`You can attach up to ${maxCommentAttachments} files per comment.`);
+            break;
+        }
+
+        if (isImage) {
+            try {
+                isCompressingImage.value = true;
+                const compressed = await imageCompression(file, {
+                    maxSizeMB: 1,
+                    maxWidthOrHeight: 1920,
+                    useWebWorker: true,
+                    fileType: file.type,
+                });
+                const compressedFile = new File([compressed], file.name, { type: file.type, lastModified: file.lastModified });
+                accepted.push(buildPendingAttachment(compressedFile, 'image'));
+            } catch {
+                accepted.push(buildPendingAttachment(file, 'image'));
+            } finally {
+                isCompressingImage.value = false;
+            }
+        } else {
+            accepted.push(buildPendingAttachment(file, 'video'));
+        }
+
+        remainingSlots--;
+    }
+
+    if (accepted.length > 0) {
+        pendingAttachments.value = [...pendingAttachments.value, ...accepted];
+    }
+};
+
+const handleFileSelection = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    addPendingAttachments(Array.from(target.files ?? []));
+    target.value = '';
+};
+
+const removePendingAttachment = (key: string) => {
+    const pending = pendingAttachments.value.find((item) => item.key === key);
+
+    if (pending) {
+        revokePendingAttachment(pending);
+    }
+
+    pendingAttachments.value = pendingAttachments.value.filter((item) => item.key !== key);
+};
+
+const removeRetainedAttachment = (attachmentToRemove: CommentAttachment) => {
+    retainedAttachments.value = retainedAttachments.value.filter((attachment) => {
+        return !(attachment.id === attachmentToRemove.id && Boolean(attachment.is_legacy) === Boolean(attachmentToRemove.is_legacy));
+    });
+};
+
+const buildCommentFormData = () => {
+    const formData = new FormData();
+
+    formData.append('body', commentForm.body);
+    pendingAttachments.value.forEach((pending, index) => {
+        formData.append(`attachments[${index}]`, pending.file);
+    });
+
+    if (editingCommentId.value) {
+        retainedAttachments.value
+            .filter((attachment) => !attachment.is_legacy)
+            .forEach((attachment, index) => {
+                formData.append(`keep_attachment_ids[${index}]`, String(attachment.id));
+            });
+
+        formData.append(
+            'keep_legacy_image',
+            retainedAttachments.value.some((attachment) => attachment.is_legacy) ? '1' : '0',
+        );
+        formData.append('_method', 'PUT');
+    }
+
+    return formData;
 };
 
 const markForRevision = (projectId: number) => {
@@ -154,38 +432,27 @@ const markForRevision = (projectId: number) => {
 };
 
 const submitComment = () => {
-    if (!commentForm.body && !commentForm.image) return;
+    if (!hasCommentContent.value || isSubmittingComment.value) return;
 
-    // If editing an existing comment
-    if (editingCommentId.value) {
-        const formData = new FormData();
-        formData.append('body', commentForm.body);
-        if (commentForm.image) formData.append('image', commentForm.image);
-        formData.append('_method', 'PUT');
+    isSubmittingComment.value = true;
 
-        router.post(route('comments.update', editingCommentId.value), formData, {
-            preserveScroll: true,
-            forceFormData: true,
-            onSuccess: () => {
-                editingCommentId.value = null;
-                commentForm.reset('body', 'image');
-            },
-            onError: (errors) => {
-                console.error('Edit failed:', errors);
-            },
-        });
-        return;
-    }
+    const endpoint = editingCommentId.value
+        ? route('comments.update', editingCommentId.value)
+        : route('projects.comments.store', props.project.id);
 
-    // Otherwise, create a new comment
-    commentForm.post(route('projects.comments.store', props.project.id), {
+    router.post(endpoint, buildCommentFormData(), {
         preserveScroll: true,
         forceFormData: true,
         onSuccess: () => {
-            commentForm.reset('body', 'image');
+            resetCommentComposer();
         },
         onError: (errors) => {
             console.error('Comment submission failed:', errors);
+            const message = Object.values(errors)[0];
+            toast.error(typeof message === 'string' ? message : 'Comment submission failed.');
+        },
+        onFinish: () => {
+            isSubmittingComment.value = false;
         },
     });
 };
@@ -193,33 +460,34 @@ const submitComment = () => {
 const handlePaste = (event: ClipboardEvent) => {
     if (!event.clipboardData) return;
 
+    const pastedFiles: File[] = [];
     for (const item of event.clipboardData.items) {
-        if (item.type.startsWith('image/')) {
+        if (item.type.startsWith('image/') || item.type.startsWith('video/')) {
             const file = item.getAsFile();
             if (file) {
-                console.log('File captured:', file.name, file.size, file.type);
-                commentForm.image = file;
+                pastedFiles.push(file);
             }
         }
     }
+
+    if (pastedFiles.length > 0) {
+        addPendingAttachments(pastedFiles);
+    }
 };
 
-const showDeleteDialog = ref(false);
-const commentToDelete = ref<any>(null);
-const editingCommentId = ref<number | null>(null);
-
-const canManage = (comment: any) => {
+const canManage = (comment: Comment) => {
     const user = page.props.auth.user;
     return comment.user_id === user.id || user.role === 'admin';
 };
 
-const editComment = (comment: any) => {
+const editComment = (comment: Comment) => {
     editingCommentId.value = comment.id;
-    commentForm.body = comment.body;
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); // optional
+    commentForm.body = comment.body ?? '';
+    clearPendingAttachments();
+    retainedAttachments.value = [...(comment.attachments ?? [])].sort((a, b) => a.position - b.position);
 };
 
-const openDeleteDialog = (comment: any) => {
+const openDeleteDialog = (comment: Comment) => {
     commentToDelete.value = comment;
     showDeleteDialog.value = true;
 };
@@ -235,10 +503,14 @@ const confirmDelete = () => {
         preserveScroll: true,
     });
 };
+
+onBeforeUnmount(() => {
+    clearPendingAttachments();
+});
 </script>
 
 <template>
-    <Dialog :open="isOpen" @update:open="onClose">
+    <Dialog :open="isOpen" @update:open="(open) => !open && emit('close')">
         <DialogContent class="max-h-[90vh] !w-[95vw] !max-w-7xl overflow-y-auto rounded-xl p-0 sm:p-2 md:p-0">
             <div class="flex h-[80vh] flex-col md:flex-row">
                 <!-- Left Column: Project Details (Scrollable) -->
@@ -370,30 +642,13 @@ const confirmDelete = () => {
                                 </span>
                             </div>
 
-                            <!-- Extra Fields -->
-                            <div v-if="project.extra_fields" class="space-y-4">
-                                <!-- Captions -->
-                                <div v-if="project.extra_fields.captions?.length" class="flex items-start justify-between">
-                                    <span class="text-sm font-medium text-gray-500">Captions</span>
-                                    <ul class="list-inside list-disc space-y-1 text-right text-sm text-gray-700">
-                                        <li v-for="(caption, index) in project.extra_fields.captions" :key="index">
-                                            {{ caption }}
-                                        </li>
-                                    </ul>
-                                </div>
-
-                                <!-- Effects -->
-                                <div v-if="project.extra_fields.effects?.length || project.extra_fields.custom_effects" class="flex items-start justify-between">
-                                    <span class="text-sm font-medium text-gray-500">Effects</span>
-                                    <ul class="list-inside list-disc space-y-1 text-right text-sm text-gray-700">
-                                        <li v-for="(effect, index) in project.extra_fields.effects" :key="index">
-                                            {{ typeof effect === 'string' ? effect : `${effect.id} (x${effect.quantity})` }}
-                                        </li>
-                                        <li v-for="(customEffect, index) in (typeof project.extra_fields.custom_effects === 'string' ? JSON.parse(project.extra_fields.custom_effects) : project.extra_fields.custom_effects)" :key="'custom-' + index">
-                                            {{ customEffect.description }} (Custom)
-                                        </li>
-                                    </ul>
-                                </div>
+                            <div v-if="selectedAddonLines.length" class="flex items-start justify-between">
+                                <span class="text-sm font-medium text-gray-500">Add-Ons</span>
+                                <ul class="list-inside list-disc space-y-1 text-right text-sm text-gray-700">
+                                    <li v-for="(addon, index) in selectedAddonLines" :key="index">
+                                        {{ addon }}
+                                    </li>
+                                </ul>
                             </div>
                         </div>
 
@@ -496,13 +751,30 @@ const confirmDelete = () => {
                                             v-html="linkify(comment.body)"
                                         ></p>
 
-                                        <div v-if="comment.image_url" class="mt-2">
-                                            <img
-                                                :src="getS3Url(comment.image_url)"
-                                                alt="comment screenshot"
-                                                class="max-w-[300px] cursor-pointer rounded-lg border transition hover:opacity-80"
-                                                @click="openNativeFullscreen"
-                                            />
+                                        <div v-if="comment.attachments?.length" class="mt-2 space-y-2">
+                                            <template
+                                                v-for="attachment in comment.attachments"
+                                                :key="`${comment.id}-${attachment.id}-${attachment.position}`"
+                                            >
+                                                <video
+                                                    v-if="attachment.mime_type?.startsWith('video/')"
+                                                    :src="attachment.url"
+                                                    controls
+                                                    controlslist="nodownload"
+                                                    preload="metadata"
+                                                    playsinline
+                                                    class="max-h-64 w-full rounded-lg border object-contain"
+                                                    @error="($event.target as HTMLVideoElement).replaceWith(Object.assign(document.createElement('div'), { className: 'flex h-28 w-full items-center justify-center rounded-lg border bg-gray-100 text-xs text-gray-400', textContent: 'Attachment expired' }))"
+                                                />
+                                                <img
+                                                    v-else
+                                                    :src="attachment.url"
+                                                    :alt="attachment.original_name ?? 'comment attachment'"
+                                                    class="max-h-52 w-full cursor-pointer rounded-lg border object-contain transition hover:opacity-80"
+                                                    @click="openNativeFullscreen"
+                                                    @error="($event.target as HTMLImageElement).replaceWith(Object.assign(document.createElement('div'), { className: 'flex h-28 w-full items-center justify-center rounded-lg border bg-gray-100 text-xs text-gray-400', textContent: 'Attachment expired' }))"
+                                                />
+                                            </template>
                                         </div>
 
                                         <span class="text-xs text-gray-400">
@@ -534,23 +806,63 @@ const confirmDelete = () => {
 
                     <!-- Comment Input -->
                     <div class="flex flex-col border-t p-4">
-                        <!-- Image preview -->
-                        <div v-if="previewUrl" class="relative mb-2 inline-block">
-                            <img :src="previewUrl" alt="screenshot preview" class="max-w-[150px] cursor-pointer rounded-lg border hover:opacity-80" />
+                        <input
+                            ref="attachmentInput"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                            multiple
+                            class="hidden"
+                            @change="handleFileSelection"
+                        />
+
+                        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                            <p class="text-xs text-gray-500">Up to 3 files: images (5 MB) or videos (25 MB). JPG, PNG, WEBP, MP4, MOV, WEBM.</p>
+                            <Button type="button" size="sm" variant="outline" @click="openAttachmentPicker" :disabled="totalSelectedAttachments >= maxCommentAttachments || isCompressingImage">
+                                <ImagePlus class="mr-2 h-4 w-4" />
+                                {{ isCompressingImage ? 'Compressing...' : 'Upload' }}
+                            </Button>
+                        </div>
+                        <div v-if="previewAttachments.length" class="mb-3 grid grid-cols-3 gap-2">
+                            <div
+                                v-for="attachment in previewAttachments"
+                                :key="attachment.key"
+                                class="group relative overflow-hidden rounded-lg border bg-muted/30"
+                            >
+                                <video
+                                    v-if="attachment.kind === 'video'"
+                                    :src="attachment.url"
+                                    preload="metadata"
+                                    playsinline
+                                    muted
+                                    class="h-24 w-full object-cover"
+                                />
+                                <img
+                                    v-else
+                                    :src="attachment.url"
+                                    :alt="attachment.originalName"
+                                    class="h-24 w-full cursor-pointer object-cover transition group-hover:opacity-80"
+                                    @click="openNativeFullscreen"
+                                />
                             <button
                                 type="button"
-                                @click="removeImage"
-                                class="absolute -top-2 -right-2 rounded-full bg-black/70 px-1.5 py-0.5 text-xs text-white hover:bg-black"
+                                @click="
+                                    attachment.existing
+                                        ? removeRetainedAttachment(attachment.attachment)
+                                        : removePendingAttachment(attachment.pending.key)
+                                "
+                                class="absolute top-2 right-2 rounded-full bg-black/70 p-1 leading-none text-[0px] transition hover:bg-black"
                             >
+                                <X class="h-3.5 w-3.5 text-white" />
                                 ✕
                             </button>
+                            </div>
                         </div>
 
                         <!-- Textarea + Send button -->
                         <div class="flex items-end space-x-2">
                             <textarea
                                 v-model="commentForm.body"
-                                placeholder="Write a comment or paste a screenshot..."
+                                placeholder="Write a comment, paste screenshots, or upload files..."
                                 class="max-h-[150px] min-h-[40px] flex-1 resize-none overflow-y-auto rounded border p-2"
                                 @input="
                                     (e: Event) => {
@@ -567,12 +879,7 @@ const confirmDelete = () => {
                                 size="sm"
                                 variant="outline"
                                 v-if="editingCommentId"
-                                @click="
-                                    () => {
-                                        editingCommentId = null;
-                                        commentForm.reset('body', 'image');
-                                    }
-                                "
+                                @click="resetCommentComposer"
                             >
                                 Cancel
                             </Button>
@@ -590,7 +897,7 @@ const confirmDelete = () => {
                                 <Button
                                     size="sm"
                                     @click="submitComment"
-                                    :disabled="commentForm.processing || (!commentForm.body && !commentForm.image)"
+                                    :disabled="isSubmittingComment || !hasCommentContent"
                                 >
                                     {{ editingCommentId ? 'Update' : 'Send' }}
                                 </Button>

@@ -2,8 +2,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "build:ssr": "vite build && vite build --ssr",
+        "build": "node --max_old_space_size=1024 ./node_modules/vite/bin/vite.js build",
+        "build:ssr": "node --max_old_space_size=1024 ./node_modules/vite/bin/vite.js build && node --max_old_space_size=1024 ./node_modules/vite/bin/vite.js build --ssr",
         "dev": "vite",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
@@ -31,6 +31,8 @@
         "@tanstack/vue-table": "^8.21.3",
         "@vitejs/plugin-vue": "^6.0.0",
         "@vueuse/core": "^12.8.2",
+        "browser-image-compression": "^2.0.2",
+        "chart.js": "^4.5.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "concurrently": "^9.0.1",
@@ -43,6 +45,7 @@
         "typescript": "^5.2.2",
         "vite": "^7.0.4",
         "vue": "^3.5.13",
+        "vue-chartjs": "^5.3.3",
         "vue-sonner": "^2.0.2",
         "ziggy-js": "^2.4.2"
     },
