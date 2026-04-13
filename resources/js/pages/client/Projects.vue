@@ -42,14 +42,15 @@ const clientStatusClasses: Record<string, string> = {
     cancelled: 'bg-rose-700 text-white',
 };
 
-const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any; viewProjectId?: number | null }>>();
+const page = usePage<AppPageProps<{ projects: Paginated<Projects>; filters?: any; viewProjectId?: number | null; viewProject?: Projects | null }>>();
 const projects = computed(() => page.props.projects);
 const viewProjectId = computed(() => page.props.viewProjectId);
+const deepLinkedProject = computed(() => page.props.viewProject ?? null);
 
 const showModal = ref(false);
 const showViewModal = ref(false);
 const selectedProject = ref<Projects | null>(null);
-const viewProject = ref<Projects | null>(null);
+const activeViewProject = ref<Projects | null>(null);
 
 const openEditModal = (project: Projects) => {
     selectedProject.value = project;
@@ -62,18 +63,21 @@ const closeModal = () => {
 };
 
 const openViewModal = (project: Projects) => {
-    viewProject.value = project;
+    activeViewProject.value = project;
     showViewModal.value = true;
 };
 
 const closeViewModal = () => {
     showViewModal.value = false;
-    viewProject.value = null;
+    activeViewProject.value = null;
 };
 
 // Auto-open project view modal when viewProjectId is present (from notification click)
 const openProjectFromId = (projectId: number) => {
-    const project = projects.value.data.find((p) => p.id === projectId);
+    const project = deepLinkedProject.value?.id === projectId
+        ? deepLinkedProject.value
+        : projects.value.data.find((p) => p.id === projectId);
+
     if (project) {
         openViewModal(project);
     }
@@ -262,9 +266,9 @@ const markForRevision = (projectId: number) => {
         </div>
 
         <ProjectViewModal
-            v-if="viewProject"
+            v-if="activeViewProject"
             :isOpen="showViewModal"
-            :project="viewProject"
+            :project="activeViewProject"
             :role="page.props.auth.user.role"
             @close="closeViewModal"
         />

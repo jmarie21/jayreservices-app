@@ -24,6 +24,7 @@ class ProjectsController extends Controller
     public function index(Request $request, PricingService $pricingService): Response
     {
         try {
+            $viewProjectId = $request->query('view') ? (int) $request->query('view') : null;
             $query = Auth::user()
                 ->projects()
                 ->with(['service', 'comments.user', 'comments.attachments'])
@@ -69,6 +70,7 @@ class ProjectsController extends Controller
             $projects = $query->paginate(10)->withQueryString();
 
             $this->attachServicePricingData($projects, $pricingService);
+            $viewProject = $this->resolveViewProject($viewProjectId, $pricingService);
 
             Log::info('Client viewed projects', [
                 'user_id' => Auth::id(),
@@ -79,7 +81,8 @@ class ProjectsController extends Controller
             return Inertia::render('client/Projects', [
                 'projects' => $projects,
                 'filters' => $request->only(['status', 'date_from', 'date_to', 'search']),
-                'viewProjectId' => $request->query('view') ? (int) $request->query('view') : null,
+                'viewProjectId' => $viewProjectId,
+                'viewProject' => $viewProject,
             ])->withViewData(['ssr' => false]);
         } catch (\Exception $e) {
             Log::error('Error loading client projects', [
@@ -384,6 +387,28 @@ class ProjectsController extends Controller
 
             return $project;
         });
+    }
+
+    protected function resolveViewProject(?int $viewProjectId, PricingService $pricingService): ?Project
+    {
+        if (! $viewProjectId) {
+            return null;
+        }
+
+        $project = Auth::user()
+            ->projects()
+            ->with(['service', 'comments.user', 'comments.attachments'])
+            ->find($viewProjectId);
+
+        if (! $project) {
+            return null;
+        }
+
+        if ($project->service) {
+            $project->service->setAttribute('pricing_data', $pricingService->getServicePricingData($project->service_id));
+        }
+
+        return $project;
     }
 
     protected function sendRevisionChatMessage(User $client, Project $project): void

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EditorProjectCommentMail;
 use App\Models\Project;
 use App\Models\ProjectComment;
 use App\Models\ProjectCommentAttachment;
@@ -13,6 +14,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use League\Flysystem\UnableToWriteFile;
@@ -71,6 +73,7 @@ class CommentController extends Controller
                 $client = User::find($project->client_id);
                 if ($client) {
                     $client->notify(new ClientProjectCommentNotification($comment, $project));
+                    $this->queueClientCommentEmail($client, $comment, $project);
 
                     Log::info('Client notified about admin comment', [
                         'project_id' => $project->id,
@@ -91,6 +94,7 @@ class CommentController extends Controller
                 $client = User::find($project->client_id);
                 if ($client) {
                     $client->notify(new ClientProjectCommentNotification($comment, $project));
+                    $this->queueClientCommentEmail($client, $comment, $project);
 
                     Log::info('Client notified about editor comment', [
                         'project_id' => $project->id,
@@ -113,6 +117,21 @@ class CommentController extends Controller
         // }
 
         return back()->with('newComment', $comment);
+    }
+
+    protected function queueClientCommentEmail(User $client, ProjectComment $comment, Project $project): void
+    {
+        $recipients = collect($client->getAllEmails())
+            ->filter(fn ($email) => is_string($email) && $email !== '')
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($recipients === []) {
+            return;
+        }
+
+        Mail::to($recipients)->queue(new EditorProjectCommentMail($comment, $project));
     }
 
     public function update(Request $request, ProjectComment $comment)
