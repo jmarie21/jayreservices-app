@@ -14,6 +14,7 @@ class SupportMessage extends Model
     protected $fillable = [
         'support_conversation_id',
         'sender_id',
+        'project_id',
         'body',
     ];
 
@@ -25,6 +26,11 @@ class SupportMessage extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
     }
 
     public function attachments(): HasMany

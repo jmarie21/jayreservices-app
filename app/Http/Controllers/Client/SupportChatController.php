@@ -105,6 +105,7 @@ class SupportChatController extends Controller
             ->with([
                 'messages.sender:id,name,role',
                 'messages.attachments',
+                'messages.project:id,project_name',
             ])
             ->findOrFail($conversationId);
     }
@@ -112,7 +113,7 @@ class SupportChatController extends Controller
     protected function loadMessage(int $messageId): SupportMessage
     {
         return SupportMessage::query()
-            ->with(['sender:id,name,role', 'attachments'])
+            ->with(['sender:id,name,role', 'attachments', 'project:id,project_name'])
             ->findOrFail($messageId);
     }
 }

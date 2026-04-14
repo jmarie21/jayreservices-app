@@ -184,6 +184,11 @@ export interface SupportMessageAttachment {
     position: number;
 }
 
+export interface SupportRelatedProject {
+    id: number;
+    project_name: string;
+}
+
 export interface SupportMessage {
     id: number;
     body: string;
@@ -191,6 +196,7 @@ export interface SupportMessage {
     sender_name: string;
     sender_role: SupportMessageSenderRole;
     created_at: string | null;
+    related_project?: SupportRelatedProject | null;
     attachments?: SupportMessageAttachment[];
 }
 

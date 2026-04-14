@@ -35,6 +35,7 @@ class SupportChatPayload
         $conversation->loadMissing([
             'client:id,name,email',
             'latestMessage.sender:id,name,role',
+            'latestMessage.project:id,project_name',
         ]);
 
         $latestMessage = $conversation->latestMessage;
@@ -71,6 +72,7 @@ class SupportChatPayload
     {
         $conversation->loadMissing([
             'messages.sender:id,name,role',
+            'messages.project:id,project_name',
         ]);
 
         $messages = $conversation->messages
@@ -90,7 +92,7 @@ class SupportChatPayload
      */
     public static function message(SupportMessage $message): array
     {
-        $message->loadMissing(['sender:id,name,role', 'attachments']);
+        $message->loadMissing(['sender:id,name,role', 'attachments', 'project:id,project_name']);
 
         return [
             'id' => $message->id,
@@ -99,6 +101,12 @@ class SupportChatPayload
             'sender_name' => $message->sender?->name ?? 'Deleted user',
             'sender_role' => $message->sender?->role ?? 'unknown',
             'created_at' => $message->created_at?->toISOString(),
+            'related_project' => $message->project
+                ? [
+                    'id' => $message->project->id,
+                    'project_name' => $message->project->project_name,
+                ]
+                : null,
             'attachments' => $message->attachments
                 ->values()
                 ->map(fn ($attachment) => $attachment->toArray())
