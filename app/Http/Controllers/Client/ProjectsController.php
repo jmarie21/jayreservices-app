@@ -423,6 +423,7 @@ class ProjectsController extends Controller
 
             $message = $conversation->messages()->create([
                 'sender_id' => $client->id,
+                'project_id' => $project->id,
                 'body' => $body,
             ]);
 
@@ -435,10 +436,10 @@ class ProjectsController extends Controller
             $broadcaster = app(SupportChatBroadcaster::class);
             $conversation = SupportConversation::query()
                 ->withSupportSummaryData()
-                ->with(['messages.sender:id,name,role', 'messages.attachments'])
+                ->with(['messages.sender:id,name,role', 'messages.attachments', 'messages.project:id,project_name'])
                 ->findOrFail($conversation->id);
 
-            $message->load(['sender:id,name,role', 'attachments']);
+            $message->load(['sender:id,name,role', 'attachments', 'project:id,project_name']);
 
             $broadcaster->dispatch($conversation, $message);
         } catch (\Throwable $e) {

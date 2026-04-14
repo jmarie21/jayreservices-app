@@ -259,6 +259,10 @@ const filters = ref({
     editor_id: pageProps.filters?.editor_id || '', // Add this line
 });
 
+const formatVideoFormat = (value: string | null | undefined) => {
+    return value ? value.replaceAll('_', ' ').replace(/\b\w/g, (match) => match.toUpperCase()) : 'N/A';
+};
+
 // Apply filters
 const applyFilters = (newFilters: Filters) => {
     // Update local filters
@@ -467,7 +471,7 @@ onMounted(() => {
                             </div>
                         </TableCell>
                         <TableCell>{{ project.service?.name || 'N/A' }}</TableCell>
-                        <TableCell>{{ project.format || 'N/A' }}</TableCell>
+                        <TableCell>{{ formatVideoFormat(project.format) }}</TableCell>
 
                         <TableCell>{{ project.client?.name || 'N/A' }}</TableCell>
 
@@ -684,7 +688,7 @@ onMounted(() => {
                                 <td class="p-2">{{ row.client }}</td>
                                 <td class="truncate p-2" :title="row.project_name">{{ row.project_name }}</td>
                                 <td class="p-2">{{ row.service }}</td>
-                                <td class="p-2">{{ row.video_format }}</td>
+                                <td class="p-2">{{ formatVideoFormat(row.video_format) }}</td>
                                 <td class="break-words p-2">{{ row.add_ons || '—' }}</td>
                                 <td class="p-2">{{ row.editor }}</td>
                                 <td class="p-2">{{ row.priority }}</td>

@@ -54,6 +54,7 @@ class SupportConversationController extends Controller
             ->withSupportSummaryData()
             ->with([
                 'messages.sender:id,name,role',
+                'messages.project:id,project_name',
             ])
             ->findOrFail($conversationId);
     }

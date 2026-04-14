@@ -334,7 +334,7 @@ onBeforeUnmount(() => {
     <Toaster />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-[calc(100vh-4rem)] flex-col gap-4 overflow-hidden p-4">
+        <div class="flex h-[calc(100dvh-4rem)] flex-col gap-4 overflow-hidden p-3 sm:p-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold">Messages</h1>
@@ -352,9 +352,9 @@ onBeforeUnmount(() => {
 
             <div
                 v-else
-                class="grid flex-1 overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-gray-900 lg:grid-cols-5"
+                class="grid flex-1 min-h-0 grid-rows-[minmax(14rem,18rem)_minmax(0,1fr)] overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-gray-900 lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)] lg:grid-rows-1"
             >
-                <aside class="flex min-h-0 flex-col border-b lg:col-span-1 lg:border-r lg:border-b-0">
+                <aside class="flex min-h-0 flex-col overflow-hidden border-b lg:border-r lg:border-b-0">
                     <div class="border-b px-4 py-3">
                         <h2 class="font-semibold">Client conversations</h2>
                         <p class="text-xs text-muted-foreground">{{ conversations.length }} total</p>
@@ -401,8 +401,8 @@ onBeforeUnmount(() => {
                     </div>
                 </aside>
 
-                <section class="flex min-h-0 flex-col lg:col-span-4">
-                    <div v-if="selectedConversation" class="border-b px-5 py-4">
+                <section class="flex min-h-0 flex-col overflow-hidden">
+                    <div v-if="selectedConversation" class="border-b px-4 py-4 sm:px-5">
                         <h2 class="text-lg font-semibold">{{ selectedConversation.client.name }}</h2>
                         <p class="text-sm text-muted-foreground">{{ selectedConversation.client.email }}</p>
                     </div>
@@ -416,7 +416,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div v-else-if="selectedConversation" class="flex min-h-0 flex-1 flex-col">
-                        <div ref="threadViewport" class="min-h-0 flex-1 space-y-4 overflow-y-auto bg-slate-50 px-5 py-5 dark:bg-slate-950/30">
+                        <div ref="threadViewport" class="min-h-0 flex-1 space-y-4 overflow-y-auto bg-slate-50 px-4 py-4 sm:px-5 sm:py-5 dark:bg-slate-950/30">
                             <div
                                 v-for="message in selectedConversation.messages"
                                 :key="message.id"
@@ -445,6 +445,20 @@ onBeforeUnmount(() => {
                                         </span>
                                     </div>
                                     <p v-if="message.body" class="text-sm whitespace-pre-wrap">{{ message.body }}</p>
+                                    <a
+                                        v-if="message.related_project"
+                                        :href="route('projects.all', { view: message.related_project.id })"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        :class="[
+                                            'mt-2 inline-flex max-w-full rounded-full border px-3 py-1 text-xs font-medium transition',
+                                            message.sender_role === 'admin'
+                                                ? 'border-white/20 text-white hover:bg-white/10'
+                                                : 'border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800',
+                                        ]"
+                                    >
+                                        <span class="truncate">View project: {{ message.related_project.project_name }}</span>
+                                    </a>
                                     <div v-if="message.attachments?.length" class="mt-2 grid grid-cols-2 gap-1.5">
                                         <template v-for="attachment in message.attachments" :key="attachment.id">
                                             <video
@@ -470,7 +484,7 @@ onBeforeUnmount(() => {
                             </div>
                         </div>
 
-                        <div class="border-t bg-white p-4 dark:bg-gray-900">
+                        <div class="border-t bg-white p-3 sm:p-4 dark:bg-gray-900">
                             <input
                                 ref="adminAttachmentInput"
                                 type="file"
@@ -488,21 +502,21 @@ onBeforeUnmount(() => {
                                     </button>
                                 </div>
                             </div>
-                            <div class="flex items-end gap-3">
+                            <div class="flex items-end gap-2 sm:gap-3">
                                 <Button type="button" size="icon" variant="ghost" class="h-11 w-11 shrink-0" :disabled="totalAttachments >= maxChatAttachments || isCompressing" @click="openAttachmentPicker">
                                     <ImagePlus class="h-4 w-4" />
                                 </Button>
                                 <Textarea
                                     v-model="draftBody"
                                     rows="3"
-                                    class="min-h-[52px] resize-none"
+                                    class="min-h-[52px] min-w-0 flex-1 resize-none"
                                     placeholder="Reply to this client..."
                                     @keydown.enter.exact.prevent="sendMessage"
                                 />
-                                <Button type="button" class="h-11 shrink-0" :disabled="isSending || !hasContent" @click="sendMessage">
-                                    <LoaderCircle v-if="isSending" class="mr-2 h-4 w-4 animate-spin" />
-                                    <SendHorizontal v-else class="mr-2 h-4 w-4" />
-                                    Send
+                                <Button type="button" aria-label="Send reply" class="h-11 w-11 shrink-0 px-0 sm:w-auto sm:px-4" :disabled="isSending || !hasContent" @click="sendMessage">
+                                    <LoaderCircle v-if="isSending" class="h-4 w-4 animate-spin sm:mr-2" />
+                                    <SendHorizontal v-else class="h-4 w-4 sm:mr-2" />
+                                    <span class="hidden sm:inline">Send</span>
                                 </Button>
                             </div>
                             <p class="mt-2 text-[11px] text-slate-400">Images (5 MB) or videos (25 MB). Press Enter to send.</p>
