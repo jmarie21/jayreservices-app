@@ -22,7 +22,7 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-Route::middleware(['auth', 'client'])->group(function () {
+Route::middleware(['auth', 'active', 'client'])->group(function () {
     Route::get('/services', [ServicesController::class, 'index'])->name('services');
     Route::get('/services/{category:slug}', [ServicesController::class, 'show'])->name('services.category');
     Route::get('/realestate-services', [ServicesController::class, 'legacyRealEstate'])->name('legacy.realestate-services');
@@ -41,7 +41,7 @@ Route::middleware(['auth', 'client'])->group(function () {
     Route::post('/support-chat/read', [SupportChatController::class, 'markRead'])->name('support-chat.read');
 });
 
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth', 'active', 'admin'])->group(function () {
     Route::get('/admin-dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/user-mgmt', [UserController::class, 'index'])->name('user-mgmt');
@@ -117,7 +117,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 });
 
-Route::middleware(['auth', 'editor'])->group(function () {
+Route::middleware(['auth', 'active', 'editor'])->group(function () {
     Route::get('editor-dashboard', function () {
         return Inertia::render('editor/EditorDashboard');
     })->name('editor-dashboard');
@@ -126,7 +126,7 @@ Route::middleware(['auth', 'editor'])->group(function () {
     Route::patch('/editor-projects/{project}', [EditorProjectsController::class, 'update'])->name('editor.projects.update');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'active'])->group(function () {
     Route::post('/projects/{project}/comments', [CommentController::class, 'store'])
         ->name('projects.comments.store');
     Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AddUserForm from '@/components/forms/AddUserForm.vue';
 import BulkNotificationModal from '@/components/modals/BulkNotificationModal.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -28,7 +29,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 const page = usePage<AppPageProps<{ users: User[] }>>();
 const users = computed(() => page.props.users);
 
-const loading = ref(false);
 const selectedUser = ref<User | null>(null);
 const showForm = ref(false);
 const showDeleteModal = ref(false);
@@ -39,7 +39,7 @@ const openAddForm = () => {
     showForm.value = true;
 };
 
-const openEditForm = (user: any) => {
+const openEditForm = (user: User) => {
     selectedUser.value = user;
     showForm.value = true;
 };
@@ -58,8 +58,8 @@ const deleteUser = () => {
             showDeleteModal.value = false;
             selectedUser.value = null;
         },
-        onError: () => {
-            toast.error('Failed to delete user.');
+        onError: (errors) => {
+            toast.error(errors.user || 'Failed to delete user.');
         },
     });
 };
@@ -90,6 +90,7 @@ const deleteUser = () => {
                         <TableHead>Email</TableHead>
                         <TableHead>Additional Emails</TableHead>
                         <TableHead>Role</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead> Created At </TableHead>
                         <TableHead> Action </TableHead>
                     </TableRow>
@@ -116,6 +117,11 @@ const deleteUser = () => {
                             <span v-else class="text-gray-400 italic">—</span>
                         </TableCell>
                         <TableCell>{{ user.role }}</TableCell>
+                        <TableCell>
+                            <Badge :class="user.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700'">
+                                {{ user.is_active ? 'Active' : 'Inactive' }}
+                            </Badge>
+                        </TableCell>
                         <TableCell> {{ new Date(user.created_at).toLocaleDateString() }} </TableCell>
                         <TableCell class="space-x-4">
                             <Button @click="openEditForm(user)">Edit</Button>

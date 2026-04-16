@@ -21,7 +21,9 @@ class AuthenticatedSessionController extends Controller
     {
         return Inertia::render('auth/Login', [
             'canResetPassword' => Route::has('password.request'),
-            'status' => $request->session()->get('status'),
+            'status' => $request->boolean('inactive')
+                ? 'Your account is inactive. Please contact an administrator.'
+                : $request->session()->get('status'),
         ]);
     }
 

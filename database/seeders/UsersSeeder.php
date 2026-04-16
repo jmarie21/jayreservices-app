@@ -19,6 +19,7 @@ class UsersSeeder extends Seeder
             'email' => 'john@gmail.com',
             'password' => 'password', // Will be hashed automatically if using $casts['password'] = 'hashed'
             'role' => 'admin',
+            'is_active' => true,
         ]);
 
         // Clients
@@ -29,6 +30,7 @@ class UsersSeeder extends Seeder
                 'email' => $client . '@gmail.com',
                 'password' => 'password',
                 'role' => 'client',
+                'is_active' => true,
             ]);
         }
     }
