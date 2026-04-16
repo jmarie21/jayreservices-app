@@ -51,7 +51,7 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => fn () => $user
-                    ? $user->only('id', 'name', 'email', 'role')
+                    ? $user->only('id', 'name', 'email', 'role', 'is_active')
                     : null,
             ],
             // Only load clients and editors for admin users (lazy loaded)

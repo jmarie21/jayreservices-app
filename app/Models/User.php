@@ -24,7 +24,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'additional_emails'
+        'is_active',
+        'additional_emails',
     ];
 
     /**
@@ -42,8 +43,9 @@ class User extends Authenticatable
         'name',
         'email',
         'role',
+        'is_active',
         'additional_emails',
-        'created_at'
+        'created_at',
     ];
 
     /**
@@ -56,6 +58,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
             'additional_emails' => 'array',
         ];
     }

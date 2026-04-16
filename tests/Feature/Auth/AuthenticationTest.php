@@ -31,6 +31,34 @@ test('users can not authenticate with invalid password', function () {
     $this->assertGuest();
 });
 
+test('inactive users can not authenticate even with valid credentials', function () {
+    $user = User::factory()->create([
+        'is_active' => false,
+    ]);
+
+    $response = $this->from('/login')->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertGuest();
+    $response->assertRedirect('/login');
+    $response->assertSessionHasErrors([
+        'email' => 'Your account is inactive. Please contact an administrator.',
+    ]);
+});
+
+test('inactive authenticated users are logged out on their next protected request', function () {
+    $user = User::factory()->create([
+        'is_active' => false,
+    ]);
+
+    $response = $this->actingAs($user)->get('/settings/profile');
+
+    $this->assertGuest();
+    $response->assertRedirect(route('login', ['inactive' => 1], absolute: false));
+});
+
 test('users can logout', function () {
     $user = User::factory()->create();
 

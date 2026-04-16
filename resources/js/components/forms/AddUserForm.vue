@@ -4,6 +4,7 @@ import { useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Button } from '../ui/button';
+import { Checkbox } from '../ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -23,6 +24,7 @@ const formData = useForm({
     email: '',
     password: '',
     role: '',
+    is_active: true,
     additional_emails: '',
 });
 
@@ -37,6 +39,7 @@ watch(
             formData.email = user.email ?? '';
             formData.password = '';
             formData.role = user.role ?? '';
+            formData.is_active = user.is_active ?? true;
             formData.additional_emails = Array.isArray(user.additional_emails) ? user.additional_emails.join(', ') : (user.additional_emails ?? '');
         } else {
             formData.reset();
@@ -122,7 +125,19 @@ const handleSubmit = () => {
                         <span v-if="formData.errors.role" class="text-sm text-red-500">{{ formData.errors.role }}</span>
                     </div>
 
-                    <!-- ✅ Additional Notification Emails (only if role is client) -->
+                    <!-- Account status -->
+                    <div class="grid gap-2">
+                        <div class="flex items-start gap-3 rounded-lg border p-3">
+                            <Checkbox :model-value="formData.is_active" @update:model-value="(value) => (formData.is_active = value === true)" />
+                            <div class="space-y-1">
+                                <Label>Active account</Label>
+                                <p class="text-sm text-gray-500">Inactive users cannot log in, and any open sessions are logged out.</p>
+                            </div>
+                        </div>
+                        <span v-if="formData.errors.is_active" class="text-sm text-red-500">{{ formData.errors.is_active }}</span>
+                    </div>
+
+                    <!-- Additional Notification Emails (only if role is client) -->
                     <div v-if="isClient" class="grid grid-rows-2 items-center">
                         <Label>Additional Notification Emails</Label>
                         <Input v-model="formData.additional_emails" placeholder="assistant@email.com, manager@email.com" />
