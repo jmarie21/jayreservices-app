@@ -409,9 +409,15 @@ class PricingService
 
         foreach (Arr::get($extraFields, 'effects', []) as $effect) {
             if (is_array($effect)) {
+                $effectName = (string) Arr::get($effect, 'id', Arr::get($effect, 'name'));
+
+                if ($this->selectedAddonsContainRole($selectedAddons, $this->normalizeValue($effectName))) {
+                    continue;
+                }
+
                 $this->mergeSelectedAddon($selectedAddons, [
                     'slug' => Arr::get($effect, 'slug'),
-                    'name' => Arr::get($effect, 'id', Arr::get($effect, 'name')),
+                    'name' => $effectName,
                     'quantity' => max(1, (int) Arr::get($effect, 'quantity', 1)),
                     'group' => 'effects',
                 ]);
@@ -419,16 +425,28 @@ class PricingService
                 continue;
             }
 
+            $effectName = (string) $effect;
+
+            if ($this->selectedAddonsContainRole($selectedAddons, $this->normalizeValue($effectName))) {
+                continue;
+            }
+
             $this->mergeSelectedAddon($selectedAddons, [
-                'name' => (string) $effect,
+                'name' => $effectName,
                 'quantity' => 1,
                 'group' => 'effects',
             ]);
         }
 
         foreach (Arr::get($extraFields, 'captions', []) as $caption) {
+            $captionName = (string) $caption;
+
+            if ($this->selectedAddonsContainRole($selectedAddons, $this->normalizeValue($captionName))) {
+                continue;
+            }
+
             $this->mergeSelectedAddon($selectedAddons, [
-                'name' => (string) $caption,
+                'name' => $captionName,
                 'quantity' => 1,
                 'group' => 'captions',
             ]);
