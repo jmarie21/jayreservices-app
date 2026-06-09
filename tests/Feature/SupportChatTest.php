@@ -7,10 +7,7 @@ use App\Models\User;
 use App\Services\SupportChatBroadcaster;
 use Illuminate\Support\Carbon;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-
-uses(Tests\TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
     $this->admin = User::factory()->create(['role' => 'admin']);
