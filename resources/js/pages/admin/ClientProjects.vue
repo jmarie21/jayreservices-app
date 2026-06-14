@@ -105,9 +105,11 @@ onUnmounted(() => clearInterval(countdownTimer));
 const getDeadlineHours = (project: Projects): number => {
     const name = project.service?.name ?? '';
     const isRush = !!project.rush;
-    if (name.includes('Luxury')) return isRush ? 18 : 36;
-    if (name.includes('Premium')) return isRush ? 12 : 24;
-    return isRush ? 6 : 12;
+    const isPackage = project.format === 'horizontal and vertical package';
+    if (name.includes('Luxury')) return (isRush ? 18 : 36) + (isPackage ? 10 : 0);
+    if (name.includes('Premium')) return (isRush ? 12 : 24) + (isPackage ? 10 : 0);
+    if (name.includes('Horsemen')) return 24;
+    return (isRush ? 6 : 12) + (isPackage ? 5 : 0);
 };
 
 const getRevisionDeadlineHours = (): number => 3;

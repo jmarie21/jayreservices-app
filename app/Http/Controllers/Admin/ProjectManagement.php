@@ -78,7 +78,21 @@ class ProjectManagement extends Controller
         $query = Project::with(['client', 'service', 'editor', 'comments.user', 'comments.attachments'])
             ->latest();
 
-        if ($request->filled('status')) {
+        $isOverdueFilter = $request->input('status') === 'overdue';
+
+        if ($isOverdueFilter) {
+            // "overdue" is a derived state, not a stored status. Narrow to projects that
+            // carry an active timer, then evaluate the deadline in PHP below.
+            $query->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->whereIn('status', ['todo', 'in_progress'])
+                        ->whereNotNull('in_progress_since');
+                })->orWhere(function ($sub) {
+                    $sub->where('status', 'revision')
+                        ->whereNotNull('revision_since');
+                });
+            });
+        } elseif ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
@@ -111,7 +125,24 @@ class ProjectManagement extends Controller
             });
         }
 
-        $projects = $query->paginate(20)->withQueryString();
+        if ($isOverdueFilter) {
+            $perPage = 20;
+            $page = LengthAwarePaginator::resolveCurrentPage();
+
+            $overdue = $query->get()
+                ->filter(fn (Project $project) => $project->isOverdue())
+                ->values();
+
+            $projects = new LengthAwarePaginator(
+                $overdue->forPage($page, $perPage)->values(),
+                $overdue->count(),
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        } else {
+            $projects = $query->paginate(20)->withQueryString();
+        }
 
         return Inertia::render('admin/AllProjects', [
             'projects' => $projects,

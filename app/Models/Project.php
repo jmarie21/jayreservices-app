@@ -67,20 +67,42 @@ class Project extends Model
         'revision_since' => 'datetime',
     ];
 
+    public const PACKAGE_FORMAT = 'horizontal and vertical package';
+
     public function getStallDeadlineHours(): int
     {
         $serviceName = $this->service?->name ?? '';
         $isRush = (bool) $this->rush;
+        $isPackage = $this->format === self::PACKAGE_FORMAT;
 
         if (str_contains($serviceName, 'Luxury')) {
-            return $isRush ? 18 : 36;
+            return ($isRush ? 18 : 36) + ($isPackage ? 10 : 0);
         }
 
         if (str_contains($serviceName, 'Premium')) {
-            return $isRush ? 12 : 24;
+            return ($isRush ? 12 : 24) + ($isPackage ? 10 : 0);
         }
 
-        return $isRush ? 6 : 12;
+        if (str_contains($serviceName, 'Horsemen')) {
+            return 24;
+        }
+
+        return ($isRush ? 6 : 12) + ($isPackage ? 5 : 0);
+    }
+
+    public const REVISION_DEADLINE_HOURS = 3;
+
+    public function isOverdue(): bool
+    {
+        if (in_array($this->status, ['todo', 'in_progress'], true) && $this->in_progress_since !== null) {
+            return $this->in_progress_since->lte(now()->subHours($this->getStallDeadlineHours()));
+        }
+
+        if ($this->status === 'revision' && $this->revision_since !== null) {
+            return $this->revision_since->lte(now()->subHours(self::REVISION_DEADLINE_HOURS));
+        }
+
+        return false;
     }
 
     public function client(): BelongsTo

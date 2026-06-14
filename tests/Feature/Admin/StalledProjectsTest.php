@@ -109,6 +109,104 @@ it('sends admin notification on auto-unassign', function () {
     Notification::assertSentTo($this->admin, ProjectStalledNotification::class);
 });
 
+// --- Package Format Deadline Tests ---
+
+it('adds 5 hours to basic/deluxe deadline when the horizontal and vertical package is selected', function () {
+    $project = Project::factory()->make([
+        'service_id' => $this->basicService->id,
+        'rush' => false,
+        'format' => Project::PACKAGE_FORMAT,
+    ]);
+    $project->setRelation('service', $this->basicService);
+
+    expect($project->getStallDeadlineHours())->toBe(17);
+});
+
+it('adds 5 hours to the rush basic/deluxe deadline when the package is selected', function () {
+    $project = Project::factory()->make([
+        'service_id' => $this->basicService->id,
+        'rush' => true,
+        'format' => Project::PACKAGE_FORMAT,
+    ]);
+    $project->setRelation('service', $this->basicService);
+
+    expect($project->getStallDeadlineHours())->toBe(11);
+});
+
+it('adds 10 hours to premium/luxury deadline when the package is selected', function () {
+    $project = Project::factory()->make([
+        'service_id' => $this->premiumService->id,
+        'rush' => false,
+        'format' => Project::PACKAGE_FORMAT,
+    ]);
+    $project->setRelation('service', $this->premiumService);
+
+    expect($project->getStallDeadlineHours())->toBe(34);
+});
+
+it('does not change the deadline for non-package formats', function () {
+    $project = Project::factory()->make([
+        'service_id' => $this->basicService->id,
+        'rush' => false,
+        'format' => 'horizontal',
+    ]);
+    $project->setRelation('service', $this->basicService);
+
+    expect($project->getStallDeadlineHours())->toBe(12);
+});
+
+it('treats a package project as stalled only after the extended deadline', function () {
+    $service = Service::factory()->create(['name' => 'Real Estate Luxury Style']);
+
+    $notStalled = Project::factory()->create([
+        'editor_id' => $this->editor->id,
+        'service_id' => $service->id,
+        'status' => 'in_progress',
+        'rush' => false,
+        'format' => Project::PACKAGE_FORMAT,
+        'in_progress_since' => now()->subHours(40), // under 46h extended deadline
+    ]);
+
+    $stalled = Project::factory()->create([
+        'editor_id' => $this->editor->id,
+        'service_id' => $service->id,
+        'status' => 'in_progress',
+        'rush' => false,
+        'format' => Project::PACKAGE_FORMAT,
+        'in_progress_since' => now()->subHours(47), // past 46h extended deadline
+    ]);
+
+    $this->artisan('projects:check-stalled')->assertSuccessful();
+
+    expect($notStalled->fresh()->status)->toBe('in_progress');
+    expect($stalled->fresh()->status)->toBe('in_progress');
+
+    Notification::assertSentTo($this->admin, ProjectStalledNotification::class, function ($notification) use ($stalled) {
+        return $notification->project->is($stalled);
+    });
+});
+
+it('uses a flat 24 hour deadline for the horsemen style service regardless of rush', function () {
+    $service = Service::factory()->create(['name' => 'Horsemen Style']);
+
+    $normal = Project::factory()->make([
+        'service_id' => $service->id,
+        'rush' => false,
+        'format' => 'horizontal',
+    ]);
+    $normal->setRelation('service', $service);
+
+    $rushed = Project::factory()->make([
+        'service_id' => $service->id,
+        'rush' => true,
+        'format' => 'vertical',
+    ]);
+    $rushed->setRelation('service', $service);
+
+    expect($normal->getStallDeadlineHours())->toBe(24);
+    expect($rushed->getStallDeadlineHours())->toBe(24);
+});
+
 // --- Forward-Only Enforcement Tests ---
 
 it('allows editor to move status forward (in_progress to for_qa)', function () {
