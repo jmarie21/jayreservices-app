@@ -5,10 +5,12 @@ import {
     FolderOpenDot,
     Folders,
     HandCoins,
+    Layers3,
     LayoutGrid,
     MessageSquareText,
     Settings,
     SquareGanttChart,
+    Tags,
     UserCog,
     UsersRound,
 } from 'lucide-vue-next';
@@ -34,6 +36,16 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             title: 'Editors Projects',
             href: '/editors-projects',
             icon: UsersRound,
+        },
+        {
+            title: 'Editor Levels',
+            href: '/editor-levels',
+            icon: Layers3,
+        },
+        {
+            title: 'Client Levels',
+            href: '/client-levels',
+            icon: Tags,
         },
         {
             title: 'Project Management',

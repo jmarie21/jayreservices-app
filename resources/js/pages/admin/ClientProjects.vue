@@ -2,17 +2,19 @@
 import DynamicOrderForm from '@/components/forms/DynamicOrderForm.vue';
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
+import EditorLevelBadge from '@/components/EditorLevelBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Toaster } from '@/components/ui/sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { editorLevelLabels } from '@/lib/editor-level';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
-import { Paginated } from '@/types/app-page-prop';
+import { EditorLevel, Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { Clock } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
@@ -25,18 +27,18 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Project Management', href: '/pr
 
 const pageProps = usePage<
     AppPageProps<{
-        client: { id: number; name: string; email: string };
+        client: { id: number; name: string; email: string; recommended_editor_level?: EditorLevel | null };
         projects: Paginated<Projects>;
-        editors: { id: number; name: string }[];
+        editors: { id: number; name: string; editor_level?: EditorLevel | null }[];
         filters?: { status?: string; date_from?: string; date_to?: string; search?: string; editor_id: string };
     }>
 >().props;
 
 const page = usePage<
     AppPageProps<{
-        client: { id: number; name: string; email: string };
+        client: { id: number; name: string; email: string; recommended_editor_level?: EditorLevel | null };
         projects: Paginated<Projects>;
-        editors: { id: number; name: string }[];
+        editors: { id: number; name: string; editor_level?: EditorLevel | null }[];
         filters?: { status?: string; date_from?: string; date_to?: string; search?: string; editor_id: string };
     }>
 >();
@@ -90,6 +92,18 @@ const statusLabels: Record<Status, string> = {
     sent_to_client: 'Sent to Client',
     cancelled: 'Cancelled',
 };
+
+const editorDropdownGroupOrder: (EditorLevel | 'unassigned')[] = ['senior', 'mid', 'junior', 'unassigned'];
+
+const groupedEditors = computed(() =>
+    editorDropdownGroupOrder
+        .map((level) => ({
+            level,
+            label: level === 'unassigned' ? 'Unassigned' : editorLevelLabels[level],
+            editors: editors.filter((editor) => (editor.editor_level ?? 'unassigned') === level),
+        }))
+        .filter((group) => group.editors.length > 0),
+);
 
 // Countdown timer
 const now = ref(Date.now());
@@ -310,7 +324,13 @@ const goToPage = (pageNumber: number) => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
             <div class="mb-2 flex flex-col gap-4">
-                <h1 class="text-3xl font-bold">{{ client.name }}'s Projects</h1>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-3xl font-bold">{{ client.name }}'s Projects</h1>
+                    <div v-if="client.recommended_editor_level" class="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <span>Recommended editor level:</span>
+                        <EditorLevelBadge :level="client.recommended_editor_level" />
+                    </div>
+                </div>
                 <p class="text-muted-foreground">{{ client.email }}</p>
             </div>
 
@@ -362,9 +382,15 @@ const goToPage = (pageNumber: number) => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem :value="null">Unassigned</SelectItem>
-                                    <SelectItem v-for="editor in editors" :key="editor.id" :value="editor.id">
-                                        {{ editor.name }}
-                                    </SelectItem>
+                                    <template v-for="(group, index) in groupedEditors" :key="group.level">
+                                        <SelectSeparator v-if="index > 0" />
+                                        <SelectGroup>
+                                            <SelectLabel class="text-xs text-muted-foreground">{{ group.label }}</SelectLabel>
+                                            <SelectItem v-for="editor in group.editors" :key="editor.id" :value="editor.id">
+                                                {{ editor.name }}
+                                            </SelectItem>
+                                        </SelectGroup>
+                                    </template>
                                 </SelectContent>
                             </Select>
                         </TableCell>
