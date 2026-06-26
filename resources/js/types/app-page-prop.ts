@@ -1,5 +1,7 @@
 export type UserRole = 'admin' | 'client' | 'editor';
 
+export type EditorLevel = 'senior' | 'mid' | 'junior';
+
 export type User = {
     id: number;
     name: string;
@@ -7,6 +9,8 @@ export type User = {
     role: UserRole;
     is_active: boolean;
     additional_emails?: string | null;
+    editor_level?: EditorLevel | null;
+    recommended_editor_level?: EditorLevel | null;
 };
 
 export type Services = {

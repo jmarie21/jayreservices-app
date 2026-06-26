@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\EditorLevel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -26,6 +27,8 @@ class User extends Authenticatable
         'role',
         'is_active',
         'additional_emails',
+        'editor_level',
+        'recommended_editor_level',
     ];
 
     /**
@@ -45,6 +48,8 @@ class User extends Authenticatable
         'role',
         'is_active',
         'additional_emails',
+        'editor_level',
+        'recommended_editor_level',
         'created_at',
     ];
 
@@ -60,17 +65,19 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'additional_emails' => 'array',
+            'editor_level' => EditorLevel::class,
+            'recommended_editor_level' => EditorLevel::class,
         ];
     }
 
     public function projects(): HasMany
     {
-        return $this->hasMany(Project::class, "client_id");
+        return $this->hasMany(Project::class, 'client_id');
     }
 
     public function assignedProjects(): HasMany
     {
-        return $this->hasMany(Project::class, "editor_id");
+        return $this->hasMany(Project::class, 'editor_id');
     }
 
     public function comments(): HasMany
@@ -104,19 +111,17 @@ class User extends Authenticatable
         return $this->role === 'client';
     }
 
-
-
     public function getAllEmails(): array
     {
         $emails = [];
 
         // ✅ Add primary email if valid
-        if (!empty($this->email) && filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+        if (! empty($this->email) && filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
             $emails[] = $this->email;
         }
 
         // ✅ Handle additional_emails if present
-        if (!empty($this->additional_emails)) {
+        if (! empty($this->additional_emails)) {
             if (is_array($this->additional_emails)) {
                 $extraEmails = $this->additional_emails;
             } else {
@@ -132,7 +137,4 @@ class User extends Authenticatable
 
         return $emails;
     }
-
-
-    
 }

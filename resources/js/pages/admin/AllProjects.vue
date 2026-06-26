@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EditorLevelLegend from '@/components/EditorLevelLegend.vue';
 import ProjectViewModal from '@/components/modals/ProjectViewModal.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
 import ProjectFilters from '@/components/ProjectFilters.vue';
@@ -8,12 +9,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Toaster } from '@/components/ui/sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { editorLevelLabels, editorLevelTextClasses } from '@/lib/editor-level';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
-import { Paginated } from '@/types/app-page-prop';
+import { EditorLevel, Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ChevronDown, Clock, Download, Eye } from 'lucide-vue-next';
@@ -37,7 +39,7 @@ const pageProps = usePage<
     AppPageProps<{
         client: { id: number; name: string; email: string };
         projects: Paginated<Projects>;
-        editors: { id: number; name: string }[];
+        editors: { id: number; name: string; editor_level?: EditorLevel | null }[];
         filters?: { status?: string; date_from?: string; date_to?: string; search?: string; editor_id: string };
         viewProjectId?: number;
     }>
@@ -95,6 +97,22 @@ const statusLabels: Record<Status, string> = {
     sent_to_client: 'Sent to Client',
     cancelled: 'Cancelled',
 };
+
+const editorDropdownGroupOrder: (EditorLevel | 'unassigned')[] = ['senior', 'mid', 'junior', 'unassigned'];
+
+const groupedEditors = computed(() =>
+    editorDropdownGroupOrder
+        .map((level) => ({
+            level,
+            label: level === 'unassigned' ? 'Unassigned' : editorLevelLabels[level],
+            editors: editors.filter((editor) => (editor.editor_level ?? 'unassigned') === level),
+        }))
+        .filter((group) => group.editors.length > 0),
+);
+
+function recommendedLevelTooltip(level: EditorLevel): string {
+    return `Recommended editor level: ${editorLevelLabels[level]}`;
+}
 
 // Countdown timer
 const now = ref(Date.now());
@@ -440,6 +458,12 @@ onMounted(() => {
                     <ProjectFilters :filters="filters" :role="pageProps.auth.user.role" :editors="editors" @update:filters="applyFilters" />
                 </div>
 
+                <!-- Recommended editor level legend -->
+                <div class="flex flex-col items-center justify-center gap-1.5">
+                    <Label class="text-xs font-medium text-slate-400 uppercase">Recommended Level</Label>
+                    <EditorLevelLegend />
+                </div>
+
                 <!-- Search input -->
                 <div class="w-[320px] space-y-2">
                     <Label class="text-xl font-bold">Search project:</Label>
@@ -475,7 +499,19 @@ onMounted(() => {
                         <TableCell>{{ project.service?.name || 'N/A' }}</TableCell>
                         <TableCell>{{ formatVideoFormat(project.format) }}</TableCell>
 
-                        <TableCell>{{ project.client?.name || 'N/A' }}</TableCell>
+                        <TableCell>
+                            <span
+                                class="inline-block max-w-[180px] truncate"
+                                :class="project.client?.recommended_editor_level ? editorLevelTextClasses[project.client.recommended_editor_level] : ''"
+                                :title="
+                                    project.client?.recommended_editor_level
+                                        ? recommendedLevelTooltip(project.client.recommended_editor_level)
+                                        : project.client?.name
+                                "
+                            >
+                                {{ project.client?.name || 'N/A' }}
+                            </span>
+                        </TableCell>
 
                         <!-- Editor Select -->
                         <TableCell>
@@ -485,9 +521,15 @@ onMounted(() => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem :value="null">Unassigned</SelectItem>
-                                    <SelectItem v-for="editor in editors" :key="editor.id" :value="editor.id">
-                                        {{ editor.name }}
-                                    </SelectItem>
+                                    <template v-for="(group, index) in groupedEditors" :key="group.level">
+                                        <SelectSeparator v-if="index > 0" />
+                                        <SelectGroup>
+                                            <SelectLabel class="text-xs text-muted-foreground">{{ group.label }}</SelectLabel>
+                                            <SelectItem v-for="editor in group.editors" :key="editor.id" :value="editor.id">
+                                                {{ editor.name }}
+                                            </SelectItem>
+                                        </SelectGroup>
+                                    </template>
                                 </SelectContent>
                             </Select>
                         </TableCell>

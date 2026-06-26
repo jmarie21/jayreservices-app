@@ -66,10 +66,10 @@ class ProjectManagement extends Controller
         $this->attachServicePricingData($projects, $pricingService, true);
 
         return Inertia::render('admin/ClientProjects', [
-            'client' => $client->only(['id', 'name', 'email']),
+            'client' => $client->only(['id', 'name', 'email', 'recommended_editor_level']),
             'projects' => $projects,
             'filters' => $request->only(['status', 'date_from', 'date_to', 'search', 'editor_id']),
-            'editors' => User::where('role', 'editor')->get(['id', 'name']),
+            'editors' => User::where('role', 'editor')->get(['id', 'name', 'editor_level']),
         ]);
     }
 
@@ -147,8 +147,8 @@ class ProjectManagement extends Controller
         return Inertia::render('admin/AllProjects', [
             'projects' => $projects,
             'filters' => $request->only(['status', 'date_from', 'date_to', 'search', 'editor_id']),
-            'editors' => User::where('role', 'editor')->get(['id', 'name']),
-            'clients' => User::where('role', 'client')->get(['id', 'name']),
+            'editors' => User::where('role', 'editor')->get(['id', 'name', 'editor_level']),
+            'clients' => User::where('role', 'client')->get(['id', 'name', 'recommended_editor_level']),
             'viewProjectId' => $request->query('view') ? (int) $request->query('view') : null,
         ]);
     }

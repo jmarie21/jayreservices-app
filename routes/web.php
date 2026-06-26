@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\BulkNotificationController;
+use App\Http\Controllers\Admin\ClientLevelController;
+use App\Http\Controllers\Admin\EditorLevelController;
 use App\Http\Controllers\Admin\EditorManagement;
 use App\Http\Controllers\Admin\InvoiceManagementController;
 use App\Http\Controllers\Admin\ProjectManagement;
@@ -59,6 +61,12 @@ Route::middleware(['auth', 'active', 'admin'])->group(function () {
     Route::get('/all-projects/preview-export', [ProjectManagement::class, 'previewExport'])->name('projects.all.preview-export');
     Route::get('/editors-projects', [EditorManagement::class, 'index'])->name('admin.editors-projects.index');
     Route::put('/project-mgmt/{project}', [ProjectManagement::class, 'adminUpdateProject'])->name('admin.project.update');
+
+    Route::get('/editor-levels', [EditorLevelController::class, 'index'])->name('admin.editor-levels.index');
+    Route::patch('/editor-levels/assign', [EditorLevelController::class, 'assign'])->name('admin.editor-levels.assign');
+
+    Route::get('/client-levels', [ClientLevelController::class, 'index'])->name('admin.client-levels.index');
+    Route::patch('/client-levels/assign', [ClientLevelController::class, 'assign'])->name('admin.client-levels.assign');
 
     // Admin services management
     Route::get('/admin-services', [ServiceManagementController::class, 'index'])->name('admin.services.management');
