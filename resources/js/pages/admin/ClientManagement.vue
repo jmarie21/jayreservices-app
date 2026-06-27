@@ -47,37 +47,39 @@ const clients = computed(() => pageProps.clients ?? []);
             </div>
 
             <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Recommended Level</TableHead>
-                            <TableHead>Dedicated Editor Rules</TableHead>
-                            <TableHead>Extra Requests</TableHead>
-                            <TableHead class="text-right">Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow v-if="clients.length === 0">
-                            <TableCell colspan="6" class="text-center text-sm text-slate-500">No clients found.</TableCell>
-                        </TableRow>
-                        <TableRow v-for="client in clients" :key="client.id">
-                            <TableCell class="font-medium text-slate-900">{{ client.name }}</TableCell>
-                            <TableCell class="text-slate-500">{{ client.email }}</TableCell>
-                            <TableCell>
-                                <EditorLevelBadge :level="client.recommended_editor_level" />
-                            </TableCell>
-                            <TableCell>{{ client.dedicated_editor_rules_count }}</TableCell>
-                            <TableCell>{{ client.extra_requests_count }}</TableCell>
-                            <TableCell class="text-right">
-                                <Button size="sm" variant="outline" as-child>
-                                    <Link :href="route('admin.client-management.show', client.id)">Manage</Link>
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+                <div class="max-h-[70vh] overflow-y-auto overflow-x-auto">
+                    <Table>
+                        <TableHeader class="sticky top-0 z-10 bg-white">
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Recommended Level</TableHead>
+                                <TableHead>Dedicated Editor Rules</TableHead>
+                                <TableHead>Extra Requests</TableHead>
+                                <TableHead class="text-right">Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-if="clients.length === 0">
+                                <TableCell colspan="6" class="text-center text-sm text-slate-500">No clients found.</TableCell>
+                            </TableRow>
+                            <TableRow v-for="client in clients" :key="client.id">
+                                <TableCell class="max-w-[200px] truncate font-medium text-slate-900" :title="client.name">{{ client.name }}</TableCell>
+                                <TableCell class="max-w-[220px] truncate text-slate-500" :title="client.email">{{ client.email }}</TableCell>
+                                <TableCell>
+                                    <EditorLevelBadge :level="client.recommended_editor_level" />
+                                </TableCell>
+                                <TableCell>{{ client.dedicated_editor_rules_count }}</TableCell>
+                                <TableCell>{{ client.extra_requests_count }}</TableCell>
+                                <TableCell class="text-right">
+                                    <Button size="sm" variant="outline" as-child>
+                                        <Link :href="route('admin.client-management.show', client.id)">Manage</Link>
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
             </div>
         </div>
     </AppLayout>
