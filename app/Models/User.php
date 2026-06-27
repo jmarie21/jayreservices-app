@@ -5,7 +5,6 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\EditorLevel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -30,7 +29,6 @@ class User extends Authenticatable
         'additional_emails',
         'editor_level',
         'recommended_editor_level',
-        'dedicated_editor_id',
     ];
 
     /**
@@ -52,8 +50,9 @@ class User extends Authenticatable
         'additional_emails',
         'editor_level',
         'recommended_editor_level',
-        'dedicated_editor_id',
         'created_at',
+        'dedicatedEditorRules',
+        'extraRequests',
     ];
 
     /**
@@ -83,9 +82,14 @@ class User extends Authenticatable
         return $this->hasMany(Project::class, 'editor_id');
     }
 
-    public function dedicatedEditor(): BelongsTo
+    public function dedicatedEditorRules(): HasMany
     {
-        return $this->belongsTo(User::class, 'dedicated_editor_id');
+        return $this->hasMany(ClientDedicatedEditor::class, 'client_id');
+    }
+
+    public function extraRequests(): HasMany
+    {
+        return $this->hasMany(ClientExtraRequest::class, 'client_id');
     }
 
     public function comments(): HasMany

@@ -2,6 +2,7 @@ import { NavItem } from '@/types';
 import {
     Brush,
     ClipboardList,
+    Contact,
     FolderOpenDot,
     Folders,
     HandCoins,
@@ -10,7 +11,6 @@ import {
     MessageSquareText,
     Settings,
     SquareGanttChart,
-    Tags,
     UserCog,
     UsersRound,
 } from 'lucide-vue-next';
@@ -43,9 +43,9 @@ export const allNavItems: { [key: string]: NavItem[] } = {
             icon: Layers3,
         },
         {
-            title: 'Client Levels',
-            href: '/client-levels',
-            icon: Tags,
+            title: 'Client Management',
+            href: '/client-management',
+            icon: Contact,
         },
         {
             title: 'Project Management',

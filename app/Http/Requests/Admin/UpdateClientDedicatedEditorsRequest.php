@@ -5,7 +5,7 @@ namespace App\Http\Requests\Admin;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateDedicatedEditorRequest extends FormRequest
+class UpdateClientDedicatedEditorsRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -15,8 +15,9 @@ class UpdateDedicatedEditorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'editor_id' => [
-                'nullable',
+            'service_id' => ['nullable', 'integer', Rule::exists('services', 'id')],
+            'editor_ids' => ['nullable', 'array'],
+            'editor_ids.*' => [
                 'integer',
                 Rule::exists('users', 'id')->where('role', 'editor'),
             ],
