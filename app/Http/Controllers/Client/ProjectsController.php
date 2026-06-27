@@ -25,7 +25,7 @@ class ProjectsController extends Controller
             $viewProjectId = $request->query('view') ? (int) $request->query('view') : null;
             $query = Auth::user()
                 ->projects()
-                ->with(['service', 'comments.user', 'comments.attachments'])
+                ->with(['client.extraRequests', 'service', 'comments.user', 'comments.attachments'])
                 ->latest();
 
             $clientStatusGroups = [
@@ -391,7 +391,7 @@ class ProjectsController extends Controller
 
         $project = Auth::user()
             ->projects()
-            ->with(['service', 'comments.user', 'comments.attachments'])
+            ->with(['client.extraRequests', 'service', 'comments.user', 'comments.attachments'])
             ->find($viewProjectId);
 
         if (! $project) {

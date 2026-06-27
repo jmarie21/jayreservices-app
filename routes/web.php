@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\BulkNotificationController;
+use App\Http\Controllers\Admin\ClientDedicatedEditorController;
+use App\Http\Controllers\Admin\ClientExtraRequestController;
 use App\Http\Controllers\Admin\ClientLevelController;
+use App\Http\Controllers\Admin\ClientManagementController;
 use App\Http\Controllers\Admin\EditorLevelController;
 use App\Http\Controllers\Admin\EditorManagement;
 use App\Http\Controllers\Admin\InvoiceManagementController;
@@ -67,7 +70,16 @@ Route::middleware(['auth', 'active', 'admin'])->group(function () {
 
     Route::get('/client-levels', [ClientLevelController::class, 'index'])->name('admin.client-levels.index');
     Route::patch('/client-levels/assign', [ClientLevelController::class, 'assign'])->name('admin.client-levels.assign');
-    Route::patch('/client-levels/{client}/dedicated-editor', [ClientLevelController::class, 'updateDedicatedEditor'])->name('admin.client-levels.dedicated-editor');
+
+    Route::get('/client-levels/{client}/dedicated-editors', [ClientDedicatedEditorController::class, 'edit'])->name('admin.client-levels.dedicated-editors.edit');
+    Route::patch('/client-levels/{client}/dedicated-editors', [ClientDedicatedEditorController::class, 'update'])->name('admin.client-levels.dedicated-editors.update');
+
+    Route::get('/client-management', [ClientManagementController::class, 'index'])->name('admin.client-management.index');
+    Route::get('/client-management/{client}', [ClientManagementController::class, 'show'])->name('admin.client-management.show');
+
+    Route::post('/client-management/{client}/extra-requests', [ClientExtraRequestController::class, 'store'])->name('admin.client-management.extra-requests.store');
+    Route::put('/client-management/{client}/extra-requests/{extraRequest}', [ClientExtraRequestController::class, 'update'])->name('admin.client-management.extra-requests.update');
+    Route::delete('/client-management/{client}/extra-requests/{extraRequest}', [ClientExtraRequestController::class, 'destroy'])->name('admin.client-management.extra-requests.destroy');
 
     // Admin services management
     Route::get('/admin-services', [ServiceManagementController::class, 'index'])->name('admin.services.management');

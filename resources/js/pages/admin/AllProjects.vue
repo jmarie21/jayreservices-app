@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { editorLevelLabels, editorLevelTextClasses } from '@/lib/editor-level';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
-import { EditorLevel, Paginated } from '@/types/app-page-prop';
+import { DedicatedEditorRule, EditorLevel, Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ChevronDown, Clock, Download, Eye, Lock } from 'lucide-vue-next';
@@ -114,18 +114,26 @@ function recommendedLevelTooltip(level: EditorLevel): string {
     return `Recommended editor level: ${editorLevelLabels[level]}`;
 }
 
-function dedicatedEditorName(editorId: number): string {
-    return editors.find((editor) => editor.id === editorId)?.name ?? 'a specific editor';
+function dedicatedEditorIdsFor(rules: DedicatedEditorRule[] | undefined, serviceId: number | null | undefined): number[] {
+    if (!rules) {
+        return [];
+    }
+
+    return rules.filter((rule) => rule.service_id === null || rule.service_id === serviceId).map((rule) => rule.editor_id);
 }
 
-function editorSelectGroups(dedicatedEditorId?: number | null) {
-    if (!dedicatedEditorId) {
+function dedicatedEditorNames(editorIds: number[]): string {
+    return editorIds.map((editorId) => editors.find((editor) => editor.id === editorId)?.name ?? 'a specific editor').join(', ');
+}
+
+function editorSelectGroups(allowedEditorIds: number[]) {
+    if (allowedEditorIds.length === 0) {
         return groupedEditors.value;
     }
 
-    const dedicatedEditor = editors.find((editor) => editor.id === dedicatedEditorId);
+    const allowedEditors = editors.filter((editor) => allowedEditorIds.includes(editor.id));
 
-    return dedicatedEditor ? [{ level: 'dedicated' as const, label: 'Dedicated editor', editors: [dedicatedEditor] }] : groupedEditors.value;
+    return allowedEditors.length > 0 ? [{ level: 'dedicated' as const, label: 'Dedicated editor', editors: allowedEditors }] : groupedEditors.value;
 }
 
 // Countdown timer
@@ -515,9 +523,9 @@ onMounted(() => {
 
                         <TableCell>
                             <div
-                                v-if="project.client?.dedicated_editor_id"
+                                v-if="dedicatedEditorIdsFor(project.client?.dedicated_editor_rules, project.service_id).length > 0"
                                 class="flex items-center gap-1.5"
-                                :title="`Dedicated to ${dedicatedEditorName(project.client.dedicated_editor_id)} only`"
+                                :title="`Dedicated to ${dedicatedEditorNames(dedicatedEditorIdsFor(project.client?.dedicated_editor_rules, project.service_id))} only`"
                             >
                                 <Lock class="size-3.5 shrink-0 text-rose-600" />
                                 <span class="inline-block max-w-[150px] truncate font-medium text-rose-700">{{ project.client?.name || 'N/A' }}</span>
@@ -544,7 +552,12 @@ onMounted(() => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem :value="null">Unassigned</SelectItem>
-                                    <template v-for="(group, index) in editorSelectGroups(project.client?.dedicated_editor_id)" :key="group.level">
+                                    <template
+                                        v-for="(group, index) in editorSelectGroups(
+                                            dedicatedEditorIdsFor(project.client?.dedicated_editor_rules, project.service_id),
+                                        )"
+                                        :key="group.level"
+                                    >
                                         <SelectSeparator v-if="index > 0" />
                                         <SelectGroup>
                                             <SelectLabel class="text-xs text-muted-foreground">{{ group.label }}</SelectLabel>

@@ -2,20 +2,21 @@
 import LevelBoard from '@/components/LevelBoard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem, User } from '@/types';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Client Levels', href: '/client-levels' }];
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Client Management', href: '/client-management' },
+    { title: 'Client Levels', href: '/client-levels' },
+];
 
 const pageProps = usePage<
     AppPageProps<{
         clients: User[];
-        editors: { id: number; name: string }[];
     }>
 >().props;
 
 const clients = computed(() => pageProps.clients ?? []);
-const editors = computed(() => pageProps.editors ?? []);
 </script>
 
 <template>
@@ -27,19 +28,21 @@ const editors = computed(() => pageProps.editors ?? []);
                 <h1 class="text-3xl font-bold tracking-tight text-slate-900">Client Levels</h1>
                 <p class="max-w-4xl text-sm text-slate-500">
                     Tag clients with a recommended editor level. This is just a legend on the project pages — admins can still assign any
-                    editor regardless of this recommendation. If a client needs to always use one specific editor, set a "Dedicated editor"
-                    on their card instead — that one is enforced when assigning projects.
+                    editor regardless of this recommendation. For dedicated editors, extra requests, and everything else client-specific,
+                    head to Client Management.
                 </p>
             </div>
 
-            <LevelBoard
-                :users="clients"
-                level-field="recommended_editor_level"
-                assign-route-name="admin.client-levels.assign"
-                entity-noun="client"
-                :editors="editors"
-                dedicated-editor-route-name="admin.client-levels.dedicated-editor"
-            />
+            <LevelBoard :users="clients" level-field="recommended_editor_level" assign-route-name="admin.client-levels.assign" entity-noun="client">
+                <template #card-footer="{ user }: { user: User }">
+                    <Link
+                        :href="route('admin.client-management.show', user.id)"
+                        class="level-board-no-drag mt-2 inline-block text-xs font-medium text-indigo-600 hover:underline"
+                    >
+                        Manage client →
+                    </Link>
+                </template>
+            </LevelBoard>
         </div>
     </AppLayout>
 </template>

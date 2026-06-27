@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\ProjectsExport;
 use App\Http\Controllers\Controller;
 use App\Mail\ProjectSentToClientMail;
+use App\Models\ClientDedicatedEditor;
 use App\Models\Project;
 use App\Models\ServiceCategory;
 use App\Models\User;
@@ -66,8 +67,14 @@ class ProjectManagement extends Controller
         $projects = $query->paginate(10)->withQueryString();
         $this->attachServicePricingData($projects, $pricingService, true);
 
+        $client->loadMissing(['dedicatedEditorRules:id,client_id,service_id,editor_id', 'extraRequests']);
+
         return Inertia::render('admin/ClientProjects', [
-            'client' => $client->only(['id', 'name', 'email', 'recommended_editor_level', 'dedicated_editor_id']),
+            'client' => [
+                ...$client->only(['id', 'name', 'email', 'recommended_editor_level']),
+                'dedicated_editor_rules' => $client->dedicatedEditorRules,
+                'extra_requests' => $client->extraRequests,
+            ],
             'projects' => $projects,
             'filters' => $request->only(['status', 'date_from', 'date_to', 'search', 'editor_id']),
             'editors' => User::where('role', 'editor')->get(['id', 'name', 'editor_level']),
@@ -76,8 +83,14 @@ class ProjectManagement extends Controller
 
     public function showAllProjects(Request $request)
     {
-        $query = Project::with(['client', 'service', 'editor', 'comments.user', 'comments.attachments'])
-            ->latest();
+        $query = Project::with([
+            'client.dedicatedEditorRules:id,client_id,service_id,editor_id',
+            'client.extraRequests',
+            'service',
+            'editor',
+            'comments.user',
+            'comments.attachments',
+        ])->latest();
 
         $isOverdueFilter = $request->input('status') === 'overdue';
 
@@ -317,11 +330,15 @@ class ProjectManagement extends Controller
             return;
         }
 
-        $dedicatedEditorId = $project->client?->dedicated_editor_id;
+        $allowedEditorIds = ClientDedicatedEditor::where('client_id', $project->client_id)
+            ->where(function ($query) use ($project) {
+                $query->whereNull('service_id')->orWhere('service_id', $project->service_id);
+            })
+            ->pluck('editor_id');
 
-        if ($dedicatedEditorId !== null && $editorId !== $dedicatedEditorId) {
+        if ($allowedEditorIds->isNotEmpty() && ! $allowedEditorIds->contains($editorId)) {
             throw ValidationException::withMessages([
-                'editor_id' => 'This client is dedicated to a specific editor. Unassign them first if you need to assign someone else.',
+                'editor_id' => 'This client is dedicated to specific editors for this service. Unassign them first if you need to assign someone else.',
             ]);
         }
     }

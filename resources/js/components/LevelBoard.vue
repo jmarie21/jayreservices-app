@@ -3,8 +3,6 @@ import EditorLevelBadge from '@/components/EditorLevelBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { EditorLevel, User } from '@/types/app-page-prop';
 import { router } from '@inertiajs/vue3';
 import { computed, reactive, ref, watch } from 'vue';
@@ -16,8 +14,6 @@ const props = defineProps<{
     levelField: 'editor_level' | 'recommended_editor_level';
     assignRouteName: string;
     entityNoun: string;
-    editors?: { id: number; name: string }[];
-    dedicatedEditorRouteName?: string;
 }>();
 
 type ColumnKey = EditorLevel | 'unassigned';
@@ -74,30 +70,6 @@ function onChange(level: ColumnKey, event: { added?: { element: User } }) {
     if (event.added) {
         assign(level, [event.added.element.id]);
     }
-}
-
-function updateDedicatedEditor(user: User, editorId: number | null) {
-    if (!props.dedicatedEditorRouteName) {
-        return;
-    }
-
-    const previousEditorId = user.dedicated_editor_id ?? null;
-    user.dedicated_editor_id = editorId;
-
-    router.patch(
-        route(props.dedicatedEditorRouteName, user.id),
-        { editor_id: editorId },
-        {
-            preserveScroll: true,
-            preserveState: true,
-            onError: () => {
-                user.dedicated_editor_id = previousEditorId;
-                toast.error('Something went wrong', {
-                    description: `Could not update ${user.name}'s dedicated editor. Please try again.`,
-                });
-            },
-        },
-    );
 }
 
 const addModalOpen = ref(false);
@@ -161,23 +133,7 @@ const addModalTitle = computed(() => {
                         <p class="text-sm font-medium text-slate-900">{{ element.name }}</p>
                         <p class="truncate text-xs text-slate-500">{{ element.email }}</p>
 
-                        <div v-if="props.editors" class="level-board-no-drag mt-2 cursor-default">
-                            <Label class="text-xs text-slate-500">Dedicated editor</Label>
-                            <Select
-                                :modelValue="element.dedicated_editor_id ?? null"
-                                @update:modelValue="(value) => updateDedicatedEditor(element, value as number | null)"
-                            >
-                                <SelectTrigger class="h-8 w-full text-xs">
-                                    <SelectValue placeholder="None" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem :value="null">None</SelectItem>
-                                    <SelectItem v-for="editor in props.editors" :key="editor.id" :value="editor.id">
-                                        {{ editor.name }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        <slot name="card-footer" :user="element" />
                     </div>
                 </template>
             </draggable>

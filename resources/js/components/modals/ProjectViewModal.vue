@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AppPageProps, Comment, CommentAttachment, Projects } from '@/types';
-import { Paginated } from '@/types/app-page-prop';
+import { ClientExtraRequest, Paginated } from '@/types/app-page-prop';
 import { linkify } from '@/utils/linkify';
 import { mapStatusForClient } from '@/utils/statusMapper';
 import { router, useForm, usePage } from '@inertiajs/vue3';
@@ -41,6 +41,7 @@ const comments = computed<Comment[]>(() => {
 });
 
 const linkedNotes = computed(() => linkify(props.project.notes));
+const clientExtraRequests = computed<ClientExtraRequest[]>(() => props.project.client?.extra_requests ?? []);
 const extraFields = computed<Record<string, any>>(() => {
     return props.project.extra_fields && typeof props.project.extra_fields === 'object' ? props.project.extra_fields : {};
 });
@@ -649,6 +650,25 @@ onBeforeUnmount(() => {
                                         {{ addon }}
                                     </li>
                                 </ul>
+                            </div>
+                        </div>
+
+                        <!-- Client Extra Requests -->
+                        <div v-if="clientExtraRequests.length > 0" class="mb-4 space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-5 shadow">
+                            <h2 class="text-lg font-semibold text-amber-900">⚠ Special Requests</h2>
+                            <div v-for="request in clientExtraRequests" :key="request.id" class="space-y-1 border-t border-amber-200 pt-3 first:border-t-0 first:pt-0">
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-semibold text-amber-900">{{ request.title }}</p>
+                                    <a
+                                        v-if="request.link"
+                                        :href="request.link"
+                                        target="_blank"
+                                        class="text-xs font-medium text-indigo-600 hover:underline"
+                                    >
+                                        Link ↗
+                                    </a>
+                                </div>
+                                <p v-if="request.description" class="text-sm whitespace-pre-wrap text-amber-800">{{ request.description }}</p>
                             </div>
                         </div>
 

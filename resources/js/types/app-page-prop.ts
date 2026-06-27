@@ -2,6 +2,21 @@ export type UserRole = 'admin' | 'client' | 'editor';
 
 export type EditorLevel = 'senior' | 'mid' | 'junior';
 
+export type DedicatedEditorRule = {
+    service_id: number | null;
+    editor_id: number;
+};
+
+export type ClientExtraRequest = {
+    id: number;
+    client_id: number;
+    title: string;
+    link: string | null;
+    description: string | null;
+    created_at: string;
+    updated_at: string;
+};
+
 export type User = {
     id: number;
     name: string;
@@ -11,7 +26,8 @@ export type User = {
     additional_emails?: string | null;
     editor_level?: EditorLevel | null;
     recommended_editor_level?: EditorLevel | null;
-    dedicated_editor_id?: number | null;
+    dedicated_editor_rules?: DedicatedEditorRule[];
+    extra_requests?: ClientExtraRequest[];
 };
 
 export type Services = {
