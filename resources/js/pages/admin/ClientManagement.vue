@@ -47,7 +47,7 @@ const clients = computed(() => pageProps.clients ?? []);
             </div>
 
             <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div class="max-h-[70vh] overflow-y-auto">
+                <div class="max-h-[70vh] overflow-y-auto overflow-x-auto">
                     <Table>
                         <TableHeader class="sticky top-0 z-10 bg-white">
                             <TableRow>
@@ -64,8 +64,8 @@ const clients = computed(() => pageProps.clients ?? []);
                                 <TableCell colspan="6" class="text-center text-sm text-slate-500">No clients found.</TableCell>
                             </TableRow>
                             <TableRow v-for="client in clients" :key="client.id">
-                                <TableCell class="font-medium text-slate-900">{{ client.name }}</TableCell>
-                                <TableCell class="text-slate-500">{{ client.email }}</TableCell>
+                                <TableCell class="max-w-[200px] truncate font-medium text-slate-900" :title="client.name">{{ client.name }}</TableCell>
+                                <TableCell class="max-w-[220px] truncate text-slate-500" :title="client.email">{{ client.email }}</TableCell>
                                 <TableCell>
                                     <EditorLevelBadge :level="client.recommended_editor_level" />
                                 </TableCell>
