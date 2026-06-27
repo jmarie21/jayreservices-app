@@ -67,6 +67,7 @@ Route::middleware(['auth', 'active', 'admin'])->group(function () {
 
     Route::get('/client-levels', [ClientLevelController::class, 'index'])->name('admin.client-levels.index');
     Route::patch('/client-levels/assign', [ClientLevelController::class, 'assign'])->name('admin.client-levels.assign');
+    Route::patch('/client-levels/{client}/dedicated-editor', [ClientLevelController::class, 'updateDedicatedEditor'])->name('admin.client-levels.dedicated-editor');
 
     // Admin services management
     Route::get('/admin-services', [ServiceManagementController::class, 'index'])->name('admin.services.management');

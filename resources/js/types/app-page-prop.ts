@@ -11,6 +11,7 @@ export type User = {
     additional_emails?: string | null;
     editor_level?: EditorLevel | null;
     recommended_editor_level?: EditorLevel | null;
+    dedicated_editor_id?: number | null;
 };
 
 export type Services = {

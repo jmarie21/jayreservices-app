@@ -16,7 +16,7 @@ import { editorLevelLabels } from '@/lib/editor-level';
 import { AppPageProps, Projects, type BreadcrumbItem } from '@/types';
 import { EditorLevel, Paginated } from '@/types/app-page-prop';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { Clock } from 'lucide-vue-next';
+import { Clock, Lock } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -25,9 +25,17 @@ type Priority = 'urgent' | 'high' | 'normal' | 'low';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Project Management', href: '/project-mgmt' }];
 
+type ClientProjectsClient = {
+    id: number;
+    name: string;
+    email: string;
+    recommended_editor_level?: EditorLevel | null;
+    dedicated_editor_id?: number | null;
+};
+
 const pageProps = usePage<
     AppPageProps<{
-        client: { id: number; name: string; email: string; recommended_editor_level?: EditorLevel | null };
+        client: ClientProjectsClient;
         projects: Paginated<Projects>;
         editors: { id: number; name: string; editor_level?: EditorLevel | null }[];
         filters?: { status?: string; date_from?: string; date_to?: string; search?: string; editor_id: string };
@@ -36,7 +44,7 @@ const pageProps = usePage<
 
 const page = usePage<
     AppPageProps<{
-        client: { id: number; name: string; email: string; recommended_editor_level?: EditorLevel | null };
+        client: ClientProjectsClient;
         projects: Paginated<Projects>;
         editors: { id: number; name: string; editor_level?: EditorLevel | null }[];
         filters?: { status?: string; date_from?: string; date_to?: string; search?: string; editor_id: string };
@@ -104,6 +112,20 @@ const groupedEditors = computed(() =>
         }))
         .filter((group) => group.editors.length > 0),
 );
+
+function dedicatedEditorName(editorId: number): string {
+    return editors.find((editor) => editor.id === editorId)?.name ?? 'a specific editor';
+}
+
+function editorSelectGroups(dedicatedEditorId?: number | null) {
+    if (!dedicatedEditorId) {
+        return groupedEditors.value;
+    }
+
+    const dedicatedEditor = editors.find((editor) => editor.id === dedicatedEditorId);
+
+    return dedicatedEditor ? [{ level: 'dedicated' as const, label: 'Dedicated editor', editors: [dedicatedEditor] }] : groupedEditors.value;
+}
 
 // Countdown timer
 const now = ref(Date.now());
@@ -326,7 +348,11 @@ const goToPage = (pageNumber: number) => {
             <div class="mb-2 flex flex-col gap-4">
                 <div class="flex items-center gap-3">
                     <h1 class="text-3xl font-bold">{{ client.name }}'s Projects</h1>
-                    <div v-if="client.recommended_editor_level" class="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <div v-if="client.dedicated_editor_id" class="flex items-center gap-1.5 text-sm font-medium text-rose-700">
+                        <Lock class="size-4" />
+                        <span>Dedicated to {{ dedicatedEditorName(client.dedicated_editor_id) }} only</span>
+                    </div>
+                    <div v-else-if="client.recommended_editor_level" class="flex items-center gap-1.5 text-sm text-muted-foreground">
                         <span>Recommended editor level:</span>
                         <EditorLevelBadge :level="client.recommended_editor_level" />
                     </div>
@@ -382,7 +408,7 @@ const goToPage = (pageNumber: number) => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem :value="null">Unassigned</SelectItem>
-                                    <template v-for="(group, index) in groupedEditors" :key="group.level">
+                                    <template v-for="(group, index) in editorSelectGroups(client.dedicated_editor_id)" :key="group.level">
                                         <SelectSeparator v-if="index > 0" />
                                         <SelectGroup>
                                             <SelectLabel class="text-xs text-muted-foreground">{{ group.label }}</SelectLabel>
