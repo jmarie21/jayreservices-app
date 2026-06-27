@@ -18,6 +18,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -66,7 +67,7 @@ class ProjectManagement extends Controller
         $this->attachServicePricingData($projects, $pricingService, true);
 
         return Inertia::render('admin/ClientProjects', [
-            'client' => $client->only(['id', 'name', 'email', 'recommended_editor_level']),
+            'client' => $client->only(['id', 'name', 'email', 'recommended_editor_level', 'dedicated_editor_id']),
             'projects' => $projects,
             'filters' => $request->only(['status', 'date_from', 'date_to', 'search', 'editor_id']),
             'editors' => User::where('role', 'editor')->get(['id', 'name', 'editor_level']),
@@ -206,6 +207,10 @@ class ProjectManagement extends Controller
             'priority' => 'nullable|in:urgent,high,normal,low',
         ]);
 
+        if (array_key_exists('editor_id', $validated)) {
+            $this->ensureEditorMatchesClientDedication($project, $validated['editor_id']);
+        }
+
         if (! empty($validated['output_link'])) {
             $validated['output_link'] = array_map(function ($item) {
                 if (is_array($item) && ! empty($item['link']) && ! preg_match('/^https?:\/\//', $item['link'])) {
@@ -304,6 +309,21 @@ class ProjectManagement extends Controller
         }
 
         return back()->with('success', 'Project updated successfully.');
+    }
+
+    private function ensureEditorMatchesClientDedication(Project $project, ?int $editorId): void
+    {
+        if ($editorId === null) {
+            return;
+        }
+
+        $dedicatedEditorId = $project->client?->dedicated_editor_id;
+
+        if ($dedicatedEditorId !== null && $editorId !== $dedicatedEditorId) {
+            throw ValidationException::withMessages([
+                'editor_id' => 'This client is dedicated to a specific editor. Unassign them first if you need to assign someone else.',
+            ]);
+        }
     }
 
     public function updatePrice(Request $request, Project $project)
