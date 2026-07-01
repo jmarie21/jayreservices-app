@@ -668,7 +668,7 @@ onBeforeUnmount(() => {
                                         Link ↗
                                     </a>
                                 </div>
-                                <p v-if="request.description" class="text-sm whitespace-pre-wrap text-amber-800">{{ request.description }}</p>
+                                <p v-if="request.description" class="text-sm whitespace-pre-wrap text-amber-800" v-html="linkify(request.description)"></p>
                             </div>
                         </div>
 
