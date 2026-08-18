@@ -3,9 +3,11 @@ import AddUserForm from '@/components/forms/AddUserForm.vue';
 import BulkNotificationModal from '@/components/modals/BulkNotificationModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { AppPageProps, User, type BreadcrumbItem } from '@/types';
+import { Paginated } from '@/types/app-page-prop';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { toast, Toaster } from 'vue-sonner';
@@ -26,8 +28,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const page = usePage<AppPageProps<{ users: User[] }>>();
+const page = usePage<AppPageProps<{ users: Paginated<User> }>>();
 const users = computed(() => page.props.users);
+
+const goToPage = (pageNumber: number) => {
+    router.get(route('user-mgmt'), { page: pageNumber }, { preserveScroll: true, preserveState: true, replace: true });
+};
 
 const selectedUser = ref<User | null>(null);
 const showForm = ref(false);
@@ -95,7 +101,7 @@ const deleteUser = () => {
                         <TableHead> Action </TableHead>
                     </TableRow>
                 </TableHeader>
-                <TableBody v-for="user in users">
+                <TableBody v-for="user in users.data" :key="user.id">
                     <TableRow>
                         <TableCell class="font-medium"> {{ user.name }} </TableCell>
                         <TableCell>{{ user.email }}</TableCell>
@@ -130,6 +136,27 @@ const deleteUser = () => {
                     </TableRow>
                 </TableBody>
             </Table>
+
+            <!-- Pagination -->
+            <div class="mt-4 flex items-center justify-center">
+                <Pagination
+                    v-slot="{ page: currentPage }"
+                    :items-per-page="users.per_page"
+                    :total="users.total"
+                    :default-page="users.current_page"
+                    @update:page="goToPage"
+                >
+                    <PaginationContent v-slot="{ items }">
+                        <PaginationPrevious />
+                        <template v-for="(item, index) in items" :key="index">
+                            <PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === currentPage">
+                                {{ item.value }}
+                            </PaginationItem>
+                        </template>
+                        <PaginationNext />
+                    </PaginationContent>
+                </Pagination>
+            </div>
         </div>
 
         <AddUserForm :open="showForm" :user="selectedUser" @close="showForm = false" />

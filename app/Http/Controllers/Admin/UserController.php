@@ -18,22 +18,25 @@ class UserController extends Controller
     {
         $users = User::select('id', 'name', 'email', 'additional_emails', 'role', 'is_active', 'created_at')
             ->orderBy('id')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
-        return Inertia::render("admin/UserManagement", [
-            "users" => $users,
+        return Inertia::render('admin/UserManagement', [
+            'users' => $users,
         ]);
     }
 
     public function createNewUser(Request $request)
     {
         $validated = $request->validate([
-            "name" => ['required', 'max:255'],
-            "email" => ['required', 'email', 'max:255'],
-            "password" => ['required'],
-            "role" => ['required'],
+            'name' => ['required', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required'],
+            'role' => ['required'],
             'is_active' => ['nullable', 'boolean'],
             'additional_emails' => 'nullable|string',
+        ], [
+            'email.unique' => 'A user with this email already exists.',
         ]);
 
         $validated['is_active'] = (bool) ($validated['is_active'] ?? true);
@@ -46,12 +49,14 @@ class UserController extends Controller
     public function updateUser(Request $request, User $user)
     {
         $validated = $request->validate([
-            "name" => ['required', 'max:255'],
-            "email" => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            "password" => ['nullable', 'min:6'], // optional when editing
-            "role" => ['required'],
+            'name' => ['required', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'password' => ['nullable', 'min:6'], // optional when editing
+            'role' => ['required'],
             'is_active' => ['nullable', 'boolean'],
             'additional_emails' => 'nullable|string',
+        ], [
+            'email.unique' => 'A user with this email already exists.',
         ]);
 
         $validated['is_active'] = (bool) ($validated['is_active'] ?? true);
@@ -61,7 +66,7 @@ class UserController extends Controller
 
         $this->ensureAdminSafety($actingUser, $user, $validated['role'], $validated['is_active']);
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']); // prevent overwriting with null
