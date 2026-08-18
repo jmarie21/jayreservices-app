@@ -22,10 +22,42 @@ it('includes user active status on the user management page', function () {
         ->get(route('user-mgmt'))
         ->assertInertia(fn ($page) => $page
             ->component('admin/UserManagement')
-            ->has('users', 2)
-            ->where('users.1.id', $inactiveUser->id)
-            ->where('users.1.is_active', false)
+            ->has('users.data', 2)
+            ->where('users.data.1.id', $inactiveUser->id)
+            ->where('users.data.1.is_active', false)
         );
+});
+
+it('paginates the user management listing', function () {
+    User::factory()->count(15)->create(['role' => 'client']);
+
+    $this->actingAs($this->admin)
+        ->get(route('user-mgmt'))
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/UserManagement')
+            ->has('users.data', 10)
+            ->where('users.total', 16)
+            ->where('users.last_page', 2)
+        );
+});
+
+it('returns a validation error instead of a server error when creating a user with a duplicate email', function () {
+    User::factory()->create(['email' => 'duplicate@example.com']);
+
+    $response = $this->actingAs($this->admin)
+        ->from(route('user-mgmt'))
+        ->post(route('user-mgmt.store'), [
+            'name' => 'Duplicate Client',
+            'email' => 'duplicate@example.com',
+            'password' => 'password',
+            'role' => 'client',
+            'is_active' => true,
+        ]);
+
+    $response->assertRedirect(route('user-mgmt'));
+    $response->assertSessionHasErrors([
+        'email' => 'A user with this email already exists.',
+    ]);
 });
 
 it('allows admins to create inactive users', function () {
