@@ -77,15 +77,17 @@ const statusLabels: Record<Status, string> = {
     cancelled: 'Cancelled',
 };
 
+const statusOptions = Object.entries(statusLabels).filter(([status]) => status !== 'sent_to_client');
+
 const allowedTransitions: Record<string, string[]> = {
-    backlog: ['todo', 'in_progress', 'for_qa', 'done_qa', 'sent_to_client'],
-    todo: ['in_progress', 'for_qa', 'done_qa', 'sent_to_client'],
-    in_progress: ['for_qa', 'done_qa', 'sent_to_client'],
-    for_qa: ['done_qa', 'sent_to_client'],
-    done_qa: ['sent_to_client'],
+    backlog: ['todo', 'in_progress', 'for_qa', 'done_qa'],
+    todo: ['in_progress', 'for_qa', 'done_qa'],
+    in_progress: ['for_qa', 'done_qa'],
+    for_qa: ['done_qa'],
+    done_qa: [],
     sent_to_client: [],
-    revision: ['revision_completed', 'sent_to_client'],
-    revision_completed: ['sent_to_client'],
+    revision: ['revision_completed'],
+    revision_completed: [],
     cancelled: [],
 };
 
@@ -302,12 +304,12 @@ onMounted(() => {
                                         'text-green-500': project.status === 'revision_completed',
                                     }"
                                 >
-                                    <SelectValue placeholder="Select status" />
+                                    <SelectValue placeholder="Select status">{{ statusLabels[project.status] }}</SelectValue>
                                 </SelectTrigger>
 
                                 <SelectContent>
                                     <SelectItem
-                                        v-for="(label, key) in statusLabels"
+                                        v-for="[key, label] in statusOptions"
                                         :key="key"
                                         :value="key"
                                         :class="{
@@ -315,7 +317,6 @@ onMounted(() => {
                                             'text-yellow-500': key === 'in_progress',
                                             'text-orange-500': key === 'for_qa',
                                             'text-blue-500': key === 'done_qa',
-                                            'text-purple-500': key === 'sent_to_client',
                                             'text-red-500': key === 'revision',
                                             'text-green-500': key === 'revision_completed',
                                         }"

@@ -249,6 +249,20 @@ it('blocks editor from setting cancelled status', function () {
         ->assertStatus(422);
 });
 
+it('blocks editor from setting sent_to_client', function (string $status) {
+    $project = Project::factory()->create([
+        'editor_id' => $this->editor->id,
+        'service_id' => $this->basicService->id,
+        'status' => $status,
+    ]);
+
+    $this->actingAs($this->editor)
+        ->patch(route('editor.projects.update', $project), ['status' => 'sent_to_client'])
+        ->assertStatus(422);
+
+    expect($project->fresh()->status)->toBe($status);
+})->with(['backlog', 'todo', 'in_progress', 'for_qa', 'done_qa', 'revision', 'revision_completed']);
+
 it('blocks editor from moving from sent_to_client', function () {
     $project = Project::factory()->create([
         'editor_id' => $this->editor->id,

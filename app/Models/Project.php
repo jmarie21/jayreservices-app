@@ -13,14 +13,14 @@ class Project extends Model
     use HasFactory;
 
     public const EDITOR_ALLOWED_TRANSITIONS = [
-        'backlog' => ['todo', 'in_progress', 'for_qa', 'done_qa', 'sent_to_client'],
-        'todo' => ['in_progress', 'for_qa', 'done_qa', 'sent_to_client'],
-        'in_progress' => ['for_qa', 'done_qa', 'sent_to_client'],
-        'for_qa' => ['done_qa', 'sent_to_client'],
-        'done_qa' => ['sent_to_client'],
+        'backlog' => ['todo', 'in_progress', 'for_qa', 'done_qa'],
+        'todo' => ['in_progress', 'for_qa', 'done_qa'],
+        'in_progress' => ['for_qa', 'done_qa'],
+        'for_qa' => ['done_qa'],
+        'done_qa' => [],
         'sent_to_client' => [],
-        'revision' => ['revision_completed', 'sent_to_client'],
-        'revision_completed' => ['sent_to_client'],
+        'revision' => ['revision_completed'],
+        'revision_completed' => [],
         'cancelled' => [],
     ];
 
