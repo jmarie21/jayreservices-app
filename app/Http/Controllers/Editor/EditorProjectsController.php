@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Editor;
 
 use App\Http\Controllers\Controller;
-use App\Mail\ProjectSentToClientMail;
 use App\Models\Project;
 use App\Notifications\ClientProjectStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class EditorProjectsController extends Controller
@@ -128,16 +126,12 @@ class EditorProjectsController extends Controller
             }
         }
 
-        // ✅ Send email if status changed to "sent_to_client"
+        // Notify the client in-app when the project is sent to them.
         if (
             isset($validated['status']) &&
             strtolower($validated['status']) === 'sent_to_client' &&
             strtolower($oldStatus) !== 'sent_to_client'
         ) {
-            if ($project->client && $project->client->email) {
-                Mail::to($project->client->email)->send(new ProjectSentToClientMail($project));
-            }
-
             // ✅ Send notification to client when project is sent to them
             if ($project->client) {
                 $client = $project->client;
